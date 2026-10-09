@@ -1,0 +1,441 @@
+{
+ "_meta": {
+  "fixture": "E08-boundary",
+  "oracle_version": "e08-boundary-1",
+  "synthetic": true,
+  "seed": null,
+  "generator": "gen_e08_boundary.py",
+  "units": "mm",
+  "frame": "standard: center origin, +X right, +Y up, notch 6 o'clock",
+  "profile": "tests/profiles/f01_test_profile.yaml (TEST-ONLY, not operating values)",
+  "R_mm": 150,
+  "center_exclusion_mm": 1,
+  "band": "|r-100|<=1 closed",
+  "plan_links": [
+   "E08",
+   "C10",
+   "C11",
+   "C12",
+   "C13",
+   "C14",
+   "P0-05"
+  ],
+  "notes": [
+   "Axis points (EDGE/R/CEN/THX) have exact float coordinates when exact=true/ float_ambiguous=false.",
+   "Decimal-edge points (e.g. 1.999, 98.9) are exact only to double precision; margin >= 0.001 mm >> eps.",
+   "Points with float_ambiguous=true: expected sector is for the ideal angle; assertion requires a snap/tolerance policy (TBD T-09).",
+   "zones lists tags expected from profile; E1/E2 are distance_from_edge_mm, inside/boundary are radius_mm."
+  ]
+ },
+ "points": [
+  {
+   "id": "EDGE_0",
+   "group": "edge",
+   "x": 150.0,
+   "y": 0.0,
+   "r_mm": 150.0,
+   "edge_mm": "0",
+   "exact": true,
+   "expected": {
+    "zones": [
+     "E1"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "EDGE_1.999",
+   "group": "edge",
+   "x": 148.001,
+   "y": 0.0,
+   "r_mm": 148.001,
+   "edge_mm": "1.999",
+   "exact": false,
+   "expected": {
+    "zones": [
+     "E1"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "EDGE_2.0",
+   "group": "edge",
+   "x": 148.0,
+   "y": 0.0,
+   "r_mm": 148.0,
+   "edge_mm": "2.0",
+   "exact": true,
+   "expected": {
+    "zones": [
+     "E2"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "EDGE_2.001",
+   "group": "edge",
+   "x": 147.999,
+   "y": 0.0,
+   "r_mm": 147.999,
+   "edge_mm": "2.001",
+   "exact": false,
+   "expected": {
+    "zones": [
+     "E2"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "EDGE_4.999",
+   "group": "edge",
+   "x": 145.001,
+   "y": 0.0,
+   "r_mm": 145.001,
+   "edge_mm": "4.999",
+   "exact": false,
+   "expected": {
+    "zones": [
+     "E2"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "EDGE_5.0",
+   "group": "edge",
+   "x": 145.0,
+   "y": 0.0,
+   "r_mm": 145.0,
+   "edge_mm": "5.0",
+   "exact": true,
+   "expected": {
+    "zones": [],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "EDGE_5.001",
+   "group": "edge",
+   "x": 144.999,
+   "y": 0.0,
+   "r_mm": 144.999,
+   "edge_mm": "5.001",
+   "exact": false,
+   "expected": {
+    "zones": [],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "R_98.9",
+   "group": "radius",
+   "x": 98.9,
+   "y": 0.0,
+   "r_mm": 98.9,
+   "edge_mm": "511/10",
+   "exact": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "R_99",
+   "group": "radius",
+   "x": 99.0,
+   "y": 0.0,
+   "r_mm": 99.0,
+   "edge_mm": "51",
+   "exact": true,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside",
+     "zone_8inch_boundary"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "R_99.1",
+   "group": "radius",
+   "x": 99.1,
+   "y": 0.0,
+   "r_mm": 99.1,
+   "edge_mm": "509/10",
+   "exact": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside",
+     "zone_8inch_boundary"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "R_100",
+   "group": "radius",
+   "x": 100.0,
+   "y": 0.0,
+   "r_mm": 100.0,
+   "edge_mm": "50",
+   "exact": true,
+   "expected": {
+    "zones": [
+     "zone_8inch_boundary"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "R_101",
+   "group": "radius",
+   "x": 101.0,
+   "y": 0.0,
+   "r_mm": 101.0,
+   "edge_mm": "49",
+   "exact": true,
+   "expected": {
+    "zones": [
+     "zone_8inch_boundary"
+    ],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "R_101.1",
+   "group": "radius",
+   "x": 101.1,
+   "y": 0.0,
+   "r_mm": 101.1,
+   "edge_mm": "489/10",
+   "exact": false,
+   "expected": {
+    "zones": [],
+    "center": false,
+    "sector": 3
+   }
+  },
+  {
+   "id": "CEN_0.999",
+   "group": "center",
+   "x": 0.0,
+   "y": -0.999,
+   "r_mm": 0.999,
+   "edge_mm": "149001/1000",
+   "exact": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": true,
+    "sector": null
+   }
+  },
+  {
+   "id": "CEN_1.0",
+   "group": "center",
+   "x": 0.0,
+   "y": -1.0,
+   "r_mm": 1.0,
+   "edge_mm": "149",
+   "exact": true,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 6
+   }
+  },
+  {
+   "id": "TH_14.9",
+   "group": "angle",
+   "x": 12.856639657735,
+   "y": 48.318803966066,
+   "r_mm": 50.0,
+   "theta_nominal_deg": "14.9",
+   "float_ambiguous": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 12
+   }
+  },
+  {
+   "id": "TH_15",
+   "group": "angle",
+   "x": 12.940952255126,
+   "y": 48.296291314453,
+   "r_mm": 50.0,
+   "theta_nominal_deg": "15",
+   "float_ambiguous": true,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 1
+   }
+  },
+  {
+   "id": "TH_15.1",
+   "group": "angle",
+   "x": 13.025225432132,
+   "y": 48.273631543961,
+   "r_mm": 50.0,
+   "theta_nominal_deg": "15.1",
+   "float_ambiguous": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 1
+   }
+  },
+  {
+   "id": "TH_344.9",
+   "group": "angle",
+   "x": -13.025225432132,
+   "y": 48.273631543961,
+   "r_mm": 50.0,
+   "theta_nominal_deg": "344.9",
+   "float_ambiguous": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 11
+   }
+  },
+  {
+   "id": "TH_345",
+   "group": "angle",
+   "x": -12.940952255126,
+   "y": 48.296291314453,
+   "r_mm": 50.0,
+   "theta_nominal_deg": "345",
+   "float_ambiguous": true,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 12
+   }
+  },
+  {
+   "id": "TH_345.1",
+   "group": "angle",
+   "x": -12.856639657735,
+   "y": 48.318803966066,
+   "r_mm": 50.0,
+   "theta_nominal_deg": "345.1",
+   "float_ambiguous": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 12
+   }
+  },
+  {
+   "id": "THX_45",
+   "group": "angle_exact",
+   "x": 50.0,
+   "y": 50.0,
+   "r_mm": 70.71067811865476,
+   "theta_nominal_deg": "45",
+   "float_ambiguous": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 2
+   }
+  },
+  {
+   "id": "THX_135",
+   "group": "angle_exact",
+   "x": 50.0,
+   "y": -50.0,
+   "r_mm": 70.71067811865476,
+   "theta_nominal_deg": "135",
+   "float_ambiguous": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 5
+   }
+  },
+  {
+   "id": "THX_225",
+   "group": "angle_exact",
+   "x": -50.0,
+   "y": -50.0,
+   "r_mm": 70.71067811865476,
+   "theta_nominal_deg": "225",
+   "float_ambiguous": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 8
+   }
+  },
+  {
+   "id": "THX_315",
+   "group": "angle_exact",
+   "x": -50.0,
+   "y": 50.0,
+   "r_mm": 70.71067811865476,
+   "theta_nominal_deg": "315",
+   "float_ambiguous": false,
+   "expected": {
+    "zones": [
+     "zone_8inch_inside"
+    ],
+    "center": false,
+    "sector": 11
+   }
+  },
+  {
+   "id": "OUT_150.001",
+   "group": "undefined",
+   "x": 150.001,
+   "y": 0.0,
+   "r_mm": 150.001,
+   "expected": {
+    "zones": null,
+    "center": false,
+    "sector": null,
+    "note": "outside wafer; plan only states r=R is included. No expected value."
+   }
+  }
+ ]
+}

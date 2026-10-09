@@ -1,0 +1,77 @@
+# Wafer inspection map analysis: rule-based MVP + development/E2E tools
+# Target: CPython 3.11 or 3.12, 64-bit. Prefer a fresh virtual environment.
+# Install: python -m pip install -r requirements.txt
+# Check:   python -m pip check
+# Validation (2026-10-09): pip dry-run with binary wheels resolved successfully
+# on the current CPython 3.12 Linux environment. No package installation,
+# application run, browser installation or E2E execution was performed.
+# These are bounded direct dependencies, NOT a complete deployment lockfile.
+# After validation in the target environment, lock all resolved dependencies
+# and preserve the Python version, OS/base image and container digest.
+
+# KLARF 1.2/1.8 parser. Adapter and actual tool-export validation still required.
+# Upstream: https://pypi.org/project/klarfrs/
+# Linux x86_64 wheels for 0.2.1 require glibc >= 2.34.
+klarfrs==0.2.1
+
+# Numerical arrays, defect tables, spatial indices, Monte Carlo calculations
+numpy>=2.0,<3.0
+pandas>=2.2,<3.0
+scipy>=1.14,<2.0
+
+# DBSCAN, PCA, RANSAC regression, RandomForest/ExtraTrees, validation metrics
+scikit-learn>=1.6,<2.0
+joblib>=1.4,<2.0
+
+# Image fallback: HSV masks, connected components and Hough transforms
+# Install only this OpenCV distribution in the environment; it supplies cv2.
+# Do not also install opencv-python or an opencv-contrib distribution.
+opencv-python-headless>=4.11,<5.0
+Pillow>=11.0,<13.0
+
+# Radon transform and image/shape utilities
+scikit-image>=0.25,<0.27
+
+# Inspection ROI polygons, intersections, valid-area calculations
+shapely>=2.0,<3.0
+
+# YAML profiles and strict configuration/result schemas
+PyYAML>=6.0.2,<7.0
+pydantic>=2.10,<3.0
+
+# Interactive wafer maps, static overlays and Streamlit review interface
+plotly>=6.0,<7.0
+matplotlib>=3.9,<4.0
+streamlit>=1.45,<2.0
+
+# Development and regression testing, including browser E2E support
+# Test scenarios and fixtures must still be implemented in the project.
+pytest>=8.3,<9.0
+pytest-cov>=6.0,<8.0
+pytest-playwright>=0.7,<1.0
+# Browser binaries are separate from pip packages:
+#   python -m playwright install chromium
+# On a Linux CI image, install the required browser system libraries as well:
+#   python -m playwright install --with-deps chromium
+# Reference: https://playwright.dev/python/docs/intro
+
+# OPTIONAL: uncomment only when HTTP API integration is implemented.
+# fastapi>=0.115,<1.0
+# uvicorn>=0.30,<1.0
+# python-multipart>=0.0.20,<1.0  # FastAPI multipart file uploads
+# httpx>=0.28,<1.0             # API integration tests / TestClient
+
+# OPTIONAL: gradient-boosting comparison after internal labels are available.
+# xgboost>=3.0,<4.0
+
+# OPTIONAL: CNN / PyTorch tensors.
+# NumPy count maps are sufficient for the rule-based MVP.
+# Install torch and torchvision together using the official OS/CPU/CUDA
+# selector; select a compatible pair and pin it in the target-environment lock.
+# https://pytorch.org/get-started/locally/
+# Do not add a global CUDA index-url to this file.
+
+# CLI (argparse), hashes (hashlib), JSON and local review storage (sqlite3)
+# are included in Python's standard library and need no pip package.
+# Clark-Evans/null simulations, notch registration, signature grouping and
+# YAML decision rules are project code, not features supplied by this file.

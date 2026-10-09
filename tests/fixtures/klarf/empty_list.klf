@@ -1,0 +1,25 @@
+FileVersion 1 8;
+FileTimestamp 01-01-26 00:00:00;
+InspectionStationID "SYNTH" "SYNTH" "SYNTH";
+SampleType WAFER;
+ResultTimestamp 01-01-26 00:00:00;
+LotID "SYNLOT";
+SampleSize 1 300;
+DeviceID "SYNDEV";
+StepID "SYNSTEP";
+SampleOrientationMarkType NOTCH;
+OrientationMarkLocation DOWN;
+DiePitch 400000 400000;
+DieOrigin 0 0;
+WaferID "SYN01";
+Slot 1;
+SampleCenterLocation 0 0;
+InspectionOrientation FLIP_NO;
+CoordinatesMirrored NO;
+InspectionTest 1;
+SampleTestPlan 1
+ 0 0;
+DefectRecordSpec 7 DEFECTID XREL YREL XINDEX YINDEX CLASSNUMBER TEST;
+DefectList
+;
+EndOfFile;

@@ -1,0 +1,127 @@
+{
+ "_meta": {
+  "fixture": "F01",
+  "oracle_version": "f01-oracle-1",
+  "source": "wafer_inspection_execution_plan.md v1.1 sec 19.2 table; values re-derived independently by tests/fixtures/f01/derive_oracle.py (stdlib only, no production code) and cross-checked against the plan's stated expected values (all matched).",
+  "synthetic": true,
+  "not_an_inhouse_definition": "E1/E2/100mm band are TEST-ONLY profile values (plan 19.2), not operational E1/E2 definitions (C12).",
+  "units": "mm",
+  "frame": "standard: wafer center origin, +X right, +Y up, notch 6 o'clock",
+  "interval_rules": "zones [lo,hi); band |r-100|<=1 closed; center r<center_exclusion; sector [c-15,c+15) deg; 15deg->1 o'clock, 345deg->12 o'clock"
+ },
+ "wafer_radius_mm": 150.0,
+ "center_exclusion_radius_mm": 1.0,
+ "zone_profile_test_only": {
+  "E1_edge_distance_mm": [
+   0,
+   2
+  ],
+  "E2_edge_distance_mm": [
+   2,
+   5
+  ],
+  "inner_r_lt_mm": 100,
+  "band_center_mm": 100,
+  "band_half_width_mm": 1
+ },
+ "n_parsed": 8,
+ "n_included": 8,
+ "n_excluded": 0,
+ "defects": [
+  {
+   "id": "D01",
+   "x_mm": 0,
+   "y_mm": 50,
+   "bin": "B1",
+   "sector": 12
+  },
+  {
+   "id": "D02",
+   "x_mm": 50,
+   "y_mm": 0,
+   "bin": "B1",
+   "sector": 3
+  },
+  {
+   "id": "D03",
+   "x_mm": 0,
+   "y_mm": -50,
+   "bin": "B2",
+   "sector": 6
+  },
+  {
+   "id": "D04",
+   "x_mm": -50,
+   "y_mm": 0,
+   "bin": "B2",
+   "sector": 9
+  },
+  {
+   "id": "D05",
+   "x_mm": 0,
+   "y_mm": 0,
+   "bin": "B1",
+   "sector": "center"
+  },
+  {
+   "id": "D06",
+   "x_mm": 149,
+   "y_mm": 0,
+   "bin": "B3",
+   "sector": 3
+  },
+  {
+   "id": "D07",
+   "x_mm": 148,
+   "y_mm": 0,
+   "bin": "B3",
+   "sector": 3
+  },
+  {
+   "id": "D08",
+   "x_mm": 100,
+   "y_mm": 0,
+   "bin": "B2",
+   "sector": 3
+  }
+ ],
+ "bin_totals": {
+  "B1": 3,
+  "B2": 3,
+  "B3": 2
+ },
+ "center": 1,
+ "sectors_clock": {
+  "1": 0,
+  "2": 0,
+  "3": 4,
+  "4": 0,
+  "5": 0,
+  "6": 1,
+  "7": 0,
+  "8": 0,
+  "9": 1,
+  "10": 0,
+  "11": 0,
+  "12": 1
+ },
+ "sector_plus_center_equals_included": true,
+ "zones": {
+  "E1": [
+   "D06"
+  ],
+  "E2": [
+   "D07"
+  ],
+  "inner_r_lt_100": [
+   "D01",
+   "D02",
+   "D03",
+   "D04",
+   "D05"
+  ],
+  "band_100mm_pm1": [
+   "D08"
+  ]
+ }
+}

@@ -1,0 +1,1451 @@
+{
+ "_meta": {
+  "fixture": "E06-mixed",
+  "oracle_version": "e06-mixed-1",
+  "synthetic": true,
+  "seed": null,
+  "generator": "gen_e06_mixed.py",
+  "units": "mm",
+  "R_wafer": 150,
+  "frame": "standard: center origin, +X right, +Y up",
+  "plan_links": [
+   "E06",
+   "C08",
+   "C10",
+   "C11",
+   "P3-01"
+  ],
+  "construction": "ring: 24 pts r=80 th=15k. line: y=-40, 13 own pts x=-60..60 step 10 + shared R08,R16 (x=+/-69.282). local: 12 pts within 3 mm of R03 (th=45): R03, BR01, BR02 shared with ring support + 9 off-ring pts. ring support=26, line=15, local=12; naive=53; 5 overlap IDs (R08,R16,R03,BR01,BR02) each in 2 groups -> union=48. bins by list index i%4: B1,B1,B2,B3. Broken case removes R05,R06,R07,R14,R15 -> ring 21, line 15, local 12, naive 48, union 43.",
+  "deviations_from_request": [
+   "line x range -35..35 replaced by -60..60 + 2 ring pts: ring crosses y=-40 only at |x|=69.28",
+   "blob center moved from (100,60) to R03 at (56.57,56.57): (100,60) has r=116.6, cannot touch r=80 ring",
+   "ring support has 26 members (24 ring pts + BR01, BR02 on the ring radius) since 15-deg ring spacing (20.9 mm) cannot put 3 ring pts within a 3 mm blob"
+  ],
+  "support_rule": "ring |r-80|<=1.0; line y==-40 & |x|<=70; local dist to R03<=3.0 (cross-checked in generator)",
+  "dbscan_note": "Whole-wafer DBSCAN with eps>=21 bridges ring fragments through line/blob; use the ring-only fragment expectation for broken-ring test. eps=10: ring pts are noise (spacing 20.9)."
+ },
+ "cases": {
+  "intact": {
+   "points": [
+    {
+     "id": "R00",
+     "x": 0.0,
+     "y": 80.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R01",
+     "x": 20.705523608,
+     "y": 77.274066103,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R02",
+     "x": 40.0,
+     "y": 69.282032303,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R03",
+     "x": 56.568542495,
+     "y": 56.568542495,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring",
+      "local"
+     ]
+    },
+    {
+     "id": "R04",
+     "x": 69.282032303,
+     "y": 40.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R05",
+     "x": 77.274066103,
+     "y": 20.705523608,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R06",
+     "x": 80.0,
+     "y": 0.0,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R07",
+     "x": 77.274066103,
+     "y": -20.705523608,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R08",
+     "x": 69.282032303,
+     "y": -40.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring",
+      "line"
+     ]
+    },
+    {
+     "id": "R09",
+     "x": 56.568542495,
+     "y": -56.568542495,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R10",
+     "x": 40.0,
+     "y": -69.282032303,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R11",
+     "x": 20.705523608,
+     "y": -77.274066103,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R12",
+     "x": 0.0,
+     "y": -80.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R13",
+     "x": -20.705523608,
+     "y": -77.274066103,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R14",
+     "x": -40.0,
+     "y": -69.282032303,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R15",
+     "x": -56.568542495,
+     "y": -56.568542495,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R16",
+     "x": -69.282032303,
+     "y": -40.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring",
+      "line"
+     ]
+    },
+    {
+     "id": "R17",
+     "x": -77.274066103,
+     "y": -20.705523608,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R18",
+     "x": -80.0,
+     "y": -0.0,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R19",
+     "x": -77.274066103,
+     "y": 20.705523608,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R20",
+     "x": -69.282032303,
+     "y": 40.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R21",
+     "x": -56.568542495,
+     "y": 56.568542495,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R22",
+     "x": -40.0,
+     "y": 69.282032303,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R23",
+     "x": -20.705523608,
+     "y": 77.274066103,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "BR01",
+     "x": 55.572669637,
+     "y": 57.547184027,
+     "role": "ring_local",
+     "bin": "B1",
+     "groups": [
+      "ring",
+      "local"
+     ]
+    },
+    {
+     "id": "BR02",
+     "x": 57.547184027,
+     "y": 55.572669637,
+     "role": "ring_local",
+     "bin": "B1",
+     "groups": [
+      "ring",
+      "local"
+     ]
+    },
+    {
+     "id": "LN01",
+     "x": -60.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B2",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN02",
+     "x": -50.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B3",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN03",
+     "x": -40.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN04",
+     "x": -30.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN05",
+     "x": -20.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B2",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN06",
+     "x": -10.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B3",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN07",
+     "x": 0.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN08",
+     "x": 10.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN09",
+     "x": 20.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B2",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN10",
+     "x": 30.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B3",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN11",
+     "x": 40.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN12",
+     "x": 50.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN13",
+     "x": 60.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B2",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "BL01",
+     "x": 55.507882323,
+     "y": 55.507882323,
+     "role": "local",
+     "bin": "B3",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL02",
+     "x": 57.629202667,
+     "y": 57.629202667,
+     "role": "local",
+     "bin": "B1",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL03",
+     "x": 55.861435714,
+     "y": 54.447222151,
+     "role": "local",
+     "bin": "B1",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL04",
+     "x": 57.275649276,
+     "y": 58.689862838,
+     "role": "local",
+     "bin": "B2",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL05",
+     "x": 55.154328933,
+     "y": 54.447222151,
+     "role": "local",
+     "bin": "B3",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL06",
+     "x": 57.982756057,
+     "y": 58.689862838,
+     "role": "local",
+     "bin": "B1",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL07",
+     "x": 54.447222151,
+     "y": 56.568542495,
+     "role": "local",
+     "bin": "B1",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL08",
+     "x": 58.689862838,
+     "y": 56.568542495,
+     "role": "local",
+     "bin": "B2",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL09",
+     "x": 54.447222151,
+     "y": 55.861435714,
+     "role": "local",
+     "bin": "B3",
+     "groups": [
+      "local"
+     ]
+    }
+   ],
+   "expected": {
+    "support_ids": {
+     "ring": [
+      "BR01",
+      "BR02",
+      "R00",
+      "R01",
+      "R02",
+      "R03",
+      "R04",
+      "R05",
+      "R06",
+      "R07",
+      "R08",
+      "R09",
+      "R10",
+      "R11",
+      "R12",
+      "R13",
+      "R14",
+      "R15",
+      "R16",
+      "R17",
+      "R18",
+      "R19",
+      "R20",
+      "R21",
+      "R22",
+      "R23"
+     ],
+     "line": [
+      "LN01",
+      "LN02",
+      "LN03",
+      "LN04",
+      "LN05",
+      "LN06",
+      "LN07",
+      "LN08",
+      "LN09",
+      "LN10",
+      "LN11",
+      "LN12",
+      "LN13",
+      "R08",
+      "R16"
+     ],
+     "local": [
+      "BL01",
+      "BL02",
+      "BL03",
+      "BL04",
+      "BL05",
+      "BL06",
+      "BL07",
+      "BL08",
+      "BL09",
+      "BR01",
+      "BR02",
+      "R03"
+     ]
+    },
+    "support_count": {
+     "ring": 26,
+     "line": 15,
+     "local": 12
+    },
+    "naive_sum": 53,
+    "unique_union_size": 48,
+    "naive_minus_union": 5,
+    "overlap_pairs": {
+     "ring&line": [
+      "R08",
+      "R16"
+     ],
+     "ring&local": [
+      "BR01",
+      "BR02",
+      "R03"
+     ],
+     "line&local": []
+    },
+    "overlap_ids": [
+     "BR01",
+     "BR02",
+     "R03",
+     "R08",
+     "R16"
+    ],
+    "wafer_unique_defect_count": 48,
+    "bin_unique_totals": {
+     "B1": 24,
+     "B2": 12,
+     "B3": 12
+    },
+    "bin_support_counts": {
+     "ring": {
+      "B1": 14,
+      "B2": 6,
+      "B3": 6
+     },
+     "line": {
+      "B1": 8,
+      "B2": 4,
+      "B3": 3
+     },
+     "local": {
+      "B1": 6,
+      "B2": 2,
+      "B3": 4
+     }
+    },
+    "bin_naive_sum": {
+     "B1": 28,
+     "B2": 12,
+     "B3": 13
+    },
+    "dbscan_whole_wafer_informational": {
+     "eps25_min3": {
+      "eps_mm": 25.0,
+      "min_samples": 3,
+      "noise_ids": [],
+      "clusters": [
+       [
+        "BL01",
+        "BL02",
+        "BL03",
+        "BL04",
+        "BL05",
+        "BL06",
+        "BL07",
+        "BL08",
+        "BL09",
+        "BR01",
+        "BR02",
+        "LN01",
+        "LN02",
+        "LN03",
+        "LN04",
+        "LN05",
+        "LN06",
+        "LN07",
+        "LN08",
+        "LN09",
+        "LN10",
+        "LN11",
+        "LN12",
+        "LN13",
+        "R00",
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07",
+        "R08",
+        "R09",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R14",
+        "R15",
+        "R16",
+        "R17",
+        "R18",
+        "R19",
+        "R20",
+        "R21",
+        "R22",
+        "R23"
+       ]
+      ]
+     },
+     "eps10_min3": {
+      "eps_mm": 10.0,
+      "min_samples": 3,
+      "noise_ids": [
+       "R00",
+       "R01",
+       "R02",
+       "R04",
+       "R05",
+       "R06",
+       "R07",
+       "R09",
+       "R10",
+       "R11",
+       "R12",
+       "R13",
+       "R14",
+       "R15",
+       "R17",
+       "R18",
+       "R19",
+       "R20",
+       "R21",
+       "R22",
+       "R23"
+      ],
+      "clusters": [
+       [
+        "BL01",
+        "BL02",
+        "BL03",
+        "BL04",
+        "BL05",
+        "BL06",
+        "BL07",
+        "BL08",
+        "BL09",
+        "BR01",
+        "BR02",
+        "R03"
+       ],
+       [
+        "LN01",
+        "LN02",
+        "LN03",
+        "LN04",
+        "LN05",
+        "LN06",
+        "LN07",
+        "LN08",
+        "LN09",
+        "LN10",
+        "LN11",
+        "LN12",
+        "LN13",
+        "R08",
+        "R16"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  "broken_ring": {
+   "points": [
+    {
+     "id": "R00",
+     "x": 0.0,
+     "y": 80.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R01",
+     "x": 20.705523608,
+     "y": 77.274066103,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R02",
+     "x": 40.0,
+     "y": 69.282032303,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R03",
+     "x": 56.568542495,
+     "y": 56.568542495,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring",
+      "local"
+     ]
+    },
+    {
+     "id": "R04",
+     "x": 69.282032303,
+     "y": 40.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R08",
+     "x": 69.282032303,
+     "y": -40.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring",
+      "line"
+     ]
+    },
+    {
+     "id": "R09",
+     "x": 56.568542495,
+     "y": -56.568542495,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R10",
+     "x": 40.0,
+     "y": -69.282032303,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R11",
+     "x": 20.705523608,
+     "y": -77.274066103,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R12",
+     "x": 0.0,
+     "y": -80.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R13",
+     "x": -20.705523608,
+     "y": -77.274066103,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R16",
+     "x": -69.282032303,
+     "y": -40.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring",
+      "line"
+     ]
+    },
+    {
+     "id": "R17",
+     "x": -77.274066103,
+     "y": -20.705523608,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R18",
+     "x": -80.0,
+     "y": -0.0,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R19",
+     "x": -77.274066103,
+     "y": 20.705523608,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R20",
+     "x": -69.282032303,
+     "y": 40.0,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R21",
+     "x": -56.568542495,
+     "y": 56.568542495,
+     "role": "ring",
+     "bin": "B1",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R22",
+     "x": -40.0,
+     "y": 69.282032303,
+     "role": "ring",
+     "bin": "B2",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "R23",
+     "x": -20.705523608,
+     "y": 77.274066103,
+     "role": "ring",
+     "bin": "B3",
+     "groups": [
+      "ring"
+     ]
+    },
+    {
+     "id": "BR01",
+     "x": 55.572669637,
+     "y": 57.547184027,
+     "role": "ring_local",
+     "bin": "B1",
+     "groups": [
+      "ring",
+      "local"
+     ]
+    },
+    {
+     "id": "BR02",
+     "x": 57.547184027,
+     "y": 55.572669637,
+     "role": "ring_local",
+     "bin": "B1",
+     "groups": [
+      "ring",
+      "local"
+     ]
+    },
+    {
+     "id": "LN01",
+     "x": -60.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B2",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN02",
+     "x": -50.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B3",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN03",
+     "x": -40.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN04",
+     "x": -30.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN05",
+     "x": -20.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B2",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN06",
+     "x": -10.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B3",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN07",
+     "x": 0.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN08",
+     "x": 10.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN09",
+     "x": 20.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B2",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN10",
+     "x": 30.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B3",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN11",
+     "x": 40.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN12",
+     "x": 50.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B1",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "LN13",
+     "x": 60.0,
+     "y": -40.0,
+     "role": "line",
+     "bin": "B2",
+     "groups": [
+      "line"
+     ]
+    },
+    {
+     "id": "BL01",
+     "x": 55.507882323,
+     "y": 55.507882323,
+     "role": "local",
+     "bin": "B3",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL02",
+     "x": 57.629202667,
+     "y": 57.629202667,
+     "role": "local",
+     "bin": "B1",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL03",
+     "x": 55.861435714,
+     "y": 54.447222151,
+     "role": "local",
+     "bin": "B1",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL04",
+     "x": 57.275649276,
+     "y": 58.689862838,
+     "role": "local",
+     "bin": "B2",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL05",
+     "x": 55.154328933,
+     "y": 54.447222151,
+     "role": "local",
+     "bin": "B3",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL06",
+     "x": 57.982756057,
+     "y": 58.689862838,
+     "role": "local",
+     "bin": "B1",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL07",
+     "x": 54.447222151,
+     "y": 56.568542495,
+     "role": "local",
+     "bin": "B1",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL08",
+     "x": 58.689862838,
+     "y": 56.568542495,
+     "role": "local",
+     "bin": "B2",
+     "groups": [
+      "local"
+     ]
+    },
+    {
+     "id": "BL09",
+     "x": 54.447222151,
+     "y": 55.861435714,
+     "role": "local",
+     "bin": "B3",
+     "groups": [
+      "local"
+     ]
+    }
+   ],
+   "expected": {
+    "support_ids": {
+     "ring": [
+      "BR01",
+      "BR02",
+      "R00",
+      "R01",
+      "R02",
+      "R03",
+      "R04",
+      "R08",
+      "R09",
+      "R10",
+      "R11",
+      "R12",
+      "R13",
+      "R16",
+      "R17",
+      "R18",
+      "R19",
+      "R20",
+      "R21",
+      "R22",
+      "R23"
+     ],
+     "line": [
+      "LN01",
+      "LN02",
+      "LN03",
+      "LN04",
+      "LN05",
+      "LN06",
+      "LN07",
+      "LN08",
+      "LN09",
+      "LN10",
+      "LN11",
+      "LN12",
+      "LN13",
+      "R08",
+      "R16"
+     ],
+     "local": [
+      "BL01",
+      "BL02",
+      "BL03",
+      "BL04",
+      "BL05",
+      "BL06",
+      "BL07",
+      "BL08",
+      "BL09",
+      "BR01",
+      "BR02",
+      "R03"
+     ]
+    },
+    "support_count": {
+     "ring": 21,
+     "line": 15,
+     "local": 12
+    },
+    "naive_sum": 48,
+    "unique_union_size": 43,
+    "naive_minus_union": 5,
+    "overlap_pairs": {
+     "ring&line": [
+      "R08",
+      "R16"
+     ],
+     "ring&local": [
+      "BR01",
+      "BR02",
+      "R03"
+     ],
+     "line&local": []
+    },
+    "overlap_ids": [
+     "BR01",
+     "BR02",
+     "R03",
+     "R08",
+     "R16"
+    ],
+    "wafer_unique_defect_count": 43,
+    "bin_unique_totals": {
+     "B1": 23,
+     "B2": 10,
+     "B3": 10
+    },
+    "bin_support_counts": {
+     "ring": {
+      "B1": 13,
+      "B2": 4,
+      "B3": 4
+     },
+     "line": {
+      "B1": 8,
+      "B2": 4,
+      "B3": 3
+     },
+     "local": {
+      "B1": 6,
+      "B2": 2,
+      "B3": 4
+     }
+    },
+    "bin_naive_sum": {
+     "B1": 27,
+     "B2": 10,
+     "B3": 11
+    },
+    "ring_fragments_expected": {
+     "removed_ids": [
+      "R05",
+      "R06",
+      "R07",
+      "R14",
+      "R15"
+     ],
+     "fragment_A_th120_195": [
+      "R08",
+      "R09",
+      "R10",
+      "R11",
+      "R12",
+      "R13"
+     ],
+     "fragment_B_th240_60": [
+      "R00",
+      "R01",
+      "R02",
+      "R03",
+      "R04",
+      "R16",
+      "R17",
+      "R18",
+      "R19",
+      "R20",
+      "R21",
+      "R22",
+      "R23"
+     ],
+     "ring_base_remaining": 19,
+     "n_fragments": 2,
+     "note": "ring_base ids only, brute-force DBSCAN eps=25 min_samples=2 (gaps 61 mm and 80 mm >> eps, spacing 20.9 mm < eps)"
+    },
+    "dbscan_whole_wafer_informational": {
+     "eps25_min3": {
+      "eps_mm": 25.0,
+      "min_samples": 3,
+      "noise_ids": [],
+      "clusters": [
+       [
+        "BL01",
+        "BL02",
+        "BL03",
+        "BL04",
+        "BL05",
+        "BL06",
+        "BL07",
+        "BL08",
+        "BL09",
+        "BR01",
+        "BR02",
+        "LN01",
+        "LN02",
+        "LN03",
+        "LN04",
+        "LN05",
+        "LN06",
+        "LN07",
+        "LN08",
+        "LN09",
+        "LN10",
+        "LN11",
+        "LN12",
+        "LN13",
+        "R00",
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R08",
+        "R09",
+        "R10",
+        "R11",
+        "R12",
+        "R13",
+        "R16",
+        "R17",
+        "R18",
+        "R19",
+        "R20",
+        "R21",
+        "R22",
+        "R23"
+       ]
+      ]
+     },
+     "eps10_min3": {
+      "eps_mm": 10.0,
+      "min_samples": 3,
+      "noise_ids": [
+       "R00",
+       "R01",
+       "R02",
+       "R04",
+       "R09",
+       "R10",
+       "R11",
+       "R12",
+       "R13",
+       "R17",
+       "R18",
+       "R19",
+       "R20",
+       "R21",
+       "R22",
+       "R23"
+      ],
+      "clusters": [
+       [
+        "BL01",
+        "BL02",
+        "BL03",
+        "BL04",
+        "BL05",
+        "BL06",
+        "BL07",
+        "BL08",
+        "BL09",
+        "BR01",
+        "BR02",
+        "R03"
+       ],
+       [
+        "LN01",
+        "LN02",
+        "LN03",
+        "LN04",
+        "LN05",
+        "LN06",
+        "LN07",
+        "LN08",
+        "LN09",
+        "LN10",
+        "LN11",
+        "LN12",
+        "LN13",
+        "R08",
+        "R16"
+       ]
+      ]
+     }
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,1333 @@
+{
+ "_meta": {
+  "fixture": "E07-lift-pin",
+  "oracle_version": "e07-lift-pin-1",
+  "synthetic": true,
+  "seed": null,
+  "generator": "gen_e07_lift_pin.py",
+  "units": "mm",
+  "wafer_radius_mm": 150.0,
+  "frame": "standard: center origin, +X right, +Y up, notch DOWN",
+  "clock_angle": "degrees(atan2(x, y)) mod 360 (0=12h, clockwise); harmonics use radians",
+  "plan_links": [
+   "E07",
+   "C09",
+   "C19",
+   "P2-05",
+   "P3-01",
+   "plan 8.2"
+  ],
+  "scope": "synthetic template-geometry oracle; NOT a real equipment template, NOT an adapter validation, NOT evidence of any process/equipment cause",
+  "bins": "B1/B2/B3 cycle by point index within each case",
+  "template": {
+   "TEST_ONLY": true,
+   "not_in_house_value": true,
+   "frame": "notch_down",
+   "template_id": "E07-TEST",
+   "nominal_radius_mm": 60.0,
+   "radius_band_mm": [
+    55.0,
+    65.0
+   ],
+   "phase_deg": 0.0,
+   "positions_deg": [
+    0.0,
+    120.0,
+    240.0
+   ],
+   "expected_lobes": 3,
+   "spacing_deg": 120,
+   "angular_tolerance_deg": 10.0,
+   "radial_tolerance_mm": 5.0,
+   "min_support_per_lobe": 3,
+   "harmonic_weighting": "equal_per_lobe",
+   "partial_match": "candidate_only",
+   "profile_key_note": "maps to signatures.lift_pin.* (radius_band_mm = nominal +- radial_tolerance)"
+  },
+  "lobe_definition": "lobes are given by construction (support_ids); the lobe-finding algorithm is not fixed here",
+  "a3_observation": "equal_per_lobe A3 = 1 in EVERY case; A3 alone discriminates none of them (plan 8.2)",
+  "tolerances": {
+   "coordinate_mm": 1e-06,
+   "angle_deg": 1e-06,
+   "harmonic": 1e-06
+  },
+  "status_vocab": "feature_status per plan 16.2; match_type per E07 (threefold_match / partial_match)"
+ },
+ "cases": {
+  "LP-IDEAL": {
+   "points": [
+    {
+     "id": "LI01",
+     "x": 0.0,
+     "y": 60.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "LI02",
+     "x": 0.0,
+     "y": 61.5,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "LI03",
+     "x": 0.0,
+     "y": 58.5,
+     "bin": "B3",
+     "lobe": "L000"
+    },
+    {
+     "id": "LI04",
+     "x": 1.5,
+     "y": 60.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "LI05",
+     "x": -1.5,
+     "y": 60.0,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "LI06",
+     "x": 51.961524227,
+     "y": -30.0,
+     "bin": "B3",
+     "lobe": "L120"
+    },
+    {
+     "id": "LI07",
+     "x": 53.260562333,
+     "y": -30.75,
+     "bin": "B1",
+     "lobe": "L120"
+    },
+    {
+     "id": "LI08",
+     "x": 50.662486121,
+     "y": -29.25,
+     "bin": "B2",
+     "lobe": "L120"
+    },
+    {
+     "id": "LI09",
+     "x": 51.211524227,
+     "y": -31.299038106,
+     "bin": "B3",
+     "lobe": "L120"
+    },
+    {
+     "id": "LI10",
+     "x": 52.711524227,
+     "y": -28.700961894,
+     "bin": "B1",
+     "lobe": "L120"
+    },
+    {
+     "id": "LI11",
+     "x": -51.961524227,
+     "y": -30.0,
+     "bin": "B2",
+     "lobe": "L240"
+    },
+    {
+     "id": "LI12",
+     "x": -53.260562333,
+     "y": -30.75,
+     "bin": "B3",
+     "lobe": "L240"
+    },
+    {
+     "id": "LI13",
+     "x": -50.662486121,
+     "y": -29.25,
+     "bin": "B1",
+     "lobe": "L240"
+    },
+    {
+     "id": "LI14",
+     "x": -52.711524227,
+     "y": -28.700961894,
+     "bin": "B2",
+     "lobe": "L240"
+    },
+    {
+     "id": "LI15",
+     "x": -51.211524227,
+     "y": -31.299038106,
+     "bin": "B3",
+     "lobe": "L240"
+    }
+   ],
+   "lobes": [
+    {
+     "label": "L000",
+     "n_support": 5,
+     "support_ids": [
+      "LI01",
+      "LI02",
+      "LI03",
+      "LI04",
+      "LI05"
+     ],
+     "centroid_xy_mm": [
+      0.0,
+      60.0
+     ],
+     "centroid_clock_deg": 0.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 0.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 0.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    },
+    {
+     "label": "L120",
+     "n_support": 5,
+     "support_ids": [
+      "LI06",
+      "LI07",
+      "LI08",
+      "LI09",
+      "LI10"
+     ],
+     "centroid_xy_mm": [
+      51.961524227,
+      -30.0
+     ],
+     "centroid_clock_deg": 120.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 120.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 120.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    },
+    {
+     "label": "L240",
+     "n_support": 5,
+     "support_ids": [
+      "LI11",
+      "LI12",
+      "LI13",
+      "LI14",
+      "LI15"
+     ],
+     "centroid_xy_mm": [
+      -51.961524227,
+      -30.0
+     ],
+     "centroid_clock_deg": 240.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 240.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 240.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    }
+   ],
+   "coverage": {
+    "known": true,
+    "inspected": "full disc r<=150 (synthetic)",
+    "uncovered_regions": []
+   },
+   "features": {
+    "n_points": 15,
+    "n_lobes": 3,
+    "lobe_circular_gaps_deg": [
+     120.0,
+     120.0,
+     120.0
+    ],
+    "harmonics_equal_per_lobe": {
+     "A1": 0.0,
+     "A2": 0.0,
+     "A3": 1.0,
+     "phase_3_deg": 0.0
+    },
+    "harmonics_point_weighted": {
+     "A1": 0.0,
+     "A2": 0.0,
+     "A3": 0.998875995,
+     "phase_3_deg": 0.0
+    },
+    "phase_residual_deg": 0.0,
+    "phase_residual_rule": "wrap(phase_3 - template_phase) into (-60, 60] (120-deg periodic)"
+   },
+   "template_checks": {
+    "three_distinct_lobes": true,
+    "spacing_120_within_tol": true,
+    "radius_within_tol": true,
+    "phase_within_tol": true,
+    "coverage_includes_all_positions": true
+   },
+   "expected": {
+    "feature_status": "matched",
+    "match_type": "threefold_match",
+    "n_lobes_matched": 3,
+    "signature_group_support_ids": "LI01..LI15 (union of the 3 lobes)",
+    "wording": "geometric 3-fold template match (TEST template); NOT a cause/equipment confirmation (C19)"
+   },
+   "derivation": "3 lobes x 5 pts at r=60, clock 0/120/240. Centroids exactly (0,60), (51.961524,-30), (-51.961524,-30). equal_per_lobe: z1=z2=(1+w+w^2)/3=0 (w=exp(i2pi/3)), z3=1 -> A1=A2=0, A3=1, phase_3=0. point_weighted: alpha=atan(1.5/60)=0.024994793 rad; A3=(3+2cos(3alpha))/5, A1=A2=0 (lobe sum cancels). Mean point radius=(60+61.5+58.5+2*sqrt(3600+2.25))/5=60.0075 vs centroid radius 60."
+  },
+  "LP-SINGLE-BLOB": {
+   "points": [
+    {
+     "id": "SB01",
+     "x": -3.0,
+     "y": 58.5,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB02",
+     "x": -1.5,
+     "y": 58.5,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB03",
+     "x": 0.0,
+     "y": 58.5,
+     "bin": "B3",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB04",
+     "x": 1.5,
+     "y": 58.5,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB05",
+     "x": 3.0,
+     "y": 58.5,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB06",
+     "x": -3.0,
+     "y": 60.0,
+     "bin": "B3",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB07",
+     "x": -1.5,
+     "y": 60.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB08",
+     "x": 0.0,
+     "y": 60.0,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB09",
+     "x": 1.5,
+     "y": 60.0,
+     "bin": "B3",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB10",
+     "x": 3.0,
+     "y": 60.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB11",
+     "x": -3.0,
+     "y": 61.5,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB12",
+     "x": -1.5,
+     "y": 61.5,
+     "bin": "B3",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB13",
+     "x": 0.0,
+     "y": 61.5,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB14",
+     "x": 1.5,
+     "y": 61.5,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "SB15",
+     "x": 3.0,
+     "y": 61.5,
+     "bin": "B3",
+     "lobe": "L000"
+    }
+   ],
+   "lobes": [
+    {
+     "label": "L000",
+     "n_support": 15,
+     "support_ids": [
+      "SB01",
+      "SB02",
+      "SB03",
+      "SB04",
+      "SB05",
+      "SB06",
+      "SB07",
+      "SB08",
+      "SB09",
+      "SB10",
+      "SB11",
+      "SB12",
+      "SB13",
+      "SB14",
+      "SB15"
+     ],
+     "centroid_xy_mm": [
+      0.0,
+      60.0
+     ],
+     "centroid_clock_deg": 0.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.037495687,
+     "circular_mean_point_clock_deg": 0.0,
+     "max_point_distance_from_centroid_mm": 3.354101966,
+     "nearest_template_position_deg": 0.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    }
+   ],
+   "coverage": {
+    "known": true,
+    "inspected": "full disc r<=150 (synthetic)",
+    "uncovered_regions": []
+   },
+   "features": {
+    "n_points": 15,
+    "n_lobes": 1,
+    "lobe_circular_gaps_deg": [],
+    "harmonics_equal_per_lobe": {
+     "A1": 1.0,
+     "A2": 1.0,
+     "A3": 1.0,
+     "phase_3_deg": 0.0
+    },
+    "harmonics_point_weighted": {
+     "A1": 0.999375216,
+     "A2": 0.997502194,
+     "A3": 0.994384916,
+     "phase_3_deg": 0.0
+    },
+    "phase_residual_deg": 0.0,
+    "phase_residual_rule": "wrap(phase_3 - template_phase) into (-60, 60] (120-deg periodic)"
+   },
+   "template_checks": {
+    "three_distinct_lobes": false,
+    "spacing_120_within_tol": null,
+    "radius_within_tol": true,
+    "phase_within_tol": true,
+    "coverage_includes_all_positions": true
+   },
+   "expected": {
+    "feature_status": "no_match",
+    "match_type": null,
+    "n_lobes_matched": 1,
+    "reason": "single lobe (1 of 3 template positions); positions 120/240 inspected and empty",
+    "must_not": [
+     "matched",
+     "threefold_match",
+     "partial_match",
+     "verdict from A3 alone"
+    ],
+    "note": "A3 (equal_per_lobe) = 1 and point_weighted A3 ~ 0.99 are as large as LP-IDEAL; A1 = 1 shows one-sided concentration. Plan 8.2: A3 threshold alone is forbidden."
+   },
+   "derivation": "15 pts = grid u in {-1.5,0,1.5} (radial) x v in {-3,-1.5,0,1.5,3} (tangential) around (0,60); max offset sqrt(1.5^2+3^2)=3.354 mm; symmetric in v -> centroid (0,60), clock 0. Point angle = atan2(v, 60+u). equal_per_lobe (1 lobe at 0): z1=z2=z3=1 -> A1=A2=A3=1, phase_3=0 (phase residual 0: phase alone cannot reject). point_weighted: A_k=(1/15)*sum cos(k*atan2(v,60+u)) (imaginary parts cancel by symmetry)."
+  },
+  "LP-TWO-LOBES": {
+   "points": [
+    {
+     "id": "TL01",
+     "x": 0.0,
+     "y": 60.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "TL02",
+     "x": 0.0,
+     "y": 61.5,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "TL03",
+     "x": 0.0,
+     "y": 58.5,
+     "bin": "B3",
+     "lobe": "L000"
+    },
+    {
+     "id": "TL04",
+     "x": 1.5,
+     "y": 60.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "TL05",
+     "x": -1.5,
+     "y": 60.0,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "TL06",
+     "x": 51.961524227,
+     "y": -30.0,
+     "bin": "B3",
+     "lobe": "L120"
+    },
+    {
+     "id": "TL07",
+     "x": 53.260562333,
+     "y": -30.75,
+     "bin": "B1",
+     "lobe": "L120"
+    },
+    {
+     "id": "TL08",
+     "x": 50.662486121,
+     "y": -29.25,
+     "bin": "B2",
+     "lobe": "L120"
+    },
+    {
+     "id": "TL09",
+     "x": 51.211524227,
+     "y": -31.299038106,
+     "bin": "B3",
+     "lobe": "L120"
+    },
+    {
+     "id": "TL10",
+     "x": 52.711524227,
+     "y": -28.700961894,
+     "bin": "B1",
+     "lobe": "L120"
+    }
+   ],
+   "lobes": [
+    {
+     "label": "L000",
+     "n_support": 5,
+     "support_ids": [
+      "TL01",
+      "TL02",
+      "TL03",
+      "TL04",
+      "TL05"
+     ],
+     "centroid_xy_mm": [
+      0.0,
+      60.0
+     ],
+     "centroid_clock_deg": 0.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 0.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 0.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    },
+    {
+     "label": "L120",
+     "n_support": 5,
+     "support_ids": [
+      "TL06",
+      "TL07",
+      "TL08",
+      "TL09",
+      "TL10"
+     ],
+     "centroid_xy_mm": [
+      51.961524227,
+      -30.0
+     ],
+     "centroid_clock_deg": 120.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 120.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 120.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    }
+   ],
+   "coverage": {
+    "known": true,
+    "inspected": "full disc r<=150 (synthetic)",
+    "uncovered_regions": []
+   },
+   "features": {
+    "n_points": 10,
+    "n_lobes": 2,
+    "lobe_circular_gaps_deg": [
+     120.0,
+     240.0
+    ],
+    "harmonics_equal_per_lobe": {
+     "A1": 0.5,
+     "A2": 0.5,
+     "A3": 1.0,
+     "phase_3_deg": 0.0
+    },
+    "harmonics_point_weighted": {
+     "A1": 0.499937529,
+     "A2": 0.499750156,
+     "A3": 0.998875995,
+     "phase_3_deg": 0.0
+    },
+    "phase_residual_deg": 0.0,
+    "phase_residual_rule": "wrap(phase_3 - template_phase) into (-60, 60] (120-deg periodic)"
+   },
+   "template_checks": {
+    "three_distinct_lobes": false,
+    "spacing_120_within_tol": true,
+    "radius_within_tol": true,
+    "phase_within_tol": true,
+    "coverage_includes_all_positions": true
+   },
+   "expected": {
+    "feature_status": "candidate",
+    "match_type": "partial_match",
+    "n_lobes_matched": 2,
+    "matched_positions_deg": [
+     0,
+     120
+    ],
+    "missing_positions_deg": [
+     240
+    ],
+    "missing_position_status": "absent_in_inspected_area",
+    "must_not": [
+     "matched",
+     "threefold_match",
+     "report as 3-position template satisfied"
+    ]
+   },
+   "derivation": "Lobes at 0 and 120 (10 pts). equal_per_lobe: z1=(1+exp(i2pi/3))/2 -> A1=|cos(pi/3)|=0.5; z2=(1+exp(i4pi/3))/2 -> A2=0.5; z3=(1+exp(i2pi))/2=1 -> A3=1, phase_3=0. point_weighted: A1=0.5*(3+2cos(alpha))/5, A2=0.5*(3+2cos(2alpha))/5, A3=(3+2cos(3alpha))/5, alpha=atan(1.5/60)."
+  },
+  "LP-WRONG-RADIUS": {
+   "points": [
+    {
+     "id": "WR01",
+     "x": 0.0,
+     "y": 90.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "WR02",
+     "x": 0.0,
+     "y": 91.5,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "WR03",
+     "x": 0.0,
+     "y": 88.5,
+     "bin": "B3",
+     "lobe": "L000"
+    },
+    {
+     "id": "WR04",
+     "x": 1.5,
+     "y": 90.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "WR05",
+     "x": -1.5,
+     "y": 90.0,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "WR06",
+     "x": 77.942286341,
+     "y": -45.0,
+     "bin": "B3",
+     "lobe": "L120"
+    },
+    {
+     "id": "WR07",
+     "x": 79.241324446,
+     "y": -45.75,
+     "bin": "B1",
+     "lobe": "L120"
+    },
+    {
+     "id": "WR08",
+     "x": 76.643248235,
+     "y": -44.25,
+     "bin": "B2",
+     "lobe": "L120"
+    },
+    {
+     "id": "WR09",
+     "x": 77.192286341,
+     "y": -46.299038106,
+     "bin": "B3",
+     "lobe": "L120"
+    },
+    {
+     "id": "WR10",
+     "x": 78.692286341,
+     "y": -43.700961894,
+     "bin": "B1",
+     "lobe": "L120"
+    },
+    {
+     "id": "WR11",
+     "x": -77.942286341,
+     "y": -45.0,
+     "bin": "B2",
+     "lobe": "L240"
+    },
+    {
+     "id": "WR12",
+     "x": -79.241324446,
+     "y": -45.75,
+     "bin": "B3",
+     "lobe": "L240"
+    },
+    {
+     "id": "WR13",
+     "x": -76.643248235,
+     "y": -44.25,
+     "bin": "B1",
+     "lobe": "L240"
+    },
+    {
+     "id": "WR14",
+     "x": -78.692286341,
+     "y": -43.700961894,
+     "bin": "B2",
+     "lobe": "L240"
+    },
+    {
+     "id": "WR15",
+     "x": -77.192286341,
+     "y": -46.299038106,
+     "bin": "B3",
+     "lobe": "L240"
+    }
+   ],
+   "lobes": [
+    {
+     "label": "L000",
+     "n_support": 5,
+     "support_ids": [
+      "WR01",
+      "WR02",
+      "WR03",
+      "WR04",
+      "WR05"
+     ],
+     "centroid_xy_mm": [
+      0.0,
+      90.0
+     ],
+     "centroid_clock_deg": 0.0,
+     "centroid_radius_mm": 90.0,
+     "mean_point_radius_mm": 90.004999653,
+     "circular_mean_point_clock_deg": 0.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 0.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 30.0,
+     "within_radial_tolerance": false,
+     "support_ge_min": true
+    },
+    {
+     "label": "L120",
+     "n_support": 5,
+     "support_ids": [
+      "WR06",
+      "WR07",
+      "WR08",
+      "WR09",
+      "WR10"
+     ],
+     "centroid_xy_mm": [
+      77.942286341,
+      -45.0
+     ],
+     "centroid_clock_deg": 120.0,
+     "centroid_radius_mm": 90.0,
+     "mean_point_radius_mm": 90.004999653,
+     "circular_mean_point_clock_deg": 120.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 120.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 30.0,
+     "within_radial_tolerance": false,
+     "support_ge_min": true
+    },
+    {
+     "label": "L240",
+     "n_support": 5,
+     "support_ids": [
+      "WR11",
+      "WR12",
+      "WR13",
+      "WR14",
+      "WR15"
+     ],
+     "centroid_xy_mm": [
+      -77.942286341,
+      -45.0
+     ],
+     "centroid_clock_deg": 240.0,
+     "centroid_radius_mm": 90.0,
+     "mean_point_radius_mm": 90.004999653,
+     "circular_mean_point_clock_deg": 240.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 240.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 30.0,
+     "within_radial_tolerance": false,
+     "support_ge_min": true
+    }
+   ],
+   "coverage": {
+    "known": true,
+    "inspected": "full disc r<=150 (synthetic)",
+    "uncovered_regions": []
+   },
+   "features": {
+    "n_points": 15,
+    "n_lobes": 3,
+    "lobe_circular_gaps_deg": [
+     120.0,
+     120.0,
+     120.0
+    ],
+    "harmonics_equal_per_lobe": {
+     "A1": 0.0,
+     "A2": 0.0,
+     "A3": 1.0,
+     "phase_3_deg": 0.0
+    },
+    "harmonics_point_weighted": {
+     "A1": 0.0,
+     "A2": 0.0,
+     "A3": 0.999500197,
+     "phase_3_deg": 0.0
+    },
+    "phase_residual_deg": 0.0,
+    "phase_residual_rule": "wrap(phase_3 - template_phase) into (-60, 60] (120-deg periodic)"
+   },
+   "template_checks": {
+    "three_distinct_lobes": true,
+    "spacing_120_within_tol": true,
+    "radius_within_tol": false,
+    "phase_within_tol": true,
+    "coverage_includes_all_positions": true
+   },
+   "expected": {
+    "feature_status": "no_match",
+    "match_type": null,
+    "n_lobes_matched": 0,
+    "n_points_in_template_radius_band": 0,
+    "reason": "radius mismatch: lobe radial residual +30 mm > 5 mm (no point within 60+-5 mm)",
+    "must_not": [
+     "matched",
+     "candidate"
+    ]
+   },
+   "derivation": "Same geometry as LP-IDEAL at r=90. Harmonics are identical to LP-IDEAL for equal_per_lobe (A1=A2=0, A3=1, phase_3=0): harmonics carry no radius information. point_weighted A3=(3+2cos(3*atan(1.5/90)))/5. Point radii in [88.5, 91.5] -> 0 points in template band [55, 65]."
+  },
+  "LP-WRONG-PHASE": {
+   "points": [
+    {
+     "id": "WP01",
+     "x": 38.567256581,
+     "y": 45.962666587,
+     "bin": "B1",
+     "lobe": "L040"
+    },
+    {
+     "id": "WP02",
+     "x": 39.531437996,
+     "y": 47.111733252,
+     "bin": "B2",
+     "lobe": "L040"
+    },
+    {
+     "id": "WP03",
+     "x": 37.603075167,
+     "y": 44.813599922,
+     "bin": "B3",
+     "lobe": "L040"
+    },
+    {
+     "id": "WP04",
+     "x": 39.716323246,
+     "y": 44.998485173,
+     "bin": "B1",
+     "lobe": "L040"
+    },
+    {
+     "id": "WP05",
+     "x": 37.418189917,
+     "y": 46.926848002,
+     "bin": "B2",
+     "lobe": "L040"
+    },
+    {
+     "id": "WP06",
+     "x": 20.5212086,
+     "y": -56.381557247,
+     "bin": "B3",
+     "lobe": "L160"
+    },
+    {
+     "id": "WP07",
+     "x": 21.034238815,
+     "y": -57.791096178,
+     "bin": "B1",
+     "lobe": "L160"
+    },
+    {
+     "id": "WP08",
+     "x": 20.008178385,
+     "y": -54.972018316,
+     "bin": "B2",
+     "lobe": "L160"
+    },
+    {
+     "id": "WP09",
+     "x": 19.111669668,
+     "y": -56.894587462,
+     "bin": "B3",
+     "lobe": "L160"
+    },
+    {
+     "id": "WP10",
+     "x": 21.930747531,
+     "y": -55.868527032,
+     "bin": "B1",
+     "lobe": "L160"
+    },
+    {
+     "id": "WP11",
+     "x": -59.088465181,
+     "y": 10.41889066,
+     "bin": "B2",
+     "lobe": "L280"
+    },
+    {
+     "id": "WP12",
+     "x": -60.56567681,
+     "y": 10.679362927,
+     "bin": "B3",
+     "lobe": "L280"
+    },
+    {
+     "id": "WP13",
+     "x": -57.611253551,
+     "y": 10.158418394,
+     "bin": "B1",
+     "lobe": "L280"
+    },
+    {
+     "id": "WP14",
+     "x": -58.827992914,
+     "y": 11.89610229,
+     "bin": "B2",
+     "lobe": "L280"
+    },
+    {
+     "id": "WP15",
+     "x": -59.348937447,
+     "y": 8.94167903,
+     "bin": "B3",
+     "lobe": "L280"
+    }
+   ],
+   "lobes": [
+    {
+     "label": "L040",
+     "n_support": 5,
+     "support_ids": [
+      "WP01",
+      "WP02",
+      "WP03",
+      "WP04",
+      "WP05"
+     ],
+     "centroid_xy_mm": [
+      38.567256581,
+      45.962666587
+     ],
+     "centroid_clock_deg": 40.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498829,
+     "circular_mean_point_clock_deg": 40.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 0.0,
+     "angular_residual_deg": 40.0,
+     "within_angular_tolerance": false,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    },
+    {
+     "label": "L160",
+     "n_support": 5,
+     "support_ids": [
+      "WP06",
+      "WP07",
+      "WP08",
+      "WP09",
+      "WP10"
+     ],
+     "centroid_xy_mm": [
+      20.5212086,
+      -56.381557247
+     ],
+     "centroid_clock_deg": 160.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 160.0,
+     "max_point_distance_from_centroid_mm": 1.500000001,
+     "nearest_template_position_deg": 120.0,
+     "angular_residual_deg": 40.0,
+     "within_angular_tolerance": false,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    },
+    {
+     "label": "L280",
+     "n_support": 5,
+     "support_ids": [
+      "WP11",
+      "WP12",
+      "WP13",
+      "WP14",
+      "WP15"
+     ],
+     "centroid_xy_mm": [
+      -59.088465181,
+      10.41889066
+     ],
+     "centroid_clock_deg": 280.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 280.0,
+     "max_point_distance_from_centroid_mm": 1.500000001,
+     "nearest_template_position_deg": 240.0,
+     "angular_residual_deg": 40.0,
+     "within_angular_tolerance": false,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    }
+   ],
+   "coverage": {
+    "known": true,
+    "inspected": "full disc r<=150 (synthetic)",
+    "uncovered_regions": []
+   },
+   "features": {
+    "n_points": 15,
+    "n_lobes": 3,
+    "lobe_circular_gaps_deg": [
+     120.0,
+     120.0,
+     120.0
+    ],
+    "harmonics_equal_per_lobe": {
+     "A1": 0.0,
+     "A2": 0.0,
+     "A3": 1.0,
+     "phase_3_deg": 40.0
+    },
+    "harmonics_point_weighted": {
+     "A1": 0.0,
+     "A2": 0.0,
+     "A3": 0.998875995,
+     "phase_3_deg": 40.0
+    },
+    "phase_residual_deg": 40.0,
+    "phase_residual_rule": "wrap(phase_3 - template_phase) into (-60, 60] (120-deg periodic)"
+   },
+   "template_checks": {
+    "three_distinct_lobes": true,
+    "spacing_120_within_tol": true,
+    "radius_within_tol": true,
+    "phase_within_tol": false,
+    "coverage_includes_all_positions": true
+   },
+   "expected": {
+    "feature_status": "no_match",
+    "match_type": null,
+    "n_lobes_matched": 0,
+    "reason": "phase mismatch: phase residual 40 deg > 10 deg (3-fold shape exists, template phase not met)",
+    "must_not": [
+     "matched",
+     "threefold_match"
+    ],
+    "note": "Phase residual is relative to the TEST template frame (notch_down clock). Shape-only 3-fold symmetry may be reported as a descriptive feature, not as template match."
+   },
+   "derivation": "Lobes at 40/160/280, r=60. equal_per_lobe: z3=exp(i*3*40deg)=exp(i*120deg) -> A3=1, phase_3=120/3=40 deg; residual wrap(40-0, 120)=40. z1=z2=0 (3 equally spaced). Each lobe is 40 deg from the nearest template position (0->40, 120->160, 240->280) > 10 deg tolerance."
+  },
+  "LP-UNCOVERED": {
+   "points": [
+    {
+     "id": "UC01",
+     "x": 0.0,
+     "y": 60.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "UC02",
+     "x": 0.0,
+     "y": 61.5,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "UC03",
+     "x": 0.0,
+     "y": 58.5,
+     "bin": "B3",
+     "lobe": "L000"
+    },
+    {
+     "id": "UC04",
+     "x": 1.5,
+     "y": 60.0,
+     "bin": "B1",
+     "lobe": "L000"
+    },
+    {
+     "id": "UC05",
+     "x": -1.5,
+     "y": 60.0,
+     "bin": "B2",
+     "lobe": "L000"
+    },
+    {
+     "id": "UC06",
+     "x": 51.961524227,
+     "y": -30.0,
+     "bin": "B3",
+     "lobe": "L120"
+    },
+    {
+     "id": "UC07",
+     "x": 53.260562333,
+     "y": -30.75,
+     "bin": "B1",
+     "lobe": "L120"
+    },
+    {
+     "id": "UC08",
+     "x": 50.662486121,
+     "y": -29.25,
+     "bin": "B2",
+     "lobe": "L120"
+    },
+    {
+     "id": "UC09",
+     "x": 51.211524227,
+     "y": -31.299038106,
+     "bin": "B3",
+     "lobe": "L120"
+    },
+    {
+     "id": "UC10",
+     "x": 52.711524227,
+     "y": -28.700961894,
+     "bin": "B1",
+     "lobe": "L120"
+    }
+   ],
+   "lobes": [
+    {
+     "label": "L000",
+     "n_support": 5,
+     "support_ids": [
+      "UC01",
+      "UC02",
+      "UC03",
+      "UC04",
+      "UC05"
+     ],
+     "centroid_xy_mm": [
+      0.0,
+      60.0
+     ],
+     "centroid_clock_deg": 0.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 0.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 0.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    },
+    {
+     "label": "L120",
+     "n_support": 5,
+     "support_ids": [
+      "UC06",
+      "UC07",
+      "UC08",
+      "UC09",
+      "UC10"
+     ],
+     "centroid_xy_mm": [
+      51.961524227,
+      -30.0
+     ],
+     "centroid_clock_deg": 120.0,
+     "centroid_radius_mm": 60.0,
+     "mean_point_radius_mm": 60.007498828,
+     "circular_mean_point_clock_deg": 120.0,
+     "max_point_distance_from_centroid_mm": 1.5,
+     "nearest_template_position_deg": 120.0,
+     "angular_residual_deg": 0.0,
+     "within_angular_tolerance": true,
+     "radial_residual_mm": 0.0,
+     "within_radial_tolerance": true,
+     "support_ge_min": true
+    }
+   ],
+   "coverage": {
+    "known": true,
+    "inspected": "full disc r<=150 EXCEPT uncovered_regions (synthetic assumption)",
+    "uncovered_regions": [
+     {
+      "type": "annular_sector",
+      "clock_deg_interval": [
+       220,
+       260
+      ],
+      "radius_mm_interval": [
+       40,
+       80
+      ],
+      "closed": "left",
+      "note": "contains the whole template window 240+-10 deg x 60+-5 mm"
+     }
+    ],
+    "representation_note": "fixture-local coverage description; production coverage schema is undecided (TBD T-05)"
+   },
+   "features": {
+    "n_points": 10,
+    "n_lobes": 2,
+    "lobe_circular_gaps_deg": [
+     120.0,
+     240.0
+    ],
+    "harmonics_equal_per_lobe": {
+     "A1": 0.5,
+     "A2": 0.5,
+     "A3": 1.0,
+     "phase_3_deg": 0.0
+    },
+    "harmonics_point_weighted": {
+     "A1": 0.499937529,
+     "A2": 0.499750156,
+     "A3": 0.998875995,
+     "phase_3_deg": 0.0
+    },
+    "phase_residual_deg": 0.0,
+    "phase_residual_rule": "wrap(phase_3 - template_phase) into (-60, 60] (120-deg periodic)"
+   },
+   "template_checks": {
+    "three_distinct_lobes": "unknown",
+    "spacing_120_within_tol": true,
+    "radius_within_tol": true,
+    "phase_within_tol": true,
+    "coverage_includes_all_positions": false
+   },
+   "expected": {
+    "feature_status": "candidate",
+    "match_type": "partial_match",
+    "n_lobes_matched": 2,
+    "matched_positions_deg": [
+     0,
+     120
+    ],
+    "unobserved_positions_deg": [
+     240
+    ],
+    "missing_position_status": "not_inspected (unknown, NOT absent)",
+    "coverage_flag": "incomplete_coverage",
+    "must_not": [
+     "matched",
+     "no_match",
+     "report position 240 as absent"
+    ],
+    "decision_pending": "candidate vs insufficient_data for a 2-observed/1-uninspected case is not fixed by the plan (16.2 says unknown required condition -> insufficient_data). Fixture uses candidate + incomplete_coverage; the hard requirements are must_not and coverage_flag."
+   },
+   "derivation": "Point set identical in geometry to LP-TWO-LOBES (IDs differ), so all features equal LP-TWO-LOBES. Only the coverage input differs: the 240-deg window lies in an uninspected region, so its emptiness is not evidence of absence."
+  }
+ }
+}
