@@ -1,0 +1,9 @@
+defect_id,x_mm,y_mm,classification_bin,generation_group,clock_hour
+1,0,50,1,count_only,12
+2,50,0,1,count_only,3
+3,0,-50,2,count_only,6
+4,-50,0,2,count_only,9
+5,0,0,1,count_only,center
+6,149,0,3,count_only,3
+7,148,0,3,count_only,3
+8,100,0,2,count_only,3

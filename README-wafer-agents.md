@@ -10,9 +10,15 @@
 | `wafer-e2e-validator.md` | 실제 흐름 실행과 정답·증빙 대조 | Read/검색/Bash, 소스·설정·기대값 수정 금지 |
 | `wafer-contract-reviewer.md` | 계약 위배 및 과도한 설계 검토 | Read/검색만, 파일 수정과 시험 실행 불가 |
 
-모델은 모두 `inherit`, 권한 모드는 `default`다. 추가 MCP, hook, 영구 memory, orchestration framework는 포함하지 않는다. Validator와 maintainer의 Bash는 도구 자체로 파일 쓰기를 차단하지 않으므로 정의의 작업 범위 지침을 따라야 한다.
+모델은 모두 `inherit`, 권한 모드는 `default`다. Agent 정의 자체에는 MCP, hook, 영구 memory, orchestration framework를 넣지 않았다. 프로젝트 MCP(`.mcp.json`의 Playwright)와 스킬은 별도 구성이며, agent가 MCP 도구를 자동으로 쓴다고 가정하지 않는다(validator는 Bash 기반 Python E2E를 실행한다). Validator와 maintainer의 Bash는 도구 자체로 파일 쓰기를 차단하지 않으므로 정의의 작업 범위 지침을 따라야 한다.
 
 설치 후 Claude Code에서 `/agents`로 세 이름을 확인한다. 처음 `agents` 디렉터리를 만들었다면 세션을 다시 시작하고 확인한다. Agent가 필요할 때 이름을 명시해 호출한다. 작은 변경은 메인 Claude Code가 직접 같은 체크를 수행할 수 있다.
+
+## 현재 설치 상태 (2026-10-09 확인)
+
+- `.claude/agents/`에 세 정의가 있고, 이 저장소의 Claude Code 세션에서 세 이름으로 실제 호출해 audit·update·실행 검증·정적 검토에 사용했다.
+- 함께 쓰는 프로젝트 스킬: `/wafer-verify`(변경 범위별 테스트 선택·독립 oracle·insenv·상태 구분), `/wafer-contract-audit`(문서·코드·YAML·테스트 정합성). 위치 `.claude/skills/<name>/SKILL.md`. 스킬은 체크리스트이고 agent는 책임 분리라서 서로 대체하지 않는다.
+- 브라우저 탐색용 Playwright MCP는 `.mcp.json`(project scope)에 등록돼 있다. 처음 사용할 때 대화형 `claude`에서 프로젝트 MCP를 승인해야 한다. 자세한 내용은 `CLAUDE_CODE_TOOLING_GUIDE.md`.
 
 ## 기준 파일
 
@@ -65,7 +71,7 @@ wafer-contract-reviewer 에이전트를 사용해 최종 변경을 읽기 전용
 
 ## 이 묶음의 검증 범위
 
-생성 시 frontmatter, 이름/도구/역할 범위, 문서 참조, 기존 CLAUDE.md 및 실행계획과의 정합성을 점검한다. 실제 Claude Code에서 agent 로딩·호출, 프로그램 구현, pytest/E2E는 이 문서 생성 작업의 검증 범위가 아니다. 설치 후 실제 환경에서 확인한다.
+생성 시 frontmatter, 이름/도구/역할 범위, 문서 참조, 기존 CLAUDE.md 및 실행계획과의 정합성을 점검한다. 최초 문서 생성 시에는 실제 agent 로딩·호출, 프로그램 구현, pytest/E2E를 검증하지 않았다. 이후 이 저장소 작업에서 세 agent의 실제 호출과 위임 결과를 확인했다(위 "현재 설치 상태").
 
 ## 공식 형식 참고
 

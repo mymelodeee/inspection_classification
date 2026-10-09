@@ -1,0 +1,58 @@
+{
+  "synthetic_only": true,
+  "coordinate_contract_version": "synthetic-die-local-v1",
+  "wafer_radius_mm": 150,
+  "side": "FRONT",
+  "axis": "+X right,+Y up",
+  "length_unit_in_klarf": "um",
+  "die_pitch_um": [
+    10000,
+    10000
+  ],
+  "sample_center_location_um": [
+    150000,
+    150000
+  ],
+  "formula": "raw_mm=(die_index*10000+relative_um-150000)/1000",
+  "rotation_to_notch_down_clockwise_deg": {
+    "DOWN": 0,
+    "UP": 180,
+    "LEFT": 270,
+    "RIGHT": 90
+  },
+  "normalized_theta_clock": "degrees(atan2(x_mm,y_mm)) mod 360",
+  "center_exclusion_radius_mm": 1,
+  "clock_sectors": "[hour_center-15,hour_center+15) modulo 360",
+  "coverage": {
+    "source": "synthetic sidecar declaration, not inferred from defects",
+    "shape": "full_disk",
+    "radius_mm": 150
+  },
+  "test_zones_only": {
+    "E1_edge_distance_mm": [
+      0,
+      2
+    ],
+    "E2_edge_distance_mm": [
+      2,
+      5
+    ],
+    "interval": "[lower,upper)",
+    "inner_radius_mm": 100,
+    "boundary_band_radius_mm": [
+      99,
+      101
+    ],
+    "boundary_band_interval": "closed"
+  },
+  "threefold_test_template_only": {
+    "radius_mm": 60,
+    "phase_clock_deg": 0,
+    "angles_clock_deg": [
+      0,
+      120,
+      240
+    ]
+  },
+  "operational_defaults": false
+}

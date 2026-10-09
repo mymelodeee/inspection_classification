@@ -97,6 +97,36 @@ DBSCAN의 noise point는 삭제하지 않는다. Scratch·희박한 ring·repeat
 
 추가 label 축은 `morphology`, `zone`, `signature_match`, `review_status`로 둔다. 예를 들어 형태는 `local_cluster`, 위치는 `E1`, 시그니처는 `gripper_candidate`일 수 있다. 라벨의 의미가 다른 항목을 하나의 상호배타 class 목록에 섞지 않는다.
 
+### 5.3 실제 사내 데이터 도입 시 입력 계약 재검증
+
+현재 구현은 **합성 입력 규약에서만 검증**됐다(`tests/fixtures/klarf`, `klarf_dummy_data`). 이는 사내 입력 지원 완료가 아니다. 실제 샘플이 들어오면 아래 다섯 영역을 export 계열별로 다시 확인하고, 확인된 차이만 Phase 1 수정 작업(P1-07)으로 반영한다. 실제 샘플·명세 없이 파싱 규칙이나 코드를 추측해 바꾸지 않는다. 추적 항목은 TBD.md T-29다.
+
+**현재 합성 가정(2026-10-09 코드 기준)**
+
+| 영역 | 현재 구현의 가정 | 실제 데이터에서 확인할 것 |
+|---|---|---|
+| 파일명 | 파싱하지 않는다. 파일명은 시도 기록(attempts)에 basename으로만 남고, 분석 키·중복 판정은 파일 내용 sha256을 쓴다 | 아래 ① |
+| 내부 형식 | (a) 1.2 스타일 평면 문법(`DefectRecordSpec`/`DefectList`), (b) KLARF 1.8 Record/Field/List, 단일 FileRecord>LotRecord>WaferRecord와 단일 DefectList. 둘 다 UTF-8. 선언 개수·괄호·EndOfFile·중복 Field를 엄격 검사 | 아래 ② |
+| 메타데이터 | lot/wafer/job/시간을 추출·출력하지 않는다(헤더는 내부에서만 읽음). 결과의 식별은 source_sha256과 이벤트 키 `레코드순서:DEFECTID` | 아래 ③ |
+| 좌표 | 합성 adapter 2종을 profile `coordinates.adapter_id`로 명시 선택: `synthetic-um-die00-notch-down`(XREL/YREL=중심 기준 µm, 단일 die), `synthetic-die-local-v1`(raw=(index×pitch+rel−center)/1000, 노치 회전 1회, side는 profile 선언) | 아래 ④ |
+| bin | `CLASSNUMBER`만 사용(0=unknown). 표기는 adapter별로 "B<n>" 또는 "<n>". ROUGH/FINE bin은 읽지만 쓰지 않는다 | 아래 ④ |
+
+**① 파일명 규칙.** `date_time_lotid_waferid_jobid` 같은 형식은 예시일 뿐 사내 확정 규칙이 아니다. 실제 필드 순서, 구분자, 날짜·시간 형식과 timezone, 확장자, 선택 필드, 누락값 표기, 필드 값 안에 구분자가 들어가는 경우를 export 계열별로 확인한다. 파일명 규칙은 장비/export별 명시 profile로 두고, 규칙에 맞지 않는 이름은 추측하지 않고 상태(예: 파일명 메타데이터 미상)로 남긴다.
+
+**② 내부 파일 형식.** KLARF 버전, record/list 계층, column 이름·순서·자료형, 추가/누락 field, 복수 wafer·inspection record, 인코딩, 빈 결과와 손상·작성 중 파일의 구분을 확인한다. 지원 범위 밖의 입력은 명시적으로 실패하거나 보류하며, 정상 0건으로 반환하지 않는다(현재 엄격 파서의 원칙 유지).
+
+**③ 메타데이터 정합성.** 파일명과 내부 record에서 얻은 lotid/waferid/jobid/시간이 다를 때의 우선순위와 충돌 처리 정책을 확정한다. 두 값을 출처와 함께 모두 보존하고, 조용히 덮어쓰지 않는다. 파일명만으로 고유 검사 이벤트나 분석 키를 확정하지 않는다(분석 키는 내용 해시와 적용 버전 기준, 16.4).
+
+**④ 좌표와 bin 의미.** 단위, die index/pitch, 상대좌표, 중심, 축, notch, front/back side, classification/rough/fine bin의 의미를 실제 기준점과 장비 명세에 대조한다. 내부 문법이 파싱됐다는 사실과 물리 좌표가 검증됐다는 사실을 별도 상태로 기록한다.
+
+**⑤ 영향받는 기능.** 규칙 변경이 자동 수집(파일 도착·작성 완료 판정), 파서, adapter, 분석 키/중복 방지, 저장·재조회, JSON/CSV export, UI, 테스트에 미치는 영향을 변경마다 확인한다.
+
+**설계 원칙.** 장비/export별 명시적 parser·adapter·파일명 profile을 우선한다. 확정되지 않은 형식을 자동 추측하는 범용 파서나 plugin framework는 만들지 않는다. 필요한 차이는 실제 샘플과 요구가 확인된 뒤 최소 범위로 반영하고, 기존 adapter와 입력 형식이 같으면 새 adapter를 추가하지 않는다.
+
+**테스트 최신성.** 실제 샘플 도입 후 기존 테스트·시나리오의 최신성을 점검하고, 승인된 입력 계약 변경에 해당하는 시나리오만 근거와 함께 개정한다(기존/신규 기대값, 사유, 샘플 manifest 버전 기록). 실패를 숨기려고 기대값을 바꾸지 않는다. 합성 fixture의 기대값은 합성 계약의 정답으로 유지한다.
+
+**완료 기준(P0-07, P1-07 공통).** ① 대상 장비/export 계열별 입력 계약을 문서화했다. ② 검토된 실제 샘플에서 파일명과 내부 메타데이터를 정확히 추출했다. ③ 충돌·누락·미지원 입력을 합의된 상태로 처리했다. ④ 좌표·bin·개수 보존을 독립 정답과 대조했다. ⑤ 영향받는 회귀와 입력부터 출력까지의 실제 흐름을 검증했다. 실제 샘플·정의가 없으면 미완료 또는 BLOCKED로 유지하며, 합성 테스트 통과로 완료 처리하지 않는다.
+
 ## 6. Phase 1: KLARF 파싱과 좌표계
 
 ### 6.1 파서 선정
@@ -421,7 +451,7 @@ CI 제안 순서는 `설정·schema 검증 → 단위/좌표 시험 → golden �
 
 | 순서 | 작업 | 담당 역할 | 완료 결과 |
 |---|---|---|---|
-| 1 | KLARF·화면·집계표의 동일 검사 묶음 확보 | 데이터 제공/도메인 검토 | 샘플 manifest |
+| 1 | KLARF·화면·집계표의 동일 검사 묶음 확보(파일명 원본 유지, export 계열별) | 데이터 제공/도메인 검토 | 샘플 manifest(5.3, T-29) |
 | 2 | Header와 column 이름·단위·건수 조사 | 개발 | 필드 매핑표와 parser 실패 목록 |
 | 3 | 몇 개의 식별 가능한 defect를 화면과 좌표로 대조 | 개발+도메인 검토 | 중심·축·반전·노치 변환 명세 |
 | 4 | E1/E2·100mm 존·삼발이 template 정의 | 도메인 검토 | 미정값이 표시된 YAML profile |
@@ -522,6 +552,7 @@ CI 제안 순서는 `설정·schema 검증 → 단위/좌표 시험 → golden �
 - [ ] P0-04 형태·zone·signature·보류 상태의 라벨 가이드를 확정했다. 증빙: 전형·반례·혼합 예시.
 - [ ] P0-05 E1/E2, 100mm zone, 삼발이 설정의 확정값과 미정값을 구분했다. 증빙: 검토된 YAML profile.
 - [ ] P0-06 Gold oracle·lot/time split·성능 목표·허용오차를 고정했다. 증빙: 버전 있는 manifest와 acceptance profile.
+- [ ] P0-07 대상 장비/export 계열별 입력 계약(파일명 규칙, 내부 형식, 메타데이터 우선순위, 좌표·bin 의미)을 실제 샘플로 확인해 문서화했다(5.3 ①~④). 증빙: 계열별 입력 계약서, 검토된 샘플 manifest(필드 추출 정답 포함). 상태: BLOCKED(실제 샘플 없음, TBD T-29).
 
 ### Phase 1 · 파싱과 정규화
 
@@ -530,13 +561,15 @@ CI 제안 순서는 `설정·schema 검증 → 단위/좌표 시험 → golden �
 - [ ] P1-03 원본 ID·좌표·bin과 변환 정보를 보존한다. 증빙: 원본/표준 테이블 비교.
 - [ ] P1-04 Included/excluded·bin·sector·center의 합계 규칙을 만족한다. 증빙: E01/E04/E08/E09.
 - [ ] P1-05 방향·coverage 부족을 기능별 보류로 반환한다. 증빙: E10/E11.
-- [ ] P1-06 KLARF가 있는 경로에서 이미지 추출에 의존하지 않는다. 증빙: 이미지가 없는 E01 완료 결과.
+- [x] P1-06 KLARF가 있는 경로에서 이미지 추출에 의존하지 않는다. 증빙: 이미지가 없는 E01 완료 결과. **(2026-10-09, 합성 증빙)** 코드에 이미지 경로 없음; F01·klarf_dummy_data 13개를 KLARF만으로 CLI/CSV/UI(AppTest·Edge E2E) 처리 — `pytest tests -q`(304+E2E 4 PASS). 실제 장비 KLARF는 미검증.
+
+- [ ] P1-07 승인된 실제 입력 계약을 parser·adapter·파일명 profile·메타데이터 보존에 최소 범위로 반영하고 영향 기능을 재검증했다(5.3 ⑤). 증빙: 19.3 하위 case 결과, 영향 회귀, 입력→출력 실제 흐름 기록. 완료 기준: 5.3 완료 기준 ①~⑤. 합성 fixture 통과만으로 체크하지 않는다. 상태: BLOCKED(T-29).
 
 ### Phase 2 · 특징과 후보
 
 - [ ] P2-01 반경·각도·edge 거리·면적 보정 밀도가 독립 oracle과 일치한다. 증빙: E01/E08/E11.
-- [ ] P2-02 비유의 검정에서도 후보 검출을 계속한다. 증빙: E14의 실행 trace와 최종 후보.
-- [ ] P2-03 Noise point를 원본 집계 및 다른 후보 검출기에 제공한다. 증빙: E04/E06의 ID 대조.
+- [x] P2-02 비유의 검정에서도 후보 검출을 계속한다. 증빙: E14의 실행 trace와 최종 후보. **(2026-10-09, 합성 증빙)** klarf_dummy_data/uniform_random: Clark–Evans R=1.001, p=0.48(비유의, coverage sidecar 사용) 상태에서 DBSCAN·ring·line 검출 실행·결과 보고; profile에서 차단 설정은 CONFIG_INVALID. E14의 fault-injection 변형·calibration fixture는 NOT_RUN.
+- [x] P2-03 Noise point를 원본 집계 및 다른 후보 검출기에 제공한다. 증빙: E04/E06의 ID 대조. **(2026-10-09, 합성 증빙)** tests/test_phase2_fixtures.py(E04 noise ID=oracle), tests/test_e06_mixed.py(noise=brute-force DBSCAN oracle, 검출기는 전 포함점 사용), tests/test_dummy_klarf18.py T8(13개 noise∪cluster=포함 ID, 서로소).
 - [ ] P2-04 Local·line·arc·ring의 전형·반례를 통과한다. 증빙: E05~E07.
 - [ ] P2-05 삼발이의 1개 blob·부분 lobe·잘못된 위상 반례를 통과한다. 증빙: E07.
 - [ ] P2-06 큰 N에 대한 메모리·시간과 고정 seed 재현성을 확인했다. 증빙: E20/E23.
@@ -573,20 +606,20 @@ CI 제안 순서는 `설정·schema 검증 → 단위/좌표 시험 → golden �
 
 | ID | 위배·모순 확인 항목 | 문서 검토 | 구현 검증 | 통과 기준·연계 E2E |
 |---|---|---|---|---|
-| C01 | KLARF 우선인데 이미지 dot 수를 원본 count로 쓰는가 | [x] 검토 완료 | [ ] 미실행 | 원본 집계 불변, E01/E15 |
+| C01 | KLARF 우선인데 이미지 dot 수를 원본 count로 쓰는가 | [x] 검토 완료 | [x] 합성 증빙(이미지 경로 없음, 원본 개수 보존 test_dummy_klarf18 T1) | 원본 집계 불변, E01/E15 |
 | C02 | 불량 chip 수와 defect 이벤트 수를 혼용하는가 | [x] 검토 완료 | [ ] 미실행 | 다른 컬럼·분모로 출력, E01/E09 |
 | C03 | 노치 정규화 후 다시 회전하거나 side 반전을 놓치는가 | [x] 검토 완료 | [ ] 미실행 | 기준점과 frame 일치, E02 |
 | C04 | 방향 미상인데 물리 시계방향·template phase를 확정하는가 | [x] 검토 완료 | [ ] 미실행 | 해당 기능 보류, E10 |
 | C05 | 설정 누락 오류와 입력 부족에 따른 부분 결과가 충돌하는가 | [x] 정책 구체화 | [ ] 미실행 | CONFIG_INVALID와 insufficient_data 구분, E10~E12 |
 | C06 | Coverage가 없는데 전체 wafer 면적으로 density를 계산하는가 | [x] 검토 완료 | [ ] 미실행 | null+사유, 부분 coverage는 실제 분모, E11 |
-| C07 | 무작위성 비유의를 정상 또는 분석 중단으로 처리하는가 | [x] 검토 완료 | [ ] 미실행 | 후보 검사 계속·정상 단정 없음, E14 |
-| C08 | DBSCAN noise를 count 또는 다른 패턴 검사에서 삭제하는가 | [x] 검토 완료 | [ ] 미실행 | Included ID 보존, E04/E06 |
+| C07 | 무작위성 비유의를 정상 또는 분석 중단으로 처리하는가 | [x] 검토 완료 | [x] 합성 증빙(uniform_random 비유의 후 검출 실행, 차단 설정 CONFIG_INVALID) | 후보 검사 계속·정상 단정 없음, E14 |
+| C08 | DBSCAN noise를 count 또는 다른 패턴 검사에서 삭제하는가 | [x] 검토 완료 | [x] 합성 증빙(E04/E06/T8) | Included ID 보존, E04/E06 |
 | C09 | 삼발이를 하나의 인접 cluster 또는 A3 하나로 확정하는가 | [x] 검토 완료 | [ ] 미실행 | 3 lobe·반경·phase·coverage 확인, E07 |
 | C10 | 형태와 존을 한 class에 섞어 혼합형 정보를 잃는가 | [x] 검토 완료 | [ ] 미실행 | 다중 축과 group 결과 보존, E06/E08 |
 | C11 | Group·zone 중첩을 합산하여 총수를 늘리는가 | [x] 집계식 구체화 | [ ] 미실행 | 고유 ID의 union 사용, E06/E08 |
 | C12 | 100mm zone을 정의 미확정 상태에서 자동 실행하는가 | [x] 기본 비활성으로 수정 | [ ] 미실행 | 검증한 profile에서만 활성, E08/E12 |
 | C13 | 100mm를 101.6mm로 자동 치환하거나 bevel side를 XY로 추정하는가 | [x] 검토 완료 | [ ] 미실행 | 요청 기준 유지·side 미상 표시, E08/E10 |
-| C14 | 중심점·sector 경계·ring 경계의 포함 규칙이 충돌하는가 | [x] 경계 계약 명시 | [ ] 미실행 | Center 별도, 반개구간·예외 시험, E01/E08 |
+| C14 | 중심점·sector 경계·ring 경계의 포함 규칙이 충돌하는가 | [x] 경계 계약 명시 | [x] 합성 증빙(E08 경계 fixture, dummy T4 경계점 55+개, r=R 닫힌 bin) | Center 별도, 반개구간·예외 시험, E01/E08 |
 | C15 | 성공 job·판정 보류·무검출을 같은 상태로 표시하는가 | [x] 상태 필드 분리 | [ ] 미실행 | 실행/품질/판정 상태 독립, E03/E10/E13 |
 | C16 | 이미지에서 알 수 없는 bin·mm·방향을 생성하는가 | [x] 검토 완료 | [ ] 미실행 | 추정 count·가능 범위 표시, E15 |
 | C17 | 재시도·재분석·rollback이 중복 결과나 검토 이력 소실을 만드는가 | [x] 보존 계약 명시 | [ ] 미실행 | Idempotency와 revision 보존, E17~E19/E22 |
@@ -604,7 +637,7 @@ E2E 범위는 ‘운영과 같은 실행 환경에서 입력 제출 → 파싱·
 
 각 scenario는 원본 fixture, frozen profile, 기대 좌표·count·상태·패턴, 비교 tolerance, seed, input hash를 manifest에 연결한다. 운영 parser·classifier로 기대값을 생성하지 않는다. 단순 계산 oracle은 독립적으로 작성하고, 실제 패턴 정답은 사전 검토 자료로 고정한다. 합성 자료의 통과는 내부 실제 데이터 성능 검증을 대체하지 않는다.
 
-Fixture 상태: 아래 자료는 제작 명세이며 KLARF fixture 파일과 애플리케이션은 아직 준비되지 않았다. 아래 E01~E24의 실행 상태는 모두 NOT_RUN이다. 시험에 주입한 mock·fault는 반드시 표시하며, mock을 쓴 구성요소의 실제 정확도까지 검증했다고 보고하지 않는다.
+Fixture 상태: 아래 자료는 제작 명세이며 KLARF fixture 파일과 애플리케이션은 아직 준비되지 않았다. 아래 E01~E24의 실행 상태는 모두 NOT_RUN이다. **(2026-10-09 갱신)** 이후 합성 fixture(`tests/fixtures`, `klarf_dummy_data`)와 CLI·UI가 준비되어 일부 E 하위 case를 합성 범위에서 실행했다. 시나리오별 "상태: NOT_RUN" 표기는 실제 데이터 기준 상태로 유지하며, 합성 실행 기록은 작업 보고와 TBD.md에 있다. 사내 데이터 시험(19.3 포함)은 NOT_RUN/BLOCKED다. 시험에 주입한 mock·fault는 반드시 표시하며, mock을 쓴 구성요소의 실제 정확도까지 검증했다고 보고하지 않는다.
 
 ### 19.2 공통 정량 fixture F01
 
@@ -865,6 +898,25 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 
 증빙: 하위 case별 manifest·좌표/label diff·반복 instance 표·template 버전. 상태: NOT_RUN. 연계: C03/C18.
 
+### 19.3 실제 사내 입력 계약 하위 case (5.3, TBD T-29)
+
+기존 E/C ID를 유지하고 실제 입력 계약용 하위 case만 추가한다. 모두 **실제 샘플 또는 승인된 명세가 있어야 실행할 수 있으며 현재 상태는 BLOCKED**다. 합성 fixture로 같은 이름의 case를 대신 통과 처리하지 않는다. 기대값은 사전 검토된 샘플 manifest(필드 추출 정답 포함)로 고정한다.
+
+| 하위 case | 시험 내용 | 기대/통과 | 연계 C |
+|---|---|---|---|
+| E01-FN | 승인된 파일명 규칙의 정상 이름과 변형(필드 순서·구분자·확장자·선택 필드 누락) | 규칙에 맞으면 필드를 정확히 추출하고, 맞지 않으면 추측 없이 "파일명 메타데이터 미상" 상태 | C15, C20 |
+| E01-FN-DELIM | 필드 값 안에 구분자가 포함된 이름 | 승인된 규칙대로만 분리. 모호하면 미상·보류, 다른 필드로 밀려 들어가지 않음 | C15 |
+| E01-FN-TIME | 날짜·시간 형식 변형, timezone 표기 유무, 시간 누락 | 원본 문자열과 해석값을 함께 보존. 해석 불가는 null+사유 | C15 |
+| E09-META | 파일명과 내부 record의 lotid/waferid/jobid/시간 충돌 | 합의된 우선순위로 처리하고 양쪽 원본·출처를 보존. 조용한 덮어쓰기 없음. 분석 키는 파일명에 의존하지 않음 | C02, C17 |
+| E01-COLORDER | column 순서가 다른 실제 export | column 이름으로 매핑되어 같은 좌표·bin·개수 | C01, C02 |
+| E13-COLX | 추가 column / 필수 column 누락 / 자료형 불일치 | 추가 column은 보존, 필수 누락·형 불일치는 명시적 실패 | C15, C20 |
+| E09-MULTI | 한 파일에 복수 wafer·inspection record | 지원 확정 전에는 명시적 실패. 지원 후에는 record별 결과와 ID 비충돌 | C02, C11 |
+| E13-VER | 미지원 KLARF 버전·문법 | 명시적 실패, 정상 0건으로 바뀌지 않음 | C15, C20 |
+| E03-EMPTY-REAL | 실제 export의 정상 빈 결과 | 성공·0건(`no_detected_defect`), 손상과 구분 | C15 |
+| E13-CORRUPT-REAL | 실제 손상·잘린·작성 중 파일 | 실패 또는 미완료 대기. 작성 완료 후 재시도 시 원본 기대 결과 | C15, C17 |
+| E02-REAL | 실제 기준점으로 단위·die index/pitch·중심·축·notch·side 변환 대조 | gold 기준점 허용오차 내. 파싱 성공과 좌표 검증을 별도 상태로 기록 | C03, C04 |
+| E09-BIN-REAL | classification/rough/fine bin 의미 대조 | 사내 매핑 버전과 일치, unknown 보존 | C02 |
+
 ## 20. 실행 기록과 Release 완료 판정
 
 ### 20.1 상태 규칙
@@ -884,6 +936,11 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 | CHECK_ID / E2E_ID | release / commit / image | input / profile / oracle hash | 실행일·실행 역할 | 실행 상태 | 기대값과 실제값 | 증빙 위치 | 결함 ID·조치 | 재시험 결과 |
 |---|---|---|---|---|---|---|---|---|
 | 예: P1-04 / E01 | 미정 | 미정 | 미실행 | NOT_RUN | 기대: 19.2 / 실제: 미측정 | 없음 | 없음 | 미실행 |
+| E01-UP / E09-UP / E16-UP (2026-10-09, 승인된 사양 변경 T-04) | 미커밋 작업 트리 | f01-oracle-1(불변), 테스트에서 "Bn"≡CLASSNUMBER n 명시 매핑 | 메인·test-maintainer | PASS(합성) | 기존 bin 기대 "B1/B2/B3" → 신규 "1/2/3", 개수 불변 | tests/test_ingest_cli.py, tests/test_app.py | 없음(사양 변경) | `pytest -m "not e2e"` 312 passed, `-m e2e` 4 passed |
+| E12-UP (T-02) | 동상 | — | 동상 | PASS(합성) | adapter_id 누락 → CONFIG_INVALID `coordinates.adapter_id` | tests/test_profile.py, tests/test_ingest_cli.py | 없음(사양 변경) | 동상 |
+| E10-UP / E07-UP (T-03 노치 미상 부분 결과) | 동상 | klarf_dummy_data manifest·expected, f01-oracle-1 | 동상 | PASS(합성) | 노치 필드 제거 시 개수·bin·zone·radial·center 반환, clock·위상 null/insufficient_data | tests/test_ingest_cli.py, tests/test_dummy_klarf18.py | 없음 | 동상 |
+| E11-UP (T-05) | 동상 | — | 동상 | PASS(합성) | sidecar 오류 reason 구분(syntax/unsupported_shape/invalid_value) | tests/test_dummy_klarf18.py | 없음 | 동상 |
+| E16-DL / E19-DL (2026-10-09, 다운로드 내용 대조) | 동상 | f01.klf + f01_test_profile.yaml, 기대값은 테스트 내 독립 oracle(plan 19.2 + fixture 본문)·sha256 재계산 | 메인 | PASS(합성) | 실제 브라우저 다운로드 JSON/CSV zip = 8/8/0, bin 1·2·3 = 3·3·2, center 1, 12h·3h·6h·9h = 1·4·1·1, radial count 1/4/3 & area·density null(coverage_unknown), sector 0은 0으로 기록, review null→deferred rev1, provenance·manifest 동일 | tests/test_e2e_browser.py | 없음(제품 결함 미발견; selectbox 재시도는 테스트 타이밍 보정) | `pytest tests/test_e2e_browser.py -q` 7 passed |
 
 각 E2E 변형은 E02-UP, E07-SINGLE, E11-NOCOVERAGE처럼 하위 ID를 부여한다. 상위 시나리오는 적용 가능한 필수 하위 case를 모두 통과했을 때만 PASS다. 실패 수정 후 영향받는 case와 연결된 C 항목을 다시 실행한다.
 
@@ -898,7 +955,7 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 - [ ] RL-07 Staging의 실제 image에서 스모크·재시도·rollback을 확인했다.
 - [ ] RL-08 운영 사용자에게 대상 범위·입력 제한·보류 상태·검토 방법을 제공했다.
 
-현재 release 판정: NOT_READY. 사유: 본 작업은 실행계획과 시험 명세의 작성·문서 정합성 점검까지 수행했으며, 프로그램 구현·fixture 제작·사내 KLARF 대조·E2E 실행은 수행하지 않았다.
+현재 release 판정: NOT_READY. 사유: 본 작업은 실행계획과 시험 명세의 작성·문서 정합성 점검까지 수행했으며, 프로그램 구현·fixture 제작·사내 KLARF 대조·E2E 실행은 수행하지 않았다. **(2026-10-09 갱신)** 판정은 NOT_READY로 유지한다. 합성 범위의 구현·fixture·CLI/UI E2E는 진행됐지만 사내 KLARF 대조, 실제 입력 계약(5.3, T-29), blind 평가, 배포가 남아 있다.
 
 ### 20.4 이번 문서 개정에서 실제 수행한 점검
 

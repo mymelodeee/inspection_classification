@@ -1,0 +1,27 @@
+Record FileRecord "1.8"
+{
+ Record LotRecord "DUMMY_LOT"
+ {
+  Record WaferRecord "empty"
+  {
+   Field SampleType 1 {"WAFER"}
+   Field SampleSize 2 {1, 300}
+   Field DiePitch 2 {10000, 10000}
+   Field DieOrigin 2 {0, 0}
+   Field SampleCenterLocation 2 {150000, 150000}
+   Field SampleOrientationMarkType 1 {"NOTCH"}
+   Field OrientationMarkLocation 1 {"DOWN"}
+   Field DeviceID 1 {"SYNTHETIC_ONLY"}
+   Field StepID 1 {"DUMMY_INSPECTION"}
+   Field SlotNumber 1 {1}
+   List DefectList
+   {
+    Columns 14 {int32 DEFECTID, float XREL, float YREL, int32 XINDEX, int32 YINDEX, float XSIZE, float YSIZE, float DEFECTAREA, float DSIZE, int32 CLASSNUMBER, int32 TEST, int32 CLUSTERNUMBER, int32 ROUGHBINNUMBER, int32 FINEBINNUMBER}
+    Data 0
+    {
+    }
+   }
+  }
+ }
+}
+EndOfFile;

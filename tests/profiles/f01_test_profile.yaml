@@ -5,8 +5,8 @@ profile_id: "f01_test_only"
 units: "mm"
 wafer_radius_mm: 150
 coordinates:
-  adapter_id: null
-  source_units: "mm"
+  adapter_id: "synthetic-um-die00-notch-down"   # explicit (T-02)
+  source_units: "um"   # XREL/YREL are um (fixture README); was "mm" (T-02 note)
   target_notch: "DOWN"
   target_x: "RIGHT"
   target_y: "UP"

@@ -1,0 +1,3 @@
+# keep synthetic fixture bytes stable (manifest sha256 / provenance hashes)
+klarf_dummy_data/** -text
+tests/fixtures/** -text

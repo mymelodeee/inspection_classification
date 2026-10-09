@@ -1,0 +1,32 @@
+{
+  "name": "empty",
+  "lot_id": "DUMMY_LOT",
+  "wafer_id": "empty",
+  "notch": "DOWN",
+  "count": 0,
+  "bin_counts": {},
+  "center_count": 0,
+  "clock_counts": {
+    "1": 0,
+    "2": 0,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 0,
+    "8": 0,
+    "9": 0,
+    "10": 0,
+    "11": 0,
+    "12": 0
+  },
+  "zone_support_ids": {
+    "E1": [],
+    "E2": [],
+    "inner_100mm": [],
+    "boundary_100mm": []
+  },
+  "generation_intent": [],
+  "classifier_output_validated": false,
+  "file_sha256": "faf2e23d99eacc01c19188bdc6c5b963d74d2847f1ea7fdea199e0aa6e77b38c"
+}

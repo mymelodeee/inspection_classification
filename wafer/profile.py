@@ -29,7 +29,7 @@ class Coordinates(_M):
     target_x: Literal["RIGHT"] = "RIGHT"
     target_y: Literal["UP"] = "UP"
     side_convention: Optional[str] = None
-    missing_orientation: str = "retain_unknown"
+    missing_orientation: Literal["retain_unknown"] = "retain_unknown"   # only supported policy (T-03)
 
 
 class Coverage(_M):
@@ -176,6 +176,9 @@ def _check(p: Profile):
         msgs.append(f"{key}: {msg}")
 
     R = p.wafer_radius_mm
+    from .ingest import ADAPTERS
+    if p.coordinates.adapter_id not in (None, *ADAPTERS):
+        add("coordinates.adapter_id", f"unknown adapter (supported: {', '.join(ADAPTERS)})")
     if R is not None and R <= 0:
         add("wafer_radius_mm", "must be > 0")
     c = p.clock
@@ -339,6 +342,13 @@ def validate_for_run(p: Profile) -> Profile:
     """Keys the analysis cannot start without (E12: eps missing). A draft profile
     loads fine but is not runnable."""
     bad = [f"clustering.{k}" for k in ("eps_mm", "min_samples") if getattr(p.clustering, k) is None]
+    c = p.coordinates
+    if c.adapter_id is None:      # explicit adapter required (T-02 decision, plan 16.1)
+        bad.append("coordinates.adapter_id")
+    if c.adapter_id is not None and c.source_units is None:     # every adapter needs the declared unit
+        bad.append("coordinates.source_units")
+    if c.adapter_id == "synthetic-die-local-v1" and c.side_convention is None:
+        bad.append("coordinates.side_convention")
     if bad:
         raise ConfigInvalid(bad, "required before analysis")
     return p

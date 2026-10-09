@@ -17,6 +17,17 @@ PROFILE = str(HERE / "profiles/f01_test_profile.yaml")
 oracle = json.loads((HERE / "fixtures/f01/oracle.json").read_text(encoding="utf-8"))
 
 
+def oracle_bin(label):
+    """Approved spec change T-04 (2026-10-09): every adapter reports CLASSNUMBER as text ("1","2","3"), 0 -> unknown.
+    The F01 oracle (f01-oracle-1, unchanged) writes "Bn"; "Bn" means CLASSNUMBER n. Explicit mapping, not production."""
+    assert label[0] == "B" and label[1:].isdigit(), label
+    return label[1:]
+
+
+def oracle_bins(d):
+    return {oracle_bin(b): n for b, n in d.items()}
+
+
 def run_cli(name, tmp_path):
     out = tmp_path / "o.json"
     code = main([str(K / name), "--profile", PROFILE, "--out", str(out)])
@@ -28,8 +39,11 @@ def test_e01_f01_end_to_end_core(tmp_path):
     r = o["result"]
     assert code == 0 and o["job_status"] == "succeeded"
     assert (r["n_parsed"], r["n_included"], r["n_excluded"]) == (8, 8, 0)
-    assert r["bin_totals"] == oracle["bin_totals"] and r["center"] == oracle["center"]
+    # E01-UP (T-04, 2026-10-09): was r["bin_totals"] == {"B1": 3, "B2": 3, "B3": 2}; now {"1": 3, "2": 3, "3": 2}
+    assert r["bin_totals"] == oracle_bins(oracle["bin_totals"]) == {"1": 3, "2": 3, "3": 2}
+    assert r["center"] == oracle["center"]
     assert r["sectors_clock"] == oracle["sectors_clock"]
+    assert r["orientation_status"] == "notch_registered" and r["clock_status"]["status"] == "computed"
     # event key is "<record order>:<DEFECTID>"; oracle uses D01.. labels (D01 = DEFECTID 1)
     D = lambda ids: [f"D{int(i.split(':')[1]):02d}" for i in ids]
     assert D(r["zones"]["E1"]) == oracle["zones"]["E1"]
@@ -55,7 +69,8 @@ def test_e03_single_and_center_only(tmp_path):
 
 def test_e09_unclassified_bin_preserved(tmp_path):
     r = run_cli("e09_unclassified_bin.klf", tmp_path)[1]["result"]
-    assert r["bin_totals"] == {"B1": 3, "B2": 2, "B3": 2, "unknown": 1}
+    # E09-UP (T-04, 2026-10-09): was {"B1": 3, "B2": 2, "B3": 2, "unknown": 1}; CLASSNUMBER kept as text, 0 -> unknown
+    assert r["bin_totals"] == {"1": 3, "2": 2, "3": 2, "unknown": 1}
     assert sum(r["bin_totals"].values()) == r["n_included"] == 8
 
 
@@ -211,3 +226,174 @@ def test_unexpected_errors_become_json_failures(tmp_path, monkeypatch):
 
 def test_lift_pin_is_disabled_unless_a_template_profile_enables_it(tmp_path):
     assert run_cli("f01.klf", tmp_path)[1]["result"]["lift_pin"] == {"feature_status": "disabled"}
+
+
+# ---- E16 preparation: bin x clock table and CSV export consistency (CLI only; no UI/API yet) ----
+import csv  # noqa: E402
+
+
+def test_bin_sector_table_f01_hand_values(tmp_path):
+    """F01 (plan 19.2): B1 = D01 12h, D02 3h, D05 center; B2 = D03 6h, D04 9h, D08 3h; B3 = D06, D07 3h."""
+    bs = run_cli("f01.klf", tmp_path)[1]["result"]["bin_sector"]
+    nz = {b: {h: n for h, n in row.items() if n} for b, row in bs.items()}
+    # E16-UP (T-04, 2026-10-09): bin keys "B1"/"B2"/"B3" -> "1"/"2"/"3" (same hand values; oracle "Bn" = CLASSNUMBER n)
+    assert nz == {"1": {"12": 1, "3": 1, "center": 1}, "2": {"6": 1, "9": 1, "3": 1}, "3": {"3": 2}}
+
+
+def test_csv_export_matches_json(tmp_path):
+    out = tmp_path / "o.json"
+    csvd = tmp_path / "csv"
+    assert main([str(K / "f01.klf"), "--profile", PROFILE, "--out", str(out), "--csv-dir", str(csvd)]) == 0
+    r = json.loads(out.read_text(encoding="utf-8"))["result"]
+    defects = list(csv.DictReader(open(csvd / "defects.csv", encoding="utf-8")))
+    assert len(defects) == r["n_parsed"] == 8
+    clocks = [d["clock"] for d in defects if d["included"] == "True"]
+    assert {h: clocks.count(str(h)) for h in range(1, 13)} == {int(k): v for k, v in r["sectors_clock"].items()}
+    assert clocks.count("center") == r["center"]
+    spatial = list(csv.DictReader(open(csvd / "spatial_counts.csv", encoding="utf-8")))
+    bt = {s["key"]: int(s["count"]) for s in spatial if s["table"] == "bin_total"}
+    assert bt == r["bin_totals"]
+    radial = [s for s in spatial if s["table"] == "radial"]
+    assert [int(s["count"]) for s in radial] == [1, 4, 3]
+    assert all(s["density_per_mm2"] == "" and s["reason"] == "coverage_unknown" for s in radial)  # null, not 0
+    assert radial[-1]["key"] == "100-150]"
+    rows = list(csv.DictReader(open(csvd / "bin_sector.csv", encoding="utf-8")))
+    assert sum(int(row["total"]) for row in rows) == r["n_included"]
+    assert {row["bin"]: int(row["total"]) for row in rows} == r["bin_totals"]
+
+
+def test_csv_lists_excluded_records_with_reason(tmp_path):
+    p = tmp_path / "out.klf"
+    p.write_text((K / "f01.klf").read_text().replace("8 100000.0 0.0 0 0 2 1", "8 100000.0 0.0 0 0 2 1\n9 151000.0 0.0 0 0 1 1"))
+    out, csvd = tmp_path / "o.json", tmp_path / "csv"
+    main([str(p), "--profile", PROFILE, "--out", str(out), "--csv-dir", str(csvd)])
+    d = list(csv.DictReader(open(csvd / "defects.csv", encoding="utf-8")))
+    ex = [x for x in d if x["included"] == "False"]
+    assert len(d) == 9 and len(ex) == 1 and ex[0]["excluded_reason"] == "outside_wafer" and ex[0]["clock"] == ""
+
+
+def test_result_schema_check_rejects_missing_keys_and_broken_counts():
+    from wafer.report import check_result
+    with pytest.raises(ValueError):
+        check_result({"n_parsed": 1})
+
+
+def _profile_without_clock_zone_radial(tmp_path):
+    import yaml
+    d = yaml.safe_load(open(PROFILE, encoding="utf-8"))
+    d["clock"]["center_exclusion_radius_mm"] = None
+    for z in ("E1", "E2", "zone_8inch_inside", "zone_8inch_boundary"):
+        d["zones"][z]["enabled"] = False
+    d["stats"]["radial_bin_mm"] = None
+    p = tmp_path / "off.yaml"
+    p.write_text(yaml.safe_dump(d), encoding="utf-8")
+    return str(p)
+
+
+def test_csv_distinguishes_disabled_features_from_real_zero(tmp_path):
+    """Disabled clock/zones/radial on F01 vs. an empty input with everything enabled: the CSVs must differ
+    and the disabled case must carry status rows with empty counts (not 0)."""
+    off, csv_off, csv_empty = _profile_without_clock_zone_radial(tmp_path), tmp_path / "off", tmp_path / "empty"
+    assert main([str(K / "f01.klf"), "--profile", off, "--out", str(tmp_path / "a.json"), "--csv-dir", str(csv_off)]) == 0
+    assert main([str(K / "empty_list.klf"), "--profile", PROFILE, "--out", str(tmp_path / "b.json"), "--csv-dir", str(csv_empty)]) == 0
+    s_off = list(csv.DictReader(open(csv_off / "spatial_counts.csv", encoding="utf-8")))
+    st = {(r["table"], r["key"]): r for r in s_off}
+    assert st[("sector_strict", "*")]["count"] == "" and st[("sector_strict", "*")]["reason"].startswith("disabled")
+    assert st[("zone", "E1")]["count"] == "" and st[("zone", "E1")]["reason"] == "disabled"
+    assert st[("zone_union", "unique")]["count"] == "" and st[("radial", "*")]["count"] == ""
+    s_empty = list(csv.DictReader(open(csv_empty / "spatial_counts.csv", encoding="utf-8")))
+    se = {(r["table"], r["key"]): r for r in s_empty}
+    assert se[("zone_union", "unique")]["count"] == "0" and se[("sector_strict", "3")]["count"] == "0"
+    b_off = open(csv_off / "bin_sector.csv", encoding="utf-8").read()
+    b_empty = open(csv_empty / "bin_sector.csv", encoding="utf-8").read()
+    assert b_off != b_empty and "disabled" in b_off
+    d_off = list(csv.DictReader(open(csv_off / "defects.csv", encoding="utf-8")))
+    assert all(r["zones"] == "" and r["clock"] == "" for r in d_off)       # not evaluated, not "[]"
+    r_off = json.loads((tmp_path / "a.json").read_text(encoding="utf-8"))["result"]
+    assert r_off["zone_union_unique"] is None and r_off["zones_status"]["E1"] == "disabled"
+    m = json.loads((csv_off / "manifest.json").read_text(encoding="utf-8"))
+    assert m["provenance"]["source_sha256"] == r_off["provenance"]["source_sha256"]
+
+
+def test_invariant_violation_is_reported_by_name(tmp_path, monkeypatch):
+    import wafer.cli as c
+    real = c.aggregate
+
+    def broken(*a, **k):                      # injected fault (mock): corrupt one bin_sector cell
+        res, pts = real(*a, **k)
+        res["bin_sector"]["1"][12] += 1      # T-04 (2026-10-09): bin key "B1" -> "1" (fault injection target only)
+        return res, pts
+    monkeypatch.setattr(c, "aggregate", broken)
+    code, o = run_cli("f01.klf", tmp_path)
+    assert code == 5 and o["error"] == "RESULT_INVARIANT_VIOLATED" and "bin_sector" in o["detail"]
+
+
+def test_unwritable_csv_dir_is_output_write_failed(tmp_path):
+    blocker = tmp_path / "file_not_dir"
+    blocker.write_text("x")
+    code, o = run_cli_path_csv(K / "f01.klf", tmp_path, blocker / "sub")
+    assert code == 6 and o["error"] == "OUTPUT_WRITE_FAILED"
+
+
+def run_cli_path_csv(p, tmp_path, csv_dir):
+    out = tmp_path / "o3.json"
+    code = main([str(p), "--profile", PROFILE, "--out", str(out), "--csv-dir", str(csv_dir)])
+    return code, json.loads(out.read_text(encoding="utf-8"))
+
+
+# ---- T-02 (2026-10-09): explicit adapter_id is required to run (E12-UP, C13/C17) ----
+@pytest.mark.parametrize("how", ["null", "absent"])
+def test_e12_up_cli_without_adapter_id_is_config_invalid(how, tmp_path):
+    import yaml
+    d = yaml.safe_load(open(PROFILE, encoding="utf-8"))
+    if how == "null":
+        d["coordinates"]["adapter_id"] = None
+    else:
+        del d["coordinates"]["adapter_id"]
+    p = tmp_path / "no_adapter.yaml"
+    p.write_text(yaml.safe_dump(d), encoding="utf-8")
+    out = tmp_path / "o.json"
+    code = main([str(K / "f01.klf"), "--profile", str(p), "--out", str(out)])
+    o = json.loads(out.read_text(encoding="utf-8"))
+    assert code == 2 and o["job_status"] == "failed" and o["error"] == "CONFIG_INVALID"
+    assert "coordinates.adapter_id" in o["keys"] and "result" not in o
+
+
+# ---- Notch position missing (approved 2026-10-09, T-03): partial result, clock withheld (E10-UP, C03/C04/C15) ----
+def _drop_line(text, needle):
+    lines = text.splitlines(keepends=True)
+    kept = [ln for ln in lines if needle not in ln]
+    assert len(lines) - len(kept) == 1, needle      # exactly one header line removed (no silent no-op)
+    return "".join(kept)
+
+
+def test_e10_up_legacy_f01_without_notch_gives_partial_result(tmp_path):
+    """f01.klf minus its OrientationMarkLocation line. Independent oracle (f01-oracle-1): counts, bins, center and
+    zones depend on r only, so they equal the F01 values; radial counts [1, 4, 3] (hand, see stats test above).
+    Physical clock and anything phase-dependent are withheld (null + status), never 0."""
+    p = tmp_path / "nonotch.klf"
+    p.write_bytes(_drop_line((K / "f01.klf").read_bytes().decode("utf-8"), "OrientationMarkLocation").encode("utf-8"))
+    csvd = tmp_path / "csv"
+    out = tmp_path / "o.json"
+    code = main([str(p), "--profile", PROFILE, "--out", str(out), "--csv-dir", str(csvd)])
+    o = json.loads(out.read_text(encoding="utf-8"))
+    r = o["result"]
+    assert code == 0 and o["job_status"] == "succeeded"
+    assert (r["n_parsed"], r["n_included"], r["n_excluded"]) == (8, 8, 0)
+    assert r["bin_totals"] == oracle_bins(oracle["bin_totals"])
+    assert r["center"] == oracle["center"] == 1
+    D = lambda ids: [f"D{int(i.split(':')[1]):02d}" for i in ids]
+    assert D(r["zones"]["E1"]) == oracle["zones"]["E1"] and D(r["zones"]["E2"]) == oracle["zones"]["E2"]
+    assert D(r["zones"]["inner"]) == oracle["zones"]["inner_r_lt_100"]
+    assert D(r["zones"]["band"]) == oracle["zones"]["band_100mm_pm1"]
+    assert [x["count"] for x in r["radial_density"]["rows"]] == [1, 4, 3]
+    assert r["orientation_status"] == "unknown"
+    assert r["clock_status"] == {"status": "insufficient_data", "reason": "orientation_unknown"}
+    for k in ("sectors_clock", "sectors_clock_tolerant", "bin_sector", "boundary_ambiguous"):
+        assert r[k] is None, k
+    assert r["detect"]["frame"] == "unregistered"
+    d = list(csv.DictReader(open(csvd / "defects.csv", encoding="utf-8")))
+    assert len(d) == 8 and all(x["clock"] == "" for x in d)
+    sp = {(s["table"], s["key"]): s for s in csv.DictReader(open(csvd / "spatial_counts.csv", encoding="utf-8"))}
+    assert sp[("sector_strict", "*")]["count"] == "" and "orientation_unknown" in sp[("sector_strict", "*")]["reason"]
+    assert sp[("center", "center")]["count"] == "1"

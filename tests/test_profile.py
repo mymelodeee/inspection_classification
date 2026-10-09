@@ -35,11 +35,24 @@ def test_minimal_profile_all_features_disabled_by_default():
 
 
 def test_draft_profile_loads_but_not_runnable():  # E12: eps missing
+    # E12-UP (T-02, approved 2026-10-09): an explicit coordinates.adapter_id is required before analysis.
+    # Was ["clustering.eps_mm", "clustering.min_samples"]; the draft also has no adapter_id, so its key is added.
     p = parse_profile(base())
     with pytest.raises(ConfigInvalid) as e:
         validate_for_run(p)
     assert e.value.code == "CONFIG_INVALID"
-    assert e.value.keys == ["clustering.eps_mm", "clustering.min_samples"]
+    assert e.value.keys == ["clustering.eps_mm", "clustering.min_samples", "coordinates.adapter_id"]
+
+
+def test_e12_up_missing_adapter_id_alone_blocks_the_run():
+    """E12-UP (T-02): a profile complete except for adapter_id reports exactly that key."""
+    import yaml
+    d = yaml.safe_load(open(F01_YAML, encoding="utf-8"))
+    d["coordinates"]["adapter_id"] = None
+    p = parse_profile(d)                     # loads (draft), but is not runnable
+    with pytest.raises(ConfigInvalid) as e:
+        validate_for_run(p)
+    assert e.value.keys == ["coordinates.adapter_id"]
 
 
 def test_enabled_E1_missing_interval():  # E12
