@@ -1,0 +1,7 @@
+{
+  "coverage": {
+    "shape": "full_disk",
+    "radius_mm": 150,
+    "source": "synthetic test only: declared full 150 mm disk"
+  }
+}

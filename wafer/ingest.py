@@ -100,6 +100,9 @@ def _read_18(lines, sha, path):
                 wafers += 1
                 if wafers > 1:
                     raise KlarfError("more than one WaferRecord: multi-wafer files unsupported (T-12)")
+            rm = re.match(r'^Record\s+(LotRecord|WaferRecord)\s+"([^"]*)"$', ln)
+            if rm:   # record names kept for display/tracking only (not used for keys, T-29)
+                header[rm.group(1)] = rm.group(2)
         elif ln.startswith("Field "):
             f = _FIELD.match(ln)
             if not f:

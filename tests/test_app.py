@@ -14,14 +14,63 @@ KLF = str(HERE / "fixtures/klarf/f01.klf")
 PROFILE = str(HERE / "profiles/f01_test_profile.yaml")
 
 
-def run_app(db=""):
+def test_default_profile_and_single_file_reload(tmp_path):
+    """E12-DEFAULT: default serves dummy input; path content is reread for every run."""
+    from wafer.ui_inputs import DEFAULT_PROFILE
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    assert not at.radio
+    assert at.text_input(key="batch_profile_path").value == DEFAULT_PROFILE
+    at.text_area(key="batch_paths").set_value(str(HERE.parent / "klarf_dummy_data/klarf/F01_counts.klarf"))
+    analyse_and_open(at)
+    assert metrics(at)["included"] == "8"
+    profile = tmp_path / "profile.yaml"
+    profile.write_bytes(Path(DEFAULT_PROFILE).read_bytes())
+    at.button(key="back_to_batch").click().run()
+    at.text_input(key="batch_profile_path").set_value(str(profile))
+    analyse_and_open(at)
+    before = at.session_state["job"]["out"]["result"]["provenance"]["profile_sha256"]
+    profile.write_text(profile.read_text().replace("dummy_die_local_test_only", "updated_profile"), encoding="utf-8")
+    at.button(key="back_to_batch").click().run()
+    analyse_and_open(at)
+    assert not at.exception
+    provenance = at.session_state["job"]["out"]["result"]["provenance"]
+    assert provenance["profile_id"] == "updated_profile"
+    assert provenance["profile_sha256"] != before
+    at.button(key="back_to_batch").click().run()
+    assert metrics(at)["포함 결함 합"] == "8"
+    assert len(at.multiselect(key="batch_selected").value) == 1
+
+
+def test_profile_path_default_is_explicit_and_restored_when_cleared():
+    """E12-DEFAULT: the widget itself has a default; blank sessions/edits restore it."""
+    from wafer.ui_inputs import DEFAULT_PROFILE
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["batch_profile_path"] = "   "
+    at.run()
+    assert at.text_input(key="batch_profile_path").value == DEFAULT_PROFILE
+    assert at.text_input(key="batch_profile_path").proto.default == DEFAULT_PROFILE
+    at.text_input(key="batch_profile_path").set_value(PROFILE).run()
+    at.run()
+    assert at.text_input(key="batch_profile_path").value == PROFILE
+    at.text_input(key="batch_profile_path").set_value("").run()
+    assert not at.exception
+    assert at.text_input(key="batch_profile_path").value == DEFAULT_PROFILE
+
+
+def analyse_and_open(at):
+    at.button(key="batch_scan_btn").click().run()
+    at.button(key="batch_run_btn").click().run()
+    at.button(key="batch_open").click().run()
+    assert not at.exception, at.exception
+
+
+def run_app(db="", klarf=KLF):
     at = AppTest.from_file(APP, default_timeout=60)
     at.run()
-    at.text_input(key="klarf_path").set_value(KLF)
-    at.text_input(key="profile_path").set_value(PROFILE)
-    at.text_input(key="db_path").set_value(db)
-    at.button(key="run").click()
-    at.run()
+    at.text_area(key="batch_paths").set_value(klarf)
+    at.text_input(key="batch_profile_path").set_value(PROFILE)
+    at.text_input(key="batch_db_path").set_value(db)
+    analyse_and_open(at)
     assert not at.exception, at.exception
     return at
 
@@ -60,12 +109,13 @@ def test_bin_filter_changes_display_only():
 def test_failed_job_is_shown_as_failed():
     at = AppTest.from_file(APP, default_timeout=60)
     at.run()
-    at.text_input(key="klarf_path").set_value(str(HERE / "fixtures/klarf/bad_number.klf"))
-    at.text_input(key="profile_path").set_value(PROFILE)
-    at.button(key="run").click()
-    at.run()
-    assert metrics(at)["job_status"] == "failed"
-    assert any("INVALID_INPUT" in e.value for e in at.error)
+    at.text_area(key="batch_paths").set_value(str(HERE / "fixtures/klarf/bad_number.klf"))
+    at.text_input(key="batch_profile_path").set_value(PROFILE)
+    at.button(key="batch_scan_btn").click().run()
+    at.button(key="batch_run_btn").click().run()
+    assert metrics(at)["실패"] == "1"
+    assert at.dataframe[0].value.iloc[0]["상태"] == "invalid_input"
+    assert not any(b.key == "batch_open" for b in at.button)
 
 
 def test_review_is_saved_as_a_revision(tmp_path):
@@ -101,15 +151,15 @@ def test_ui_shows_the_independent_f01_values():
 
 def test_failed_job_shows_no_counts_and_no_stale_result():
     at = run_app()                                     # a successful run first
-    at.text_input(key="klarf_path").set_value(str(HERE / "fixtures/klarf/bad_number.klf"))
-    at.button(key="run").click()
-    at.run()
+    at.button(key="back_to_batch").click().run()
+    at.text_area(key="batch_paths").set_value(str(HERE / "fixtures/klarf/bad_number.klf"))
+    at.button(key="batch_scan_btn").click().run()
+    at.button(key="batch_run_btn").click().run()
     m = metrics(at)
-    assert m["job_status"] == "failed" and "included" not in m    # previous success not shown
-    at.text_input(key="klarf_path").set_value("")
-    at.button(key="run").click()
-    at.run()
-    assert not at.metric and any("모두 지정" in e.value for e in at.error)
+    assert m["실패"] == "1" and "included" not in m    # previous success not shown
+    at.text_area(key="batch_paths").set_value("")
+    at.button(key="batch_scan_btn").click().run()
+    assert not at.metric and any("지정하세요" in e.value for e in at.error)
 
 
 def test_review_payload_must_be_an_object(tmp_path):
@@ -126,12 +176,7 @@ def test_e10_up_ui_says_screen_direction_is_not_physical_when_notch_is_unknown(t
     assert "OrientationMarkLocation DOWN;\n" in src
     p = tmp_path / "nonotch.klf"
     p.write_text(src.replace("OrientationMarkLocation DOWN;\n", "", 1), encoding="utf-8")
-    at = AppTest.from_file(APP, default_timeout=60)
-    at.run()
-    at.text_input(key="klarf_path").set_value(str(p))
-    at.text_input(key="profile_path").set_value(PROFILE)
-    at.button(key="run").click()
-    at.run()
+    at = run_app(klarf=str(p))
     assert not at.exception
     assert metrics(at)["included"] == "8"
     assert any("노치 위치 미상" in c.value for c in at.caption)

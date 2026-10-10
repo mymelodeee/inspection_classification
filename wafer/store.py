@@ -32,6 +32,23 @@ CREATE TABLE IF NOT EXISTS attempts (
     detail TEXT,
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS batches (
+    batch_id TEXT PRIMARY KEY,
+    created_at TEXT NOT NULL,
+    config_json TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS batch_members (
+    batch_id TEXT NOT NULL REFERENCES batches(batch_id),
+    position INTEGER NOT NULL,
+    rel_path TEXT,
+    size INTEGER,
+    content_sha256 TEXT,
+    status TEXT NOT NULL,
+    reason TEXT,
+    analysis_key TEXT,
+    duplicate_of INTEGER,
+    PRIMARY KEY (batch_id, position)
+);
 CREATE TABLE IF NOT EXISTS reviews (
     analysis_key TEXT NOT NULL REFERENCES runs(analysis_key),
     revision INTEGER NOT NULL,
@@ -215,3 +232,29 @@ def review_status(con, key):
         return "unreviewed"
     last = revs[-1]["action"]
     return {"confirm": "confirmed", "defer": "deferred"}.get(last, "corrected")
+
+
+def save_batch(con, config, entries):
+    """Link a batch to its members. Results and reviews stay in runs / reviews (one copy each); a run that
+    appears in several batches is referenced, never duplicated or overwritten. Only the file name (basename)
+    is stored, as for attempts (T-27); the full relative path stays in the downloaded manifest."""
+    with _tx(con):
+        con.execute("INSERT INTO batches VALUES (?,?,?)",
+                    (config["batch_id"], config["created_at"], json.dumps(config, ensure_ascii=False, default=str)))
+        con.executemany("INSERT INTO batch_members VALUES (?,?,?,?,?,?,?,?,?)",
+                        [(config["batch_id"], e["index"], os.path.basename(e["rel_path"]), e["size"], e["sha256"],
+                          e["status"], e["reason"], e.get("analysis_key"), e["duplicate_of"]) for e in entries])
+
+
+def update_batch_member(con, batch_id, e):
+    """Status of one member after its run (link row only; runs and reviews are not touched)."""
+    with _tx(con):
+        con.execute("UPDATE batch_members SET status = ?, reason = ?, analysis_key = ? WHERE batch_id = ? AND position = ?",
+                    (e["status"], e["reason"], e.get("analysis_key"), batch_id, e["index"]))
+
+
+def batch_members(con, batch_id):
+    rows = con.execute("SELECT position, rel_path, status, analysis_key, duplicate_of FROM batch_members "
+                       "WHERE batch_id = ? ORDER BY position", (batch_id,)).fetchall()
+    return [{"position": r[0], "rel_path": r[1], "status": r[2], "analysis_key": r[3], "duplicate_of": r[4]}
+            for r in rows]

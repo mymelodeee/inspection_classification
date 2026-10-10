@@ -171,6 +171,22 @@ UI에서도 위 KLARF와 YAML을 입력하고 **coverage sidecar 경로**에 `kl
 
 현재는 웨이퍼 중심의 원판(`full_disk`)만 지원하고, 반경은 0보다 크고 `wafer_radius_mm` 이하여야 합니다. 검사 영역을 실제로 알 때만 지정하세요. coverage를 생략하면 미상 상태를 유지하며, 지정해도 점 수 부족이나 검사 영역 밖 결함 등의 이유로 일부 통계가 보류될 수 있습니다. 결과의 `calc_status`와 `reason`을 함께 확인합니다.
 
+### 6. 일괄 분석(여러 파일·폴더, 개발용)
+
+앱을 열면 통합 **파일 분석** 화면이 표시됩니다. 단일/다중 모드 구분 없이 파일 1개 또는 여러 개를 업로드합니다. 흐름: 업로드·파일 선택 → 입력 목록 확인 → 일괄 분석 → 개요·유형별 요약·정도 지표 → 분석 단위 선택 → **상세 맵·검토 화면 열기**. 상세 화면의 **← 분석 목록으로 돌아가기**를 누르면 업로드·선택·결과를 유지한 채 돌아옵니다. 왼쪽 YAML은 dummy profile 경로가 기본 설정됩니다. 서버의 파일 경로를 쓸 때는 **또는 KLARF 경로 (한 줄에 하나)**에 입력합니다.
+
+- **업로드:** "여러 파일 선택"과 "폴더 선택(하위 폴더 포함)"(Streamlit 1.65 `accept_multiple_files="directory"`)을 함께 쓸 수 있습니다. 브라우저가 보낸 상대 경로는 표시·추적용으로만 쓰고, 서버에서는 위치 번호로 된 임시 파일에만 씁니다. 클라이언트 PC 경로를 서버 경로로 읽지 않습니다.
+- **입력 목록(분석 전):** 상대 경로, 크기, 상태(`ready` / `excluded` / `invalid_input` / `held` / `duplicate_in_batch`)와 사유, 내용 sha256, KLARF 헤더의 lot/wafer(검증 전, 파일명은 해석하지 않음), 적용 parser·adapter·profile. 확장자 `.klf`·`.klarf`·`.txt` 외 파일은 제외하며, 확장자가 맞아도 내용이 파싱돼야 `ready`입니다. profile의 adapter로 해석할 수 없는 파일은 `held`(보류)이고 다른 파일은 계속 처리합니다.
+- **실행:** 목록 확인 시점의 파일·profile·coverage를 고정해 기존 단일 분석 core(`run_job`)를 순차 호출합니다. 목록 확인 때 profile·coverage sidecar·파일 내용의 sha256을 기록하고, 실행 시 하나라도 다르면 분석 없이 `CONFIG_INVALID`(profile / coverage / inputs)로 멈춥니다. 실행 중에는 처음 읽은 profile·sidecar 사본만 쓰므로 원본 파일을 고쳐도 같은 batch의 결과가 섞이지 않습니다. 경로가 없으면 `INPUT_NOT_FOUND`를 표시합니다. 진행률과 현재 파일을 표시합니다. 한 파일의 실패가 다른 파일을 멈추지 않으며, 실패를 0건으로 저장하지 않습니다. 같은 내용의 파일은 한 번만 분석하고(`duplicate_in_batch`), SQLite를 지정하면 기존 분석 키로 저장 결과를 재사용합니다. 필터 변경이나 화면 재실행으로 재분석하지 않습니다.
+- **입력 상한(화면에서 변경 가능, 개발용 기본값):** 파일 500개, 파일당 50 MB, 총 300 MB. 넘는 파일은 사유와 함께 제외합니다. 파일 수 상한은 확장자·크기 조건을 통과한 파일만 셉니다.
+- **수 구분:** 업로드 파일 수, 분석 단위 수, 고유 wafer 수(헤더 값, 미검증), wafer ID 미상 분석 단위 수를 따로 셉니다. 분석된 단위가 없으면 포함 결함 합은 0이 아니라 "-"(null)입니다. 현재 파서는 파일당 wafer record 1개만 허용하므로(복수 record는 `invalid_input`, TBD T-12) 성공한 파일 1개 = 분석 단위 1개입니다.
+- **정도 지표(원시 값, 점수·등급 없음):** 포함 결함 수; 유형별 고유 support 수와 비율(분모 = 포함 결함 수, 0이면 null); 평가 불가(disabled/insufficient_data) 유형은 0이 아니라 null; 유효 검사면적과 면적 보정 밀도(coverage sidecar가 있고 창 밖 결함이 없을 때만, 아니면 null+사유); ring 반경·직경·두께(P95−P5)·극단 폭, line 길이·폭·RMS 잔차·방향; 주요 시계방향과 개수·분모·비율(분모 = 포함 결함 수 − center, 방향 미상이면 보류); 삼발이는 lobe별 방향·개수를 JSON 그대로 둡니다(비활성이면 빈 칸); 평가 가능한 유형이 하나도 없으면 전체 유형 union도 null입니다. 위 값은 화면 표와 요약 CSV에 모두 열로 나옵니다. 배치 내 중복 행(`duplicate_in_batch`)은 원본 행의 값을 그대로 보여 주므로, 열을 합산할 때는 `status = succeeded` 행만 더하세요. batch 밀도는 비교 가능한 그룹(profile·adapter·coverage·스키마)별 `sum(count)/sum(유효 면적)`이며 제외 단위 수를 표시합니다.
+- **유형별 요약:** ring/line/삼발이는 규칙 판정, local은 DBSCAN 군집에서 파생한 후보(규칙·보정 없음)입니다. candidate와 matched를 구분하고, 평가 가능/불가 분모를 표시합니다. 유형은 겹칠 수 있어 합이 분석 단위 수와 같지 않습니다. 실패·보류 파일은 "평가 안 됨"이며 "유형 없음"이 아닙니다. 요약은 최초 예측 기준이고, 검토 상태·최신 revision은 별도 열입니다.
+- **맵 갤러리:** 표준 좌표(mm, 노치 6시), profile 반경의 원, 페이지당 12개, 맵당 최대 2000점 표시(통계에는 영향 없음).
+- **다운로드:** 전체 요약 CSV, 유형별 요약 CSV, ZIP(`batch_manifest.json` — 입력 hash·상태·사유·중복·제외 범위·버전, 단위별 `result.json`·CSV·manifest). 필터된 화면 표 CSV는 별도 버튼입니다.
+- SQLite에는 기존 runs/reviews 외에 batch와 구성원 연결 행만 추가합니다(결과·검토 복제 없음). `batch_members.rel_path` 열에는 폴더를 뺀 파일명만 저장하며, 전체 상대 경로는 ZIP의 `batch_manifest.json`에만 있습니다(T-31). 원본 bin 합계와 밀도는 모두 profile 내용(sha256)·adapter가 같은 그룹 안에서만 합칩니다.
+- 다운로드 파일은 화면을 다시 그릴 때마다 새로 만들어 검토 열을 최신으로 유지합니다. 파일 수가 많으면 화면 반응이 느릴 수 있습니다(개선은 실제 규모 확인 후).
+
 ## 입력 지원 범위
 
 현재는 두 종류의 합성 adapter를 지원합니다. 먼저 `synthetic-um-die00-notch-down`의 규약은 다음과 같습니다.
@@ -293,6 +309,33 @@ inspection_classification/
 ```
 
 ## 현재 한계와 다음 단계
+
+### 기본 profile, 파일 선택, coverage·SQLite 시험 (2026-10-10)
+
+- 통합 입력 화면의 기본 profile 경로는 프로젝트의 `tests/profiles/dummy_die_local_test_profile.yaml` 절대 경로입니다. 이 YAML을 같은 위치에서 수정·덮어쓰기하면 다음 분석에 반영됩니다. 별도 경로도 입력할 수 있으며 profile 업로드가 있으면 업로드가 우선합니다. 입력 목록 확인 뒤 경로의 YAML이 변경되면 실행 시 최신 profile로 목록을 다시 검증합니다. 실행 중에는 검증한 사본을 사용합니다. 잘못된 YAML은 오류로 중단합니다. 상세보기는 분석 당시 결과이며, 왼쪽 입력·설정을 바꿨으면 입력 목록 확인 후 다시 분석합니다.
+- 여러 파일/폴더를 한 번에 업로드하고 **분석할 파일**에서 제외할 파일의 선택을 해제합니다. **전체 선택/전체 제외**도 가능합니다. 선택 후 **입력 목록 확인 → 일괄 분석 실행** 순서로 진행합니다. 선택·입력 설정 변경 시 이전 목록과 결과는 초기화됩니다. 결과·CSV·ZIP·DB에는 선택하여 제출한 파일만 포함됩니다. 결과의 ‘업로드 파일’ 수 역시 이 제출 범위 기준이며, 전체 업로드/선택/제외 수는 입력 화면에 따로 표시합니다.
+- **업로드 전체 삭제**는 파일·폴더 업로드와 현재 배치 화면을 비웁니다. 원본 디스크 파일이나 이미 저장된 SQLite 이력은 삭제하지 않습니다.
+- `f01_test_profile.yaml`은 평면 F01 fixture(`tests/fixtures/klarf/f01.klf`)용으로 계속 유효하여 삭제하지 않았습니다. 이 adapter는 `CoordinatesMirrored=NO` 명시, die index `(0,0)` 등을 요구합니다. dummy KLARF 1.8에는 해당 mirror 필드가 없어 첫 검사에서 `CoordinatesMirrored != NO`가 발생합니다. 실제 mirror가 발견됐다는 뜻이 아닙니다. dummy 파일은 die index·pitch·중심·노치 회전을 처리하는 `synthetic-die-local-v1` profile을 사용해야 합니다. 기본 profile은 합성 시험용이며 운영 설정은 아닙니다.
+
+**coverage sidecar 시험**
+
+1. `klarf_dummy_data/klarf/F01_counts.klarf`를 기본 profile로 분석합니다.
+2. coverage 경로에 `tests/fixtures/coverage/full_disk_150.json`을 입력합니다(프로젝트 루트에서 앱을 실행한 경우). 다른 실행 위치에서는 절대 경로를 사용합니다.
+3. 목록 화면의 ‘면적 보정 밀도’ 및 요약 CSV의 `valid_area_mm2`, `density_per_mm2`를 확인합니다. ‘상세 맵·검토 화면 열기’를 누르면 ‘공간 집계’와 ‘판정 상태’를 볼 수 있습니다. 상세 JSON의 `result.provenance.coverage`, `result.radial_density`, `result.clark_evans`에도 기록됩니다.
+4. F01 포함 결함은 8개로 유지되고 전체 유효 면적은 `π×150² ≈ 70685.8347 mm²`, 전체 밀도는 `8/(π×150²) ≈ 0.0001131768 /mm²`입니다. 경로를 비우고 새로 분석하면 coverage 미상으로 면적 보정 밀도는 null/빈 칸입니다.
+
+이 JSON은 검사 영역을 명시하는 보조 입력입니다. 현재 중심 원판(`full_disk`)만 지원하며 반경은 profile 웨이퍼 반경 이하여야 합니다. 일괄 분석에서는 모든 선택 파일에 공통 적용됩니다. 실제 검사 영역을 모르는 입력에 이 시험 선언을 적용해서는 안 됩니다.
+
+**SQLite 시험 및 확인**
+
+1. SQLite 저장 경로에 `analysis_test.db` 또는 쓰기 가능한 기존 폴더 아래의 절대 파일 경로를 입력합니다. DB 파일은 자동 생성됩니다. 부모 폴더는 먼저 존재해야 합니다.
+2. F01 파일 하나를 일괄 분석합니다. 같은 파일·profile·coverage로 다시 분석하면 개요의 ‘저장 결과 재사용’이 1이 됩니다. 이는 동일 결과 행의 중복 저장을 막는 기능이며, 현재 분석 계산 자체는 다시 수행합니다.
+3. ‘상세 맵·검토 화면 열기’에서 action=`defer`, payload=`{"reason_code":"needs_sem_review"}`로 검토 저장 후 revision과 review_status를 확인합니다. 이후 동일 입력을 재실행해도 검토 이력은 유지됩니다.
+4. DB 파일에는 `runs`(분석 결과 JSON), `attempts`(실행 시도), `batches`(배치), `batch_members`(배치 구성), `reviews`(검토 revision)가 있습니다. SQLite 조회 도구로 `SELECT COUNT(*) FROM runs;`, `SELECT * FROM attempts;`, `SELECT * FROM reviews;` 등을 실행할 수 있습니다. 동일 F01을 두 번 성공적으로 제출한 새 DB라면 runs=1, attempts=2, batches=2입니다.
+
+DB 경로가 비어 있으면 화면 분석과 다운로드는 가능하지만 DB 검토 저장·재사용은 없습니다. 현재 앱에 전체 과거 배치를 탐색하는 화면은 없으므로 같은 입력을 같은 DB로 재분석해 검토를 확인하거나 SQLite 조회 도구로 확인합니다.
+
+보이는 Edge 브라우저에서 시험을 재현하려면 프로젝트 Python으로 `python tests/browser_demo.py`를 실행합니다. F01 파일 2개의 coverage 미상/선언, 면적·밀도, 동일 DB 재사용, 상세보기·검토 저장·목록 복귀를 실행합니다. 매번 새 `demo_output/<실행시각>/`에 DB·화면 캡처·검증 JSON을 생성하며, 브라우저를 닫으면 시연 전용 서버도 종료됩니다.
 
 - 실제 장비의 die pitch/origin, 좌표 단위, notch·side·mirror, bin 의미에 맞는 adapter 검증이 필요합니다.
 - 원판 coverage는 sidecar로 지정할 수 있으나, 실제 die 규칙과 검사 die 목록이 없어 `affected_die_count`, `inspected_die_count`는 `null`입니다.

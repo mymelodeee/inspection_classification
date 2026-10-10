@@ -107,7 +107,7 @@ DBSCAN의 noise point는 삭제하지 않는다. Scratch·희박한 ring·repeat
 |---|---|---|
 | 파일명 | 파싱하지 않는다. 파일명은 시도 기록(attempts)에 basename으로만 남고, 분석 키·중복 판정은 파일 내용 sha256을 쓴다 | 아래 ① |
 | 내부 형식 | (a) 1.2 스타일 평면 문법(`DefectRecordSpec`/`DefectList`), (b) KLARF 1.8 Record/Field/List, 단일 FileRecord>LotRecord>WaferRecord와 단일 DefectList. 둘 다 UTF-8. 선언 개수·괄호·EndOfFile·중복 Field를 엄격 검사 | 아래 ② |
-| 메타데이터 | lot/wafer/job/시간을 추출·출력하지 않는다(헤더는 내부에서만 읽음). 결과의 식별은 source_sha256과 이벤트 키 `레코드순서:DEFECTID` | 아래 ③ |
+| 메타데이터 | 단일 분석 결과에는 lot/wafer/job/시간을 출력하지 않는다. 결과의 식별은 source_sha256과 이벤트 키 `레코드순서:DEFECTID`. (2026-10-10) 일괄 분석은 KLARF 헤더의 lot/wafer(평면 LotID/WaferID, 1.8 LotRecord/WaferRecord 이름)를 "미검증" 출처로 입력 목록·요약 CSV·batch manifest에 표시·내보내지만 분석 키·중복 판정·집계에는 쓰지 않는다 | 아래 ③ |
 | 좌표 | 합성 adapter 2종을 profile `coordinates.adapter_id`로 명시 선택: `synthetic-um-die00-notch-down`(XREL/YREL=중심 기준 µm, 단일 die), `synthetic-die-local-v1`(raw=(index×pitch+rel−center)/1000, 노치 회전 1회, side는 profile 선언) | 아래 ④ |
 | bin | `CLASSNUMBER`만 사용(0=unknown). 표기는 adapter별로 "B<n>" 또는 "<n>". ROUGH/FINE bin은 읽지만 쓰지 않는다 | 아래 ④ |
 
@@ -351,6 +351,10 @@ bin_mapping:
 5. 검토: 맞음·유형 수정·군집 병합·군집 분리·판정 보류 및 사유 기록.
 
 MVP 리포트는 확정 계산값을 template 문장으로 작성한다. LLM 요약은 선택 확장이다. 예시 문장은 ‘삼발이 템플릿과 일치하는 세 군집이 관찰됨’으로 두고 ‘lift pin이 불량 원인임’으로 자동 바꾸지 않는다.
+
+### 10.1a 일괄 분석 흐름 (2026-10-10 구현, 합성 검증)
+
+업로드(여러 파일·폴더) → 입력 목록(상태·사유·hash·헤더 메타데이터·적용 parser/adapter/profile) → 고정된 입력으로 단일 core 순차 실행 → batch 개요·분석 단위 표·유형별 요약·정도 원시 지표 → 기존 상세/검토 화면 → 요약 CSV·유형 CSV·ZIP. 정도 지표는 원시 값과 분모만 제공하며 0~100 점수나 정상/위험 등급을 만들지 않는다(등급은 사내 보정 자료와 합의된 임계값 필요, TBD T-31). 상세 정의는 README "일괄 분석"과 19.4.
 
 ### 10.2 JSON 주요 필드
 
@@ -917,6 +921,27 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 | E02-REAL | 실제 기준점으로 단위·die index/pitch·중심·축·notch·side 변환 대조 | gold 기준점 허용오차 내. 파싱 성공과 좌표 검증을 별도 상태로 기록 | C03, C04 |
 | E09-BIN-REAL | classification/rough/fine bin 의미 대조 | 사내 매핑 버전과 일치, unknown 보존 | C02 |
 
+### 19.4 일괄 분석 하위 case (2026-10-10, TBD T-31)
+
+기존 E/C ID를 유지하고 일괄 분석용 하위 case만 추가한다. 합성 fixture 기준이며 실제 장비·운영 상한 검증이 아니다.
+
+| 하위 case | 내용 | 연계 C |
+|---|---|---|
+| E01-BATCH1 | 한 파일 batch의 결과 = 단일 분석 결과 | C02 |
+| E01-BATCH13 | `klarf_dummy_data` 13개 일괄, unit별 개수·bin·center·sector = manifest, 총 1412 | C01, C02 |
+| E17-BATCH | 여러 파일 선택 = 폴더 선택(같은 분석 키), 하위 폴더의 같은 파일명·다른 내용 구분, 같은 내용 다른 이름은 batch 내 중복, 반복·rerun·필터로 총수 불변 | C17 |
+| E13-BATCH | 손상·미지원·비KLARF 파일이 섞여도 정상 입력 완료, 실패를 0건으로 저장하지 않음 | C15, C20 |
+| E03-BATCH | 빈 맵(성공·0건)과 파싱 실패 구분, 비율 분모 0은 null | C15 |
+| E06-BATCH | 혼합·중첩 support의 고유 개수, 파일 간 같은 DEFECTID 비충돌 | C11 |
+| E10/E11-BATCH | coverage·방향 미상 → 밀도·방향 지표 null/보류, 부분 coverage 창 밖 결함 → 밀도 null | C04, C06 |
+| E09-MULTI-BATCH | 복수 wafer record 파일은 지원 안 됨(`invalid_input`), 파일 수와 분석 단위 수 구분 | C02 |
+| E16-BATCH | 화면·요약 CSV·유형 CSV·ZIP의 값·상태·버전 일치(실제 Edge 다운로드 포함) | C15 |
+| E19-BATCH | review 이력 보존, 적용 revision 표시, batch가 결과·검토를 복제하지 않음 | C17 |
+| E18-BATCH | 입력 상한 처리(파일 수 상한은 확장자·크기 통과 파일만 셈), 다른 batch·profile 결과 혼입 방지, core는 목록 확인 후 profile·coverage sidecar·파일 내용 변경 시 실행 거부(`CONFIG_INVALID` profile/coverage/inputs). UI는 경로 profile 변경 시 최신 파일로 재검증한 목록을 core에 전달(2026-10-10 사용자 요청). 실행 중 profile 원본 수정이 결과에 섞이지 않음(고정 사본 사용) | C17 |
+| E16-BATCH-SELECT | 여러 파일·폴더 업로드 후 일부 선택/전체 제외/전체 선택; 선택 변경 시 과거 결과 무효화; 선택 파일만 분석·다운로드. 전체 삭제 후 두 uploader 비움 및 재업로드 가능 | C01, C15, C17 |
+| E12-DEFAULT / E18-PROFILE-RELOAD | 단일/일괄 기본 경로는 dummy profile. 같은 경로 YAML 수정 후 최신 profile ID/hash로 분석; batch는 재검증 후 실행. F01 fixture 전용 profile 유지 | C17, C20 |
+| E02-BATCH-COUNT | wafer ID 미상 수는 분석 단위 수(중복 튜플 1개로 합치지 않음), 분석 단위 0이면 포함 결함 합 null, 평가 가능 유형 없음 → 전체 union null | C02, C15 |
+
 ## 20. 실행 기록과 Release 완료 판정
 
 ### 20.1 상태 규칙
@@ -941,6 +966,8 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 | E10-UP / E07-UP (T-03 노치 미상 부분 결과) | 동상 | klarf_dummy_data manifest·expected, f01-oracle-1 | 동상 | PASS(합성) | 노치 필드 제거 시 개수·bin·zone·radial·center 반환, clock·위상 null/insufficient_data | tests/test_ingest_cli.py, tests/test_dummy_klarf18.py | 없음 | 동상 |
 | E11-UP (T-05) | 동상 | — | 동상 | PASS(합성) | sidecar 오류 reason 구분(syntax/unsupported_shape/invalid_value) | tests/test_dummy_klarf18.py | 없음 | 동상 |
 | E16-DL / E19-DL (2026-10-09, 다운로드 내용 대조) | 동상 | f01.klf + f01_test_profile.yaml, 기대값은 테스트 내 독립 oracle(plan 19.2 + fixture 본문)·sha256 재계산 | 메인 | PASS(합성) | 실제 브라우저 다운로드 JSON/CSV zip = 8/8/0, bin 1·2·3 = 3·3·2, center 1, 12h·3h·6h·9h = 1·4·1·1, radial count 1/4/3 & area·density null(coverage_unknown), sector 0은 0으로 기록, review null→deferred rev1, provenance·manifest 동일 | tests/test_e2e_browser.py | 없음(제품 결함 미발견; selectbox 재시도는 테스트 타이밍 보정) | `pytest tests/test_e2e_browser.py -q` 7 passed |
+| E01-BATCH1 / E09-MULTI-BATCH / E06-BATCH / E17-BATCH / E19-BATCH / E18-BATCH / E02-BATCH-COUNT (2026-10-10, 일괄 분석 T-31) | 미커밋 작업 트리 | klarf_dummy_data manifest·expected(file_sha256 일치), dummy_die_local_test_profile.yaml, synthetic_profile.json; 손상·복수 WaferRecord·헤더 미상 파일은 테스트 안에서 생성 | 메인·test-maintainer·e2e-validator·contract-reviewer | PASS(합성) | 1파일 batch = 단일 run_job 결과 전체 일치; 같은 이름·다른 폴더 2단위(8/240); 복수 WaferRecord = invalid_input, 파일 1·단위 0, 0건 저장 없음; 파일 간 같은 DEFECTID 비충돌 합 488; 두 batch 같은 DB 격리·rerun 재사용·review 보존; profile/coverage/파일 변경 시 실행 거부, 실행 중 profile 수정 미반영; wafer ID 미상 3단위 = 3 | tests/test_batch.py(test_01~23, 12b, 12c) | 검토 지적 M1(입력 고정 불완전)·M2(미상 wafer 수)·M3(정도 지표 미노출)·m1·m2·m3·m7·m8·m10 수정 | `pytest tests/test_batch.py -q` 26 passed, `-m "not e2e"` 345 passed, `-m e2e` 11 passed(Edge) |
+| E01-BATCH13 / E13-BATCH(일부) / E03-BATCH(일부) / E16-BATCH(CSV·ZIP 수치) | 동상 | 동상 + 메모리 생성 손상 2·비대상 1·중복 1 | e2e-validator(독립 스크립트) | PASS(합성, 일부) | 13단위 개수·bin·center·sector = manifest, 총 1412; 손상 파일 runs 행 없음·CSV 빈 칸; ZIP manifest sha256 17건 = 실제 파일; unit result.json = DB; batch 밀도 1412/(13·π·150²) | 검증 스크립트(세션 scratchpad, 저장소 밖) | 없음 | 검토 지적 수정 후 같은 스크립트(scan에 coverage 전달만 변경) 재실행: 15/15 PASS, 수치 동일(1412, 밀도 1.53659337e-3, rerun 13 재사용) |
 
 각 E2E 변형은 E02-UP, E07-SINGLE, E11-NOCOVERAGE처럼 하위 ID를 부여한다. 상위 시나리오는 적용 가능한 필수 하위 case를 모두 통과했을 때만 PASS다. 실패 수정 후 영향받는 case와 연결된 C 항목을 다시 실행한다.
 
@@ -958,6 +985,27 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 현재 release 판정: NOT_READY. 사유: 본 작업은 실행계획과 시험 명세의 작성·문서 정합성 점검까지 수행했으며, 프로그램 구현·fixture 제작·사내 KLARF 대조·E2E 실행은 수행하지 않았다. **(2026-10-09 갱신)** 판정은 NOT_READY로 유지한다. 합성 범위의 구현·fixture·CLI/UI E2E는 진행됐지만 사내 KLARF 대조, 실제 입력 계약(5.3, T-29), blind 평가, 배포가 남아 있다.
 
 ### 20.4 이번 문서 개정에서 실제 수행한 점검
+
+2026-10-10 profile 기본값 표시 보완: `batch_profile_path` 입력 위젯의 `value`에 기본 YAML 절대 경로를 명시하고, 공백 입력은 변경 callback에서 기본값으로 복원한다. 사용자 지정 경로는 유지한다. E12-DEFAULT에 빈 기존 세션·빈 값 편집·위젯 기본값·사용자 경로 유지 검증을 추가했다. `python -m pytest tests/test_app.py -q`: **10 passed** (insenv Python 3.12.15); `git diff --check` 통과. C17/C20: 설정 내용·분석 로직은 변경하지 않았으며 이번 범위의 UI 회귀만 실행했다.
+
+2026-10-10 통합 입력 후속 변경 (사용자 승인: 단일/다중 모드 제거):
+
+- E16-UNIFIED: 공통 batch 입력, 기본 dummy YAML, 한 파일도 batch 분석 후 상세보기 사용. 목록↔상세 이동 시 업로드·선택·결과 보존. 상세 입력은 분석 당시 결과를 유지하고 새 분석은 목록 확인으로 시작.
+- 기존 단일 UI 테스트를 공통 입력→분석→상세보기로 개정. 손상 입력은 batch 실패 1건/상세 없음으로 기대값 개정(원본 파싱·숫자 정답 유지). 구형 모드 radio 선택 단계 제거.
+- `python -m pytest -m "not e2e" -q`: **346 passed, 13 deselected**.
+- `python -m pytest -m e2e -q`: **13 passed, 346 deselected, skip 0**, 시스템 Edge, 106.40초.
+- E16-UNIFIED/E19 신규 브라우저 시험: 두 F01 파일 각 8개/총16; 파일별 면적 π×150², 밀도 8/(π×150²); 상세 검토 defer revision 1 후 목록 복귀·같은 DB 재분석 시 재사용 2, runs=2/attempts=4/reviews=1. C01/C15/C17/C20 계약 대조 완료. 실제 장비 검증 상태는 변경 없음.
+- 보이는 Edge 시연도 완료: `demo_output/20261010-092905/verification.json`, `coverage_sqlite.db`, 화면 캡처 5개. coverage 미입력 시 밀도 null, 입력 시 파일별 면적 70685.8347mm²/밀도 0.0001131768 확인. 새 DB에 runs=2/attempts=4/batches=2/batch_members=4/reviews=1, confirm revision 1 저장 후 목록 복귀. 앞선 시연의 UI 갱신/다운로드·선택 타이밍 실패는 대기 조건과 기본 confirm 시연으로 수정 후 재실행. 시연 브라우저를 닫으면 해당 서버 종료.
+
+2026-10-10 입력 UI 후속 검증 (Windows, insenv Python 3.12.15, 합성 자료):
+
+- `python -m pytest -m "not e2e" -q`: **346 passed, 12 deselected**.
+- `python -m pytest -m e2e -q`: **12 passed, 346 deselected, skip 0** (시스템 Edge, 173.82초).
+- 신규 E16-BATCH-SELECT: 일부 선택(독립 F01 정답 8), 전체 제외/선택, 파일·폴더 전체 삭제 및 재업로드를 실제 브라우저에서 확인.
+- 신규 E12-DEFAULT / E18-PROFILE-RELOAD: 단일/일괄 기본 경로 확인, 경로 YAML 수정 후 profile ID/hash 변경과 batch 재검증·ZIP 반영 확인. core의 입력 hash 불변 테스트는 유지.
+- 최초 브라우저 회귀는 도움말 버튼이 기존 부분 label 선택자에 함께 매칭되어 8건 실패. 테스트를 정확한 textbox 역할 선택자로 수정한 뒤 전체 재실행하여 위 결과 확보(기대값 완화 없음).
+- C01/C15/C17/C20 정합성 검토: 선택 범위만 제출, 설정 변경 시 이전 결과 무효화, 실행 중 사본 고정, DB·검토 이력 보존, 시험 profile/coverage의 운영값 사용 금지 유지. F01 profile은 기존 fixture에 유효하여 삭제하지 않음.
+- 기존 사용자 변경을 보존했고 분석·좌표 알고리즘은 수정하지 않음. 실제 장비 검증 및 release 체크의 미완료 상태는 그대로 유지.
 
 | 점검 | 결과 | 한계 |
 |---|---|---|

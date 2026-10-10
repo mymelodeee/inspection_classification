@@ -19,39 +19,22 @@ import plotly.graph_objects as go  # noqa: E402
 import streamlit as st  # noqa: E402
 
 from wafer import store  # noqa: E402
-from wafer.cli import run_job  # noqa: E402
 from wafer.report import spatial_rows, write_csv  # noqa: E402
 
 st.set_page_config(page_title="Wafer inspection map", layout="wide")
 st.title("Wafer inspection map")
 st.caption("합성 adapter 기준 개발 단계입니다. 실제 장비 export와 운영 임계값은 검증되지 않았습니다 (TBD.md).")
 
-with st.sidebar:
-    st.header("입력")
-    k_up = st.file_uploader("KLARF", type=["klf", "klarf", "txt"])
-    k_path = st.text_input("또는 KLARF 경로", key="klarf_path")
-    p_up = st.file_uploader("Profile (YAML)", type=["yaml", "yml"])
-    p_path = st.text_input("또는 profile 경로", key="profile_path")
-    cov_path = st.text_input("coverage sidecar 경로 (선택, 없으면 coverage 미상)", key="coverage_path")
-    db = st.text_input("SQLite 저장 경로 (선택)", key="db_path")
-    run = st.button("분석 실행", key="run")
+from wafer.batch_ui import render as render_batch  # noqa: E402
 
-if run:
-    st.session_state.pop("job", None)            # never show a previous result for a new request
-    if not (k_up or k_path) or not (p_up or p_path):
-        st.error("KLARF와 profile을 모두 지정하세요.")
-    else:
-        with tempfile.TemporaryDirectory() as d:  # uploaded inputs are removed right after the run
-            klarf, name = k_path, k_path
-            if k_up:
-                klarf, name = str(Path(d) / Path(k_up.name).name), k_up.name
-                Path(klarf).write_bytes(k_up.getvalue())
-            profile = p_path
-            if p_up:
-                profile = str(Path(d) / Path(p_up.name).name)
-                Path(profile).write_bytes(p_up.getvalue())
-            out, code = run_job(klarf, profile, db=db or None, source_name=name, coverage_path=cov_path or None)
-        st.session_state["job"] = {"out": out, "code": code, "db": db or None, "source": Path(name).name}
+render_batch()  # one input workflow for one or many files; sidebar remains alive in detail view
+if not st.session_state.get("show_detail"):
+    st.stop()
+
+if st.button("← 분석 목록으로 돌아가기", key="back_to_batch"):
+    st.session_state["show_detail"] = False
+    st.rerun()
+st.subheader("파일 상세보기")
 
 job = st.session_state.get("job")
 if not job:
