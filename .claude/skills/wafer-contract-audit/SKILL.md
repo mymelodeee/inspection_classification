@@ -1,6 +1,6 @@
 ---
 name: wafer-contract-audit
-description: Audit consistency between the wafer-inspection documents (README.md, CLAUDE.md, TBD.md, execution plan, README-wafer-agents.md, CLAUDE_CODE_TOOLING_GUIDE.md), the code (wafer/*), the YAML profiles and the tests. Separates stale descriptions from approved spec changes and real defects. Use before or after documentation updates, after interface changes, or when a document claims a status.
+description: Audit consistency between the wafer-inspection documents (README.md, CLAUDE.md, docs/1-9 design documents incl. docs/9_TBD.md and docs/6_execution_plan.md, README-wafer-agents.md, CLAUDE_CODE_TOOLING_GUIDE.md), the code (wafer/*), the YAML profiles and the tests. Separates stale descriptions from approved spec changes and real defects. Use before or after documentation updates, after interface changes, or when a document claims a status.
 ---
 
 # wafer-contract-audit
@@ -10,9 +10,12 @@ For execution evidence use the `wafer-verify` skill or the `wafer-e2e-validator`
 
 ## 1. Read the sources of truth
 
-- Requirements and contracts: `CLAUDE.md` (4: analysis contracts), `wafer_inspection_execution_plan.md`
+- Requirements and contracts: `CLAUDE.md` (4: analysis contracts), `docs/6_execution_plan.md`
   (5.3 input contract, 9 YAML, 10 results, 16 common contract, 17 checklist, 18 C table, 19 E scenarios).
-- Decisions and open items: `TBD.md` (decided rows carry a date; open rows stay open).
+- Current-implementation documents: `docs/1_domain_definition.md` (terms, schema), `docs/2_PRD.md` (FR status),
+  `docs/3_user_scenarios.md` (scenario-to-test map), `docs/4_architecture_diagram.md`, `docs/5_ERD.md`,
+  `docs/7_wireframe.md` (labels, widget keys), `docs/8_style_guide.md`, `docs/wafer_usage_and_internal_data_guide.html`.
+- Decisions and open items: `docs/9_TBD.md` (decided rows carry a date; open rows stay open).
 - Current behaviour: `wafer/*.py`, `tests/profiles/*.yaml`, `tests/test_*.py`, `.claude/`, `.mcp.json`.
 
 ## 2. What to compare
@@ -36,10 +39,10 @@ For execution evidence use the `wafer-verify` skill or the `wafer-e2e-validator`
 3. **Code defect** - the code violates a still-valid contract. Do not edit the requirement to match the
    code; report it (fix it only if the task allows code changes).
 4. **Open definition** - in-house values (E1/E2, band width, lift-pin template, coverage, thresholds,
-   real input contract T-29) remain open/BLOCKED. Never fill them from code defaults or test-only values.
+   real input contract T-26) remain open/BLOCKED. Never fill them from code defaults or test-only values.
 
 Keep these distinctions explicit in edited text:
-- "validated on synthetic input" vs "in-house input supported" (the latter is not done - T-29),
+- "validated on synthetic input" vs "in-house input supported" (the latter is not done - T-26),
 - test-only profile values vs operating values,
 - `candidate` vs `matched` (matched only with a calibrated, approved rule),
 - dated historical records (keep them, add an update line) vs current state.

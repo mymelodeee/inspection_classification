@@ -29,7 +29,7 @@ class Coordinates(_M):
     target_x: Literal["RIGHT"] = "RIGHT"
     target_y: Literal["UP"] = "UP"
     side_convention: Optional[str] = None
-    missing_orientation: Literal["retain_unknown"] = "retain_unknown"   # only supported policy (T-03)
+    missing_orientation: Literal["retain_unknown"] = "retain_unknown"   # only supported policy (T-02)
 
 
 class Coverage(_M):
@@ -86,7 +86,7 @@ class Signatures(_M):
 
 
 class RingRule(_M):
-    """Ring/arc classification (TBD.md T-17). No code defaults: thresholds come from a profile
+    """Ring/arc classification (TBD.md T-14). No code defaults: thresholds come from a profile
     calibrated on internal labeled data. Enabled with a missing threshold -> CONFIG_INVALID."""
     enabled: bool = False
     occupancy_bin_deg: Optional[float] = None       # angular bin size for occupancy
@@ -98,7 +98,7 @@ class RingRule(_M):
 
 
 class LineRule(_M):
-    """Linear-pattern classification (TBD.md T-21). No code defaults; enabled + null -> CONFIG_INVALID."""
+    """Linear-pattern classification (TBD.md T-18). No code defaults; enabled + null -> CONFIG_INVALID."""
     enabled: bool = False
     min_points: Optional[int] = None
     max_relative_width: Optional[float] = None  # (P95-P5 normal distance) / length
@@ -112,7 +112,7 @@ class Shapes(_M):
 
 
 class Detect(_M):
-    """Candidate-detector search parameters (TBD.md T-22). No code defaults; enabled + null -> CONFIG_INVALID."""
+    """Candidate-detector search parameters (TBD.md T-19). No code defaults; enabled + null -> CONFIG_INVALID."""
     enabled: bool = False
     ring_radial_tol_mm: Optional[float] = None   # ring support = points within +-tol of the densest radius
     line_inlier_mm: Optional[float] = None       # line support = points within this normal distance
@@ -143,6 +143,28 @@ class BinMapping(_M):
     unknown_policy: str = "preserve"
 
 
+class EquipmentSignature(_M):
+    """Batch-level repeat of a spatial candidate across wafers of the same INSPECTION tool (user decision
+    2026-10-12: InspectionStationID, >= 3 wafers, a different StepID never excludes a wafer). A repeat is a
+    candidate, not a cause. Tolerances have no code defaults: enabled + null -> CONFIG_INVALID."""
+    enabled: bool = False
+    equipment_field: Literal["InspectionStationID"] = "InspectionStationID"   # inspection tool, not process tool
+    min_wafers: int = 3
+    ring_radius_tol_mm: Optional[float] = None      # |center radius difference|
+    line_angle_tol_deg: Optional[float] = None      # direction difference (mod 180)
+    line_offset_tol_mm: Optional[float] = None      # signed distance of the line from the wafer center
+    local_distance_tol_mm: Optional[float] = None   # local cluster centroid distance
+    local_min_points: Optional[int] = None          # ignore smaller local clusters (noise specks)
+
+
+class DefectVolume(_M):
+    """Excess defects vs inspection abort (user decision 2026-10-12). A tool stops reporting at its maximum
+    reportable defect count (overflow / abort), so reaching inspection_defect_limit is the abort evidence; a high
+    count alone is only 'excess, abort unconfirmed'. Both null -> not evaluated. No defaults: tool/recipe values."""
+    excess_defect_count: Optional[int] = None       # reported events >= this -> excess_defect
+    inspection_defect_limit: Optional[int] = None   # tool/recipe maximum reportable defects
+
+
 class Profile(_M):
     schema_version: str = "1.0"
     profile_id: str
@@ -160,6 +182,8 @@ class Profile(_M):
     randomness: Randomness = Randomness()
     clustering: Clustering = Clustering()
     bin_mapping: BinMapping = BinMapping()
+    equipment_signature: EquipmentSignature = EquipmentSignature()
+    defect_volume: DefectVolume = DefectVolume()
 
     def feature_status(self, name):
         """'enabled' or 'disabled' for E1/E2/zone_8inch_inside/zone_8inch_boundary/lift_pin/ring."""
@@ -313,6 +337,26 @@ def _check(p: Profile):
             add("signatures.lift_pin.min_lobe_contrast", "must be > 0")
         if lp.angular_tolerance_deg is not None and lp.angular_tolerance_deg >= lp.spacing_deg / 2:
             add("signatures.lift_pin.angular_tolerance_deg", "must be < spacing_deg / 2 (windows must not overlap)")
+    es = p.equipment_signature
+    if es.enabled:
+        for k in ("ring_radius_tol_mm", "line_angle_tol_deg", "line_offset_tol_mm", "local_distance_tol_mm",
+                  "local_min_points"):
+            v = getattr(es, k)
+            if v is None:
+                add(f"equipment_signature.{k}", "required when enabled")
+            elif v <= 0:
+                add(f"equipment_signature.{k}", "must be > 0")
+        if es.min_wafers < 2:
+            add("equipment_signature.min_wafers", "must be >= 2 (one wafer cannot show a repeat)")
+        if es.line_angle_tol_deg is not None and es.line_angle_tol_deg >= 90:
+            add("equipment_signature.line_angle_tol_deg", "must be < 90")
+    dv = p.defect_volume
+    for k in ("excess_defect_count", "inspection_defect_limit"):
+        if getattr(dv, k) is not None and getattr(dv, k) < 1:
+            add(f"defect_volume.{k}", "must be >= 1")
+    if None not in (dv.excess_defect_count, dv.inspection_defect_limit) and \
+            dv.excess_defect_count > dv.inspection_defect_limit:
+        add("defect_volume.excess_defect_count", "must not exceed inspection_defect_limit")
     if bad:
         raise ConfigInvalid(bad, "; ".join(msgs))
     return p
@@ -343,7 +387,7 @@ def validate_for_run(p: Profile) -> Profile:
     loads fine but is not runnable."""
     bad = [f"clustering.{k}" for k in ("eps_mm", "min_samples") if getattr(p.clustering, k) is None]
     c = p.coordinates
-    if c.adapter_id is None:      # explicit adapter required (T-02 decision, plan 16.1)
+    if c.adapter_id is None:      # explicit adapter required (T-01 decision, plan 16.1)
         bad.append("coordinates.adapter_id")
     if c.adapter_id is not None and c.source_units is None:     # every adapter needs the declared unit
         bad.append("coordinates.source_units")

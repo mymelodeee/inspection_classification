@@ -188,7 +188,7 @@ cases["LP-WRONG-PHASE"] = dict(
 UNCOV = dict(known=True, inspected="full disc r<=150 EXCEPT uncovered_regions (synthetic assumption)",
              uncovered_regions=[dict(type="annular_sector", clock_deg_interval=[220, 260], radius_mm_interval=[40, 80],
                                      closed="left", note="contains the whole template window 240+-10 deg x 60+-5 mm")],
-             representation_note="fixture-local coverage description; production coverage schema is undecided (TBD T-05)")
+             representation_note="fixture-local coverage description; production coverage schema is undecided (TBD T-04)")
 pts, lobes = build("UC", [("L000", 0, 60, OFF5), ("L120", 120, 60, OFF5)])
 cases["LP-UNCOVERED"] = dict(
     points=pts, lobes=lobes, coverage=UNCOV, features=features(pts, lobes),

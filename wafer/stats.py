@@ -1,7 +1,7 @@
 """Radial density and Clark-Evans test. Coverage unknown -> null + reason (never full-disc assumed).
 
 `inspected_radius_mm` is the radius of a circular inspected window about the wafer center,
-supplied by the caller from verified coverage. None means coverage unknown (TBD.md T-05, option a).
+supplied by the caller from verified coverage. None means coverage unknown (TBD.md T-04, option a).
 """
 import math
 

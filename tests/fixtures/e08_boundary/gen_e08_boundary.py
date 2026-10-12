@@ -52,7 +52,7 @@ for rs, ctr in [("0.999", True), ("1.0", False)]:
 # Group 4: clock-angle boundary at radius 50. x=50*sin(t), y=50*cos(t) (theta=atan2(x,y), 0=12 o'clock).
 # Expected sector from the NOMINAL angle (exact Fraction). 15 and 345 are NOT float-representable
 # in x,y (tan 15 deg irrational): flagged float_ambiguous; asserting them needs a tolerance/snap
-# policy (TBD T-09). 14.9/15.1/344.9/345.1 have 0.1 deg margin (>> 1e-9 rounding).
+# policy (TBD T-08). 14.9/15.1/344.9/345.1 have 0.1 deg margin (>> 1e-9 rounding).
 for ts in ["14.9", "15", "15.1", "344.9", "345", "345.1"]:
     t = F(ts); rad = math.radians(float(t))
     x, y = round(50 * math.sin(rad), 12), round(50 * math.cos(rad), 12)
@@ -82,7 +82,7 @@ out = dict(
                plan_links=["E08", "C10", "C11", "C12", "C13", "C14", "P0-05"],
                notes=["Axis points (EDGE/R/CEN/THX) have exact float coordinates when exact=true/ float_ambiguous=false.",
                       "Decimal-edge points (e.g. 1.999, 98.9) are exact only to double precision; margin >= 0.001 mm >> eps.",
-                      "Points with float_ambiguous=true: expected sector is for the ideal angle; assertion requires a snap/tolerance policy (TBD T-09).",
+                      "Points with float_ambiguous=true: expected sector is for the ideal angle; assertion requires a snap/tolerance policy (TBD T-08).",
                       "zones lists tags expected from profile; E1/E2 are distance_from_edge_mm, inside/boundary are radius_mm."]),
     points=pts)
 with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "e08_boundary.json"), "w") as f:

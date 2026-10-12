@@ -98,7 +98,7 @@ def test_ui_values_match_cli_json(tmp_path):
 def test_bin_filter_changes_display_only():
     at = run_app()
     before = metrics(at)
-    # E16-UP (T-04, 2026-10-09): bin label "B1" -> "1" (CLASSNUMBER as text); F01 still has 3 events of bin 1
+    # E16-UP (T-03, 2026-10-09): bin label "B1" -> "1" (CLASSNUMBER as text); F01 still has 3 events of bin 1
     at.multiselect(key="bin_filter").set_value(["1"])
     at.run()
     after = metrics(at)
@@ -142,7 +142,7 @@ def test_ui_shows_the_independent_f01_values():
     m = metrics(at)
     assert (m["included"], m["excluded"], m["center"]) == ("8", "0", "1")
     t = at.dataframe[0].value
-    # E16-UP (T-04, 2026-10-09): was {"B1": 3, "B2": 3, "B3": 2}; oracle "Bn" = CLASSNUMBER n -> key "n"
+    # E16-UP (T-03, 2026-10-09): was {"B1": 3, "B2": 3, "B3": 2}; oracle "Bn" = CLASSNUMBER n -> key "n"
     assert {b: int(t.loc[b, "total"]) for b in t.index} == {"1": 3, "2": 3, "3": 2}
     col = {h: int(t[h].sum()) for h in ("12", "3", "6", "9")}
     assert col == {"12": 1, "3": 4, "6": 1, "9": 1}
@@ -181,3 +181,34 @@ def test_e10_up_ui_says_screen_direction_is_not_physical_when_notch_is_unknown(t
     assert metrics(at)["included"] == "8"
     assert any("노치 위치 미상" in c.value for c in at.caption)
     assert any("orientation_unknown" in w.value for w in at.warning)
+
+
+# ---- E16-NULLWHY / E10 (approved spec change 2026-10-11): None stays None, the screen lists field + reason (C15) ----
+def _nullwhy_expanders(at):
+    return [e for e in at.expander if e.label.startswith("계산 불가 항목")]
+
+
+def test_e16_nullwhy_detail_screen_lists_null_fields_with_reasons(tmp_path):
+    """Hand-stated null sets: f01 profile has no die rule (T-13) -> 2 fields; without the notch line the clock
+    family is withheld as well (sectors_clock, sectors_clock_tolerant, n_multi_sector, boundary_ambiguous,
+    bin_sector) -> 7. center stays a number (1), so no 'center 계산 불가' caption."""
+    at = run_app()
+    ex = _nullwhy_expanders(at)
+    assert len(ex) == 1 and ex[0].label == "계산 불가 항목 2개와 사유 (값은 None 그대로)"
+    t = ex[0].table[0].value
+    assert set(t["field"]) == {"affected_die_count", "inspected_die_count"} and all(t["reason"].str.len() > 0)
+    assert any(s.value.startswith("공간 집계 (None = 계산 불가") for s in at.subheader)
+
+    src = (HERE / "fixtures/klarf/f01.klf").read_text(encoding="utf-8")
+    assert "OrientationMarkLocation DOWN;\n" in src
+    p = tmp_path / "nonotch.klf"
+    p.write_text(src.replace("OrientationMarkLocation DOWN;\n", "", 1), encoding="utf-8")
+    at = run_app(klarf=str(p))
+    ex = _nullwhy_expanders(at)
+    assert len(ex) == 1 and ex[0].label == "계산 불가 항목 7개와 사유 (값은 None 그대로)"
+    t = ex[0].table[0].value
+    assert set(t["field"]) == {"affected_die_count", "inspected_die_count", "sectors_clock", "sectors_clock_tolerant",
+                               "n_multi_sector", "boundary_ambiguous", "bin_sector"}
+    assert all("orientation_unknown" in r for f, r in zip(t["field"], t["reason"]) if "die_count" not in f)
+    assert metrics(at)["center"] == "1" and not any(c.value.startswith("center 계산 불가") for c in at.caption)
+    assert any(w.value.startswith("시계방향 집계 계산 불가") for w in at.warning)

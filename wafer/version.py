@@ -1,4 +1,4 @@
-"""Code fingerprints recorded in provenance and used in the analysis key (plan 16.4, TBD T-27).
+"""Code fingerprints recorded in provenance and used in the analysis key (plan 16.4, TBD T-24).
 
 A content hash of the modules that can change a result replaces a hand-bumped version string, so a
 code change can never reuse a stored result silently. Line endings are normalized so a CRLF/LF

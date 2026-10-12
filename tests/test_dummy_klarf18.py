@@ -12,7 +12,7 @@ shape-classification evaluation, not a UI/E2E run.
 
 N/A here, by design: shape labels (ring / line / local / mixed). manifest "generation_intent" is a pattern
 authoring intent, explicitly "not the classifier's prediction" (README: classifier_output_validated=false), and
-the ring/line thresholds are uncalibrated (TBD T-17/T-21/T-22). Asserting a label would turn an intent into a
+the ring/line thresholds are uncalibrated (TBD T-14/T-18/T-19). Asserting a label would turn an intent into a
 golden answer, so only count / partition invariants of the detectors are checked (T8).
 
 Links: E01 E02 E03 E04 E06(partition only) E07 E08 E09 E11 E13 E16(CLI JSON<->CSV only);
@@ -112,7 +112,7 @@ def test_t1_counts_order_hash_bins_clock_match_manifest(case, run):
     defects.csv equal the oracle CSV clock_hour (half-open sectors [c-15, c+15), center r < 1 mm).
 
     sectors_clock_tolerant is deliberately NOT compared: it counts points within +-tol of a boundary in both
-    neighbouring sectors (T-18) and is not a partition; manifest clock_counts is the strict partition only."""
+    neighbouring sectors (T-15) and is not a partition; manifest clock_counts is the strict partition only."""
     m, rows = MANIFEST[case], expected_rows(case)
     code, o, csvd = run(case)
     assert code == 0 and o["job_status"] == "succeeded"
@@ -127,7 +127,7 @@ def test_t1_counts_order_hash_bins_clock_match_manifest(case, run):
     assert r["provenance"]["source_sha256"] == m["file_sha256"]
     assert r["provenance"]["adapter"] == "synthetic-die-local-v1"
     assert (r["n_parsed"], r["n_included"], r["n_excluded"]) == (m["count"], m["count"], 0)
-    assert r["bin_totals"] == m["bin_counts"]                 # die-local adapter keeps "1"/"2"/"3" (T-04)
+    assert r["bin_totals"] == m["bin_counts"]                 # die-local adapter keeps "1"/"2"/"3" (T-03)
     assert r["center"] == m["center_count"]
     assert r["sectors_clock"] == m["clock_counts"]
     d = read_csv(csvd / "defects.csv")
@@ -182,7 +182,7 @@ def _dummy_variants():
         pytest.param(f, "6 9000.0 0.0 29 15", "6 -1.0 0.0 29 15", id="xrel_negative"),
         pytest.param(f, "Field DiePitch 2 {10000, 10000}", "Field DiePitch 2 {0, 10000}", id="pitch_zero"),
         pytest.param(f, 'Field SampleOrientationMarkType 1 {"NOTCH"}', 'Field SampleOrientationMarkType 1 {"FLAT"}',
-                     id="marktype_FLAT"),   # mark type not guessed (CLAUDE.md 4.2/4.3, T-03)
+                     id="marktype_FLAT"),   # mark type not guessed (CLAUDE.md 4.2/4.3, T-02)
     ]
 
 
@@ -201,7 +201,7 @@ def test_t3_side_other_than_front_profile_is_rejected(tmp_path):
 
 def test_t3_dummy_file_with_f01_profile_adapter_is_rejected(tmp_path):
     """f01_test_profile selects the single-die adapter (adapter_id "synthetic-um-die00-notch-down", explicit since
-    T-02 2026-10-09; was null); a 1.8 die-local file has no
+    T-01 2026-10-09; was null); a 1.8 die-local file has no
     CoordinatesMirrored, multi-die indices and center 150000 um -> must not be silently mis-mapped."""
     code, o, _ = cli(KL / "F01_counts.klarf", tmp_path, profile=F01_PROFILE, csv_dir=False)
     assert code == 3 and o["error"] == "UNSUPPORTED_ADAPTER" and "result" not in o
@@ -374,7 +374,7 @@ def test_t8_noise_and_clusters_partition_the_included_events(case, run):
 
 # ---------------------------------------------------------------- T9: lift-pin template (E07, C09, C19)
 def _e07_profile(tmp_path):
-    t = E07["_meta"]["template"]   # TEST-ONLY template (T-08/T-25), same values as tests/test_e07_lift_pin.py
+    t = E07["_meta"]["template"]   # TEST-ONLY template (T-07/T-22), same values as tests/test_e07_lift_pin.py
     lp = {"enabled": True, "template_id": t["template_id"], "frame": t["frame"], "expected_lobes": t["expected_lobes"],
           "spacing_deg": t["spacing_deg"], "radius_band_mm": t["radius_band_mm"], "phase_deg": t["phase_deg"],
           "angular_tolerance_deg": t["angular_tolerance_deg"], "radial_tolerance_mm": t["radial_tolerance_mm"],
@@ -466,7 +466,7 @@ def test_second_data_block_is_invalid_input(tmp_path):
         ingest.read_klarf(p)
 
 
-# E11-UP (T-05, approved 2026-10-09): exit 2 / CONFIG_INVALID unchanged; out["reason"] now names the cause.
+# E11-UP (T-04, approved 2026-10-09): exit 2 / CONFIG_INVALID unchanged; out["reason"] now names the cause.
 @pytest.mark.parametrize("label,payload,reason", [
     ("not_json", "{", "coverage_syntax_error"),
     ("no_coverage_key", "{}", "coverage_syntax_error"),
@@ -525,7 +525,7 @@ def test_sidecar_file_name_does_not_change_the_analysis_key(tmp_path):
     assert keys[0]["analysis_key"] == keys[1]["analysis_key"] and keys[1]["created"] is False
 
 
-# ---------------------------------------------------------------- notch position missing (approved 2026-10-09, T-03)
+# ---------------------------------------------------------------- notch position missing (approved 2026-10-09, T-02)
 # E10-UP / E02-NONOTCH, C03 C04 C15: no OrientationMarkLocation -> succeeded with a partial result. Radius-only
 # quantities (counts, bins, center, zones, radial counts) are rotation invariant, so the oracle of the same file
 # applies; physical clock / phase are withheld (null + status), never 0 and never a guessed rotation.
@@ -568,8 +568,11 @@ def test_e10_up_missing_notch_returns_radial_partial_result(case, tmp_path):
     for got, exp in zip(d, expected_rows(case), strict=True):
         assert float(got["r_mm"]) == pytest.approx(math.hypot(float(exp["x_mm"]), float(exp["y_mm"])), abs=1e-7)
     sp = {(s["table"], s["key"]): s for s in read_csv(csvd / "spatial_counts.csv")}
+    # E10-UP-NULLWHY (approved spec change 2026-10-11, null reasons): was "insufficient_data: orientation_unknown";
+    # a not-computed row's reason is now prefixed "not computable: " (status and cause unchanged).
     for t in ("sector_strict", "sector_tolerant"):
-        assert sp[(t, "*")]["count"] == "" and sp[(t, "*")]["reason"] == "insufficient_data: orientation_unknown"
+        assert sp[(t, "*")]["count"] == "" and \
+            sp[(t, "*")]["reason"] == "not computable: insufficient_data: orientation_unknown"
     assert sp[("center", "center")]["count"] == "1"
     bs = read_csv(csvd / "bin_sector.csv")
     assert len(bs) == 1 and bs[0]["bin"] == "" and bs[0]["status"] == "insufficient_data: orientation_unknown"
@@ -589,7 +592,7 @@ def test_e07_up_lift_pin_is_insufficient_without_notch(tmp_path):
                                                      "reason": "orientation_unknown"}
 
 
-# ---------------------------------------------------------------- review follow-ups (2026-10-09, T-03 / E10)
+# ---------------------------------------------------------------- review follow-ups (2026-10-09, T-02 / E10)
 @pytest.mark.parametrize("case", ["ring", "line"])
 def test_e10_up_no_direction_leaks_from_measurements_when_notch_is_unknown(case, tmp_path):
     """Notch line removed from a file whose ring/line is a candidate: rotation-invariant values (label, radius,

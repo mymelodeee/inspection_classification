@@ -3,7 +3,7 @@
 Hand-written KLARF text in the flat 1.2-style syntax (`Key value;` header lines, `DefectRecordSpec`,
 `DefectList` rows, `;` terminator) that only carries the version token `FileVersion 1 8`. It is NOT the
 KLARF 1.8 Record/Field/List syntax; that syntax is exercised by `klarf_dummy_data/`
-(`tests/test_dummy_klarf18.py`). See TBD.md T-15. Header fields follow common KLARF names but this is NOT
+(`tests/test_dummy_klarf18.py`). See docs/9_TBD.md T-12. Header fields follow common KLARF names but this is NOT
 verified against any real equipment export (Phase 0 / P0-01, P0-02 pending). Passing these
 files proves nothing about a tool adapter (CLAUDE.md 6-9, C20).
 
@@ -13,12 +13,12 @@ files proves nothing about a tool adapter (CLAUDE.md 6-9, C20).
   coincides with the wafer centre (`DieOrigin 0 0`, `SampleCenterLocation 0 0`), so DiePitch
   (400000 um, larger than the wafer) plays no role. No pitch trick is used.
 - If `OrientationMarkLocation` is absent the run still succeeds with partial results (counts, bins, radial/edge zones);
-  clock sectors and phase are withheld (`orientation_status=unknown`, T-03 decision 2026-10-09). A notch other than DOWN
+  clock sectors and phase are withheld (`orientation_status=unknown`, T-02 decision 2026-10-09). A notch other than DOWN
   is still rejected for this adapter.
 - `x_mm = XREL/1000`, `y_mm = YREL/1000`. +X right, +Y up, no mirror (`CoordinatesMirrored NO`),
   notch already at 6 o'clock (`OrientationMarkLocation DOWN`) so NO rotation is applied
   (guards against double rotation, C03).
-- CLASSNUMBER 1/2/3 -> bins "1"/"2"/"3" (plan F01 names them B1/B2/B3; label unified 2026-10-09, T-04). CLASSNUMBER 0 -> unclassified -> must be kept as an unknown bin.
+- CLASSNUMBER 1/2/3 -> bins "1"/"2"/"3" (plan F01 names them B1/B2/B3; label unified 2026-10-09, T-03). CLASSNUMBER 0 -> unclassified -> must be kept as an unknown bin.
 - Wafer radius R=150 mm is profile data, not read from the file (SampleSize 1 300 = 300 mm dia).
 - All defects share die (0,0): affected-die count is 1 for every file with defects (E09 die
   separation needs a multi-die variant; not provided).

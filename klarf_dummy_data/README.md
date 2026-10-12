@@ -84,6 +84,6 @@ conda run -n ins_evn python verify_dummy.py
 1. [klarfio 공개 KLARF 1.8 예제](https://github.com/hadriman/klarfio/blob/main/test_output_v1.8.klarf): Record/Field/List/Columns/Data 구성 참고. 원본 결함 행은 복사하지 않았다.
 2. [klarfio PyPI](https://pypi.org/project/klarfio/): 비교 검증 파서.
 3. [klarfrs PyPI](https://pypi.org/project/klarfrs/), [upstream source](https://github.com/banickn/klarfrs): 지원 표기 및 실제 parse/parse_defects 호환성 대조.
-4. 기존 `wafer_inspection_execution_plan.md` 19.2 F01: 8건 집계의 독립 기준.
+4. 실행계획(작성 당시 `wafer_inspection_execution_plan.md`, 현재 `docs/6_execution_plan.md`) 19.2 F01: 8건 집계의 독립 기준.
 
 공개 파서 기반 예제이며 SEMI 표준 전체 또는 특정 장비의 모든 필수 field 적합성을 인증한 파일은 아니다.

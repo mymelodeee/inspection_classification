@@ -1276,7 +1276,7 @@
       "note": "contains the whole template window 240+-10 deg x 60+-5 mm"
      }
     ],
-    "representation_note": "fixture-local coverage description; production coverage schema is undecided (TBD T-05)"
+    "representation_note": "fixture-local coverage description; production coverage schema is undecided (TBD T-04)"
    },
    "features": {
     "n_points": 10,

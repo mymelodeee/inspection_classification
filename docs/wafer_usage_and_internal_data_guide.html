@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Wafer inspection map 사용법, 사내 데이터 적용 변경점, TBD 확인 자료 안내서">
+<title>Wafer 분석 · 사용 및 사내 적용 안내서</title>
+<style>
+:root{--ink:#172b3a;--muted:#586b78;--line:#dce5e9;--paper:#fff;--bg:#f3f6f7;--nav:#142d3b;--accent:#007f78;--pale:#eaf6f3;--warn:#98600f;--sand:#fff6e6;--blue:#edf3fa}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.8 "Segoe UI","Malgun Gothic",sans-serif}a{color:var(--accent)}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #db982f;outline-offset:3px}
+.rail{position:fixed;inset:0 auto 0 0;width:245px;background:var(--nav);color:#fff;padding:34px 24px;overflow:auto}.brand{font-size:12px;letter-spacing:2px;color:#85c9c4}.rail strong{display:block;font-size:24px;line-height:1.45;margin:14px 0 30px}.rail a{display:block;color:#d6e3e8;text-decoration:none;padding:9px 0;border-bottom:1px solid #294451;font-size:14px}.rail a:hover{color:#fff}.rail small{display:block;color:#9db6c2;margin-top:26px;line-height:1.7}.rail button{margin-top:20px;width:100%;color:white;border:1px solid #6d8c9b;background:transparent;padding:8px;border-radius:6px}
+main{max-width:1370px;margin-left:245px;padding:44px 48px 64px}.hero{padding:36px 40px;background:var(--paper);border-top:5px solid var(--accent);border-radius:0 0 12px 12px}.eyebrow{font-size:12px;font-weight:700;letter-spacing:1.7px;color:var(--accent)}h1{font-size:38px;line-height:1.35;letter-spacing:-1.5px;margin:12px 0 18px}h2{font-size:25px;line-height:1.4;letter-spacing:-.7px;margin:0 0 22px}h3{font-size:18px;line-height:1.5;margin:26px 0 10px}h4{font-size:15px;margin:0 0 8px}p{margin:9px 0 14px}.lead{font-size:18px;max-width:790px;color:#405764}.meta{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin-top:24px;padding-top:14px}.tag{display:inline-block;background:var(--pale);color:#006860;border-radius:4px;padding:2px 9px;font-size:12px;font-weight:700;margin:0 5px 4px 0}.tag.warn{background:var(--sand);color:var(--warn)}
+section{margin-top:28px;padding:30px 34px;background:var(--paper);border:1px solid var(--line);border-radius:12px}.section-no{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:8px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.card{border:1px solid var(--line);border-radius:8px;padding:18px}.card p{font-size:14px;margin-bottom:0}.card .big{font-size:28px;font-weight:700;line-height:1.2;margin-bottom:10px}.callout{border-left:4px solid var(--accent);background:var(--pale);padding:15px 19px;margin:20px 0}.callout.warn{border-color:#c18a28;background:var(--sand)}.callout.info{background:var(--blue);border-color:#517daa}.muted{color:var(--muted);font-size:13px}.table-wrap{overflow-x:auto;margin:14px 0}table{border-collapse:collapse;width:100%;font-size:13px;text-align:left}th{background:#eef3f5;font-weight:700}td,th{padding:12px 13px;border:1px solid var(--line);vertical-align:top}td:first-child{font-weight:600}code{font-family:Consolas,"Malgun Gothic",monospace;font-size:.91em;background:#f0f4f5;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}pre{background:#172f3d;color:#ecf5f9;border-radius:8px;padding:18px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:13px;overflow-x:auto}pre code{background:none;color:inherit;padding:0;font-size:inherit}ol,ul{padding-left:23px}li{margin:7px 0}.steps{counter-reset:step;list-style:none;padding:0}.steps>li{position:relative;padding:0 0 20px 47px;margin:0;min-height:52px}.steps>li:before{counter-increment:step;content:counter(step);position:absolute;left:0;top:1px;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;text-align:center;line-height:30px;font-size:14px;font-weight:700}.steps strong{display:block}.flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:22px 0}.flow span{background:#edf4f5;padding:10px 14px;border-radius:6px;font-size:13px;font-weight:600}.flow b{color:#8aa4ae}.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:18px 0}.controls input{flex:1;min-width:200px}.controls input,.controls select{padding:9px 12px;border:1px solid #b9cbd2;border-radius:6px;background:#fff;color:var(--ink)}.button{display:inline-block;background:var(--accent);color:white;border:none;border-radius:6px;padding:9px 16px}.button.secondary{background:#e9f0f3;color:var(--ink)}details{border:1px solid var(--line);border-radius:7px;margin:10px 0;padding:12px 16px}summary{cursor:pointer;font-weight:600}textarea{width:100%;min-height:400px;padding:16px;border:1px solid #aabec8;border-radius:8px;resize:vertical;font-size:13px;line-height:1.7;background:#fbfcfd}footer{padding:26px 0;font-size:12px;color:var(--muted)}.checklist label{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line)}.checklist input{margin-top:8px;accent-color:var(--accent)}.nowrap{white-space:nowrap}[hidden]{display:none!important}.status{min-height:24px;color:var(--accent);font-size:13px}.print-only{display:none}
+@media(max-width:1000px){.rail{position:static;width:auto;padding:18px 24px}.rail strong{font-size:20px;margin:5px 0 12px}.rail nav{display:flex;flex-wrap:wrap;gap:0 18px}.rail a{font-size:12px;padding:4px 0}.rail small,.rail button{display:none}main{margin:0;padding:24px}.hero{padding:26px}section{padding:24px}.grid{grid-template-columns:1fr}h1{font-size:30px}}
+@media(max-width:560px){main{padding:12px}.hero,section{padding:20px}h1{font-size:26px}h2{font-size:22px}.controls>*{width:100%}th,td{padding:10px}.table-wrap{border-right:1px solid var(--line)}}
+@media print{@page{size:A4;margin:14mm}body{background:#fff;font-size:10pt;color:#111}.rail,.controls,.button,.status,.no-print{display:none!important}main{margin:0;padding:0;max-width:none}.hero{padding:16px 0;border-radius:0}h1{font-size:25pt}h2{font-size:17pt}h3{font-size:12pt}section{border:0;border-top:1px solid #aaa;border-radius:0;padding:20px 0;margin-top:15px}table{font-size:8pt;table-layout:fixed}th,td{padding:7px;overflow-wrap:anywhere}tr,.card,.callout,pre{break-inside:avoid}thead{display:table-header-group}.table-wrap{overflow:visible}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.print-only{display:block}.checklist label{break-inside:avoid}textarea{min-height:470px;font-size:9pt}details{break-inside:avoid}pre{background:#f2f4f5;color:#111}a{color:#111;text-decoration:none}}
+</style>
+</head>
+<body>
+<aside class="rail" aria-label="문서 목차">
+ <div class="brand">WAFER INSPECTION</div><strong>사용부터<br>사내 적용까지</strong>
+ <nav><a href="#start">01 · 현재 범위와 빠른 시작</a><a href="#workflow">02 · 화면 사용 순서</a><a href="#results">03 · 결과 읽기와 문제 해결</a><a href="#coverage-db">04 · Coverage / SQLite 시험</a><a href="#migration">05 · 사내 적용 수정 지점</a><a href="#requests">06 · 먼저 준비할 자료</a><a href="#tbd">07 · TBD 전체 확인표</a><a href="#reply">08 · 전달용 답변 양식</a><a href="#acceptance">09 · 적용 완료 확인 기준</a></nav>
+ <button type="button" id="print-btn">인쇄 / PDF로 저장</button>
+ <small>기준일 2026.10.10<br>코드 기준 befbf8d<br>외부 연결 없는 단일 HTML</small>
+</aside>
+<main>
+<header class="hero">
+ <div class="eyebrow">USER GUIDE &amp; INTERNAL DATA HANDOFF</div>
+ <h1>Wafer 분석 사용 및<br>사내 데이터 적용 안내서</h1>
+ <p class="lead">파일을 분석하는 방법, 운영 데이터에 맞춰 바꿔야 할 설정과 코드, 그리고 담당자에게 받아야 할 자료를 한 문서에 정리했습니다.</p>
+ <span class="tag">파일 1개 / 다중 파일 통합</span><span class="tag">기본 YAML 경로</span><span class="tag">상세보기 · 검토 · SQLite</span><span class="tag warn">실제 장비 데이터 검증 전</span>
+ <div class="meta">작성 기준: 2026년 10월 10일 · 저장소 커밋 <code>befbf8d</code> · 근거: 현재 소스, README, TBD, 실행계획, 합성 시험 기록<br>이 문서는 현재 동작을 기준으로 정리한 안내서입니다. TBD의 과거 문구가 코드와 다르면 아래에 현재 상태와 남은 결정을 구분했습니다.</div>
+</header>
+
+<section id="start">
+ <div class="section-no">01 / START</div><h2>현재 가능한 일과 시작 방법</h2>
+ <div class="grid"><div class="card"><div class="big">01 → N</div><h4>같은 입력 흐름</h4><p>파일 1개, 여러 파일, 하위 폴더를 포함한 폴더를 입력하고 선택한 파일만 분석합니다.</p></div><div class="card"><div class="big">KLARF</div><h4>원본 결함 이벤트 분석</h4><p>좌표·bin·영역·방향 집계와 ring / line / local / lift-pin 상태를 제공합니다. 결함 수는 불량 die 수와 다릅니다.</p></div><div class="card"><div class="big">SQLite</div><h4>결과와 검토 이력 보존</h4><p>예측 원본, 실행 시도, batch 구성, 검토 revision을 파일형 DB에 보관합니다.</p></div></div>
+ <div class="callout warn"><strong>현재 기본 profile은 합성 dummy 데이터 시험용입니다.</strong><br>실제 KLARF가 파싱되거나 분석이 성공해도 장비 좌표·bin 의미·판정 기준이 검증된 것은 아닙니다. 사내 적용은 먼저 <a href="#requests">실제 파일·좌표 명세·독립 정답</a>을 확보한 뒤 진행합니다.</div>
+ <h3>앱 실행</h3><p><strong>다운로드한 프로젝트 루트(README.md와 requirements.txt가 있는 폴더)에서 터미널을 엽니다.</strong> 이 문서의 파일 경로와 명령은 모두 그 폴더 기준입니다. 준비된 Python 3.11/3.12 가상환경을 활성화한 경우 바로 실행합니다.</p>
+ <pre><code>python -m streamlit run wafer/app.py</code></pre>
+ <details><summary>다른 PC에서 처음 실행할 때: 환경 준비</summary><p>64-bit Python 3.11 또는 3.12를 설치한 뒤 프로젝트 루트에서 아래 명령을 실행합니다.</p><pre><code>python -m venv .venv</code></pre><p>Windows PowerShell:</p><pre><code>.\.venv\Scripts\Activate.ps1</code></pre><p>macOS / Linux:</p><pre><code>source .venv/bin/activate</code></pre><p>활성화한 환경에 의존성을 설치하고 실행합니다.</p><pre><code>python -m pip install -r requirements.txt
+python -m pip check
+python -m streamlit run wafer/app.py</code></pre><p>기존 conda/venv가 준비되어 있으면 해당 환경을 활성화하면 됩니다. 특정 환경 이름이나 사용자 홈 경로는 필요하지 않습니다. Edge 브라우저 시연·E2E는 시스템 Edge가 설치된 Windows 환경을 기준으로 하며 다른 OS의 브라우저 검증은 별도 준비가 필요합니다.</p></details>
+ <p>터미널의 Local URL을 엽니다. 기본 주소는 <code>http://localhost:8501</code>이며 사용 중인 포트에 따라 달라집니다. 종료는 서버를 실행한 터미널에서 <code>Ctrl+C</code>입니다.</p>
+ <h3>첫 시험에 사용할 조합</h3>
+ <div class="table-wrap"><table><thead><tr><th>용도</th><th>KLARF</th><th>YAML profile</th></tr></thead><tbody>
+ <tr><td>추천 첫 실행</td><td><code>klarf_dummy_data/klarf/F01_counts.klarf</code></td><td><code>tests/profiles/dummy_die_local_test_profile.yaml</code><br>화면 기본값</td></tr>
+ <tr><td>여러 파일 / 폴더</td><td><code>klarf_dummy_data/klarf/</code><br>합성 13개, 포함 결함 합 1,412</td><td>위 dummy profile과 동일</td></tr>
+ <tr><td>별도 평면 F01 fixture</td><td><code>tests/fixtures/klarf/f01.klf</code></td><td><code>tests/profiles/f01_test_profile.yaml</code><br>전용 조합이며 dummy 폴더에 사용하지 않음</td></tr>
+ </tbody></table></div>
+ <p class="muted">이 문서의 상대 경로는 모두 프로젝트 루트 기준입니다. 서버 경로 입력은 앱을 실행한 컴퓨터의 파일을 가리킵니다. 다른 PC에서 접속했다면 로컬 파일은 업로드 기능으로 보내세요.</p>
+</section>
+
+<section id="workflow">
+ <div class="section-no">02 / WORKFLOW</div><h2>화면 사용 순서</h2>
+ <div class="flow" aria-label="분석 흐름"><span>업로드 / 경로</span><b>→</b><span>분석 파일 선택</span><b>→</b><span>입력 목록 확인</span><b>→</b><span>일괄 분석 실행</span><b>→</b><span>요약 / 상세보기</span><b>→</b><span>검토 / 다운로드</span></div>
+ <ol class="steps">
+ <li><strong>파일을 준비합니다.</strong>왼쪽 <b>여러 파일 선택</b> 또는 <b>폴더 선택(하위 폴더 포함)</b>을 사용합니다. 서버 파일은 <b>또는 KLARF 경로 (한 줄에 하나)</b>에 파일 경로를 입력할 수 있습니다. 업로드와 경로 입력은 목록에 함께 추가됩니다.</li>
+ <li><strong>분석할 파일을 선택합니다.</strong><b>분석할 파일</b>에서 선택을 해제하면 이번 분석에서 제외됩니다. <b>전체 선택 / 전체 제외</b>도 가능합니다. <b>업로드 전체 삭제</b>는 현재 파일·폴더 업로드, 경로 입력, 결과 화면을 비우며 원본 파일이나 저장 DB를 삭제하지 않습니다.</li>
+ <li><strong>Profile과 선택 입력을 확인합니다.</strong>기본 YAML 경로는 아래 파일입니다. 경로를 비우면 기본값이 복원됩니다. 다른 경로를 지정하면 유지되며, YAML을 별도 업로드한 경우 업로드가 우선합니다. coverage와 SQLite는 필요할 때 지정합니다.</li>
+ <li><strong>입력 목록을 확인합니다.</strong><b>입력 목록 확인</b>을 누른 뒤 파일별 상태와 사유를 확인합니다. 현재 서버 확장자 허용 범위는 <code>.klf / .klarf / .txt</code>입니다. 중복·손상·미지원 파일은 별도로 표시됩니다.</li>
+ <li><strong>분석을 실행합니다.</strong><b>일괄 분석 실행</b>을 누릅니다. 한 파일의 실패가 다른 파일의 분석을 막지 않습니다. 선택한 파일에 같은 profile과 coverage를 공통 적용합니다. 서로 다른 장비 규약이나 검사 영역은 나누어 실행하세요.</li>
+ <li><strong>요약을 보고 상세로 이동합니다.</strong>개요, 분석 단위별 표, 유형별 요약, 맵 갤러리를 확인합니다. <b>상세 조회할 분석 단위</b>에서 파일을 선택하고 <b>상세 맵·검토 화면 열기</b>를 누릅니다. 상세 화면에서 <b>← 분석 목록으로 돌아가기</b>를 누르면 업로드·선택·결과가 유지됩니다.</li>
+ <li><strong>검토와 다운로드를 수행합니다.</strong>SQLite를 지정했다면 상세 화면의 검토 폼에서 revision을 저장할 수 있습니다. 목록에서 전체 요약 CSV·유형 CSV·개별 결과 ZIP, 상세에서 JSON·CSV ZIP을 받습니다.</li>
+ </ol>
+ <pre><code>tests/profiles/dummy_die_local_test_profile.yaml</code></pre>
+ <div class="callout"><strong>YAML 내용을 바꾸는 방법</strong><br>위 경로의 파일을 수정·덮어쓴 뒤 다시 분석하면 새 내용을 읽습니다. 입력 목록 확인 뒤 profile이 바뀌면 UI가 최신 profile로 목록을 재검증합니다. 실행 중에는 고정 사본을 사용합니다. coverage 파일만 바꿨다면 <b>입력 목록 확인부터 다시</b> 진행하세요. 업로드한 YAML 사본을 쓰는 경우에는 새 파일을 다시 업로드하거나 업로드를 제거하고 경로를 사용해야 합니다.</div>
+ <p class="muted">상세보기는 분석 당시 결과입니다. 왼쪽 설정 변경만으로 기존 결과가 재계산되지는 않습니다. 파일 선택·입력 설정을 변경하면 목록 화면의 이전 검증·결과는 초기화됩니다.</p>
+ <h3>저장되는 결과</h3><div class="table-wrap"><table><thead><tr><th>화면 / 파일</th><th>확인할 내용</th></tr></thead><tbody>
+ <tr><td>개요 / 분석 단위별 요약</td><td>제출한 파일 수, 성공·실패·보류, 포함 결함 수, 경로·lot·wafer, 상태·사유, 원시 형상 지표. 헤더 lot/wafer는 아직 장비별 검증 전입니다.</td></tr>
+ <tr><td><code>batch_summary.csv</code></td><td>분석 단위별 요약·면적·밀도·형상·현재 검토 상태. <code>duplicate_in_batch</code> 행은 원본 값을 반복하므로 합계는 <code>status=succeeded</code> 행을 기준으로 계산합니다.</td></tr>
+ <tr><td><code>batch_results.zip</code></td><td>batch manifest, 요약 CSV, 분석 단위별 결과 JSON·결함/공간 CSV·manifest. 해시와 버전으로 실행 입력을 추적합니다.</td></tr>
+ <tr><td>상세 JSON / CSV ZIP</td><td>단일 파일 결과, provenance, 상태·사유. 결함별 좌표 행은 CSV에 있습니다. UI 내보내기에는 검토 상태/revision도 포함됩니다.</td></tr>
+ </tbody></table></div>
+</section>
+
+<section id="results">
+ <div class="section-no">03 / INTERPRETATION</div><h2>결과를 읽을 때 지켜야 할 기준</h2>
+ <div class="grid"><div class="card"><h4>0과 미계산은 다릅니다</h4><p><code>0</code>은 실제 0건, <code>null</code>·빈 칸·<code>-</code>는 미계산 또는 해당 없음입니다. 표의 문자열 변환 때문에 <code>None/nan</code>으로 보일 수도 있습니다.</p></div><div class="card"><h4>성공은 모든 기능의 확정이 아닙니다</h4><p><code>succeeded / valid</code>여도 coverage·노치·점 수가 부족할 수 있습니다. 기능별 <code>calc_status</code>, <code>feature_status</code>, <code>reason</code>을 함께 봅니다.</p></div><div class="card"><h4>후보는 원인 판정이 아닙니다</h4><p><code>candidate</code>는 보정 전 형상 후보입니다. <code>matched</code>도 규칙 일치이며 공정 원인 확증은 아닙니다. 점수·위험 등급은 제공하지 않습니다.</p></div></div>
+ <ul><li>같은 결함이 여러 유형·영역에 속할 수 있어 유형 수를 단순히 더하면 안 됩니다. 고유 ID 합집합과 유형별 분모를 확인합니다.</li><li>엄격 시계방향 집계는 12 sector 합 + center = 포함 결함 수입니다. 경계 허용오차 집계는 인접 sector 양쪽에 세므로 합이 더 클 수 있습니다.</li><li><code>no_clear_pattern</code>은 정상 판정이 아닙니다. <code>insufficient_data</code>는 점 수·방향·coverage 등의 근거 부족입니다.</li><li>지도 bin 필터와 결과 표 필터는 표시만 바꿉니다. 분석 파일 선택/제외는 실제 분석 대상을 바꿉니다. 갤러리는 맵당 최대 2,000점을 표시하지만 통계에는 전체 점을 사용합니다.</li><li>지원되는 좌표 규약 안에서 노치 위치만 누락된 경우 개수·반경 집계는 제공하고 물리 시계방향은 보류합니다. 지원하지 않는 mirror·좌표 규약은 임의 변환하지 않습니다.</li></ul>
+ <h3>대표 오류와 조치</h3><div class="table-wrap"><table><thead><tr><th>표시</th><th>해석</th><th>조치</th></tr></thead><tbody>
+ <tr><td><code>CoordinatesMirrored != NO</code></td><td>F01 전용 adapter는 해당 필드가 NO로 명시되어야 합니다. dummy 1.8에는 필드가 없어 실패할 수 있으며 실제 반전이 발견됐다는 뜻은 아닙니다.</td><td>dummy 폴더는 기본 dummy profile 사용. 실제 장비 파일은 필드를 임의로 추가해 통과시키지 말고 T-01/T-03을 확인합니다.</td></tr>
+ <tr><td><code>CONFIG_INVALID</code></td><td>잘못된 YAML, 활성 기능의 필수값 누락, 잘못된 coverage 또는 확인 후 입력 변경</td><td><code>keys / reason</code> 확인 → 수정 → 입력 목록 확인부터 재실행</td></tr>
+ <tr><td><code>INPUT_NOT_FOUND</code></td><td>앱 실행 컴퓨터에서 경로를 찾거나 읽을 수 없음</td><td>절대 경로, 실제 파일 존재, 읽기 권한을 확인합니다. 원격 접속자의 로컬 경로는 서버 경로가 아닙니다.</td></tr>
+ <tr><td><code>invalid_input / INVALID_INPUT</code></td><td>손상, 형식 불일치, 선언 개수 오류, 복수 wafer 등</td><td>원본 export와 파일 작성 완료 여부를 확인합니다. 실패를 정상 0건과 구분합니다.</td></tr>
+ <tr><td><code>held / UNSUPPORTED_ADAPTER</code></td><td>선택한 좌표 adapter의 지원 범위 밖</td><td>입력/profile 조합 확인. 사내 입력이면 장비 명세와 기준점으로 adapter를 검증·구현합니다.</td></tr>
+ <tr><td>확장자·크기 상한으로 제외</td><td>기본 허용 확장자 또는 개발용 입력 상한에 걸림</td><td>사내 확장자 명세와 규모 확인 후 <code>wafer/batch.py</code> 계약/상한을 조정합니다. 기본값은 500개·파일당 50MB·총 300MB입니다.</td></tr>
+ </tbody></table></div>
+</section>
+
+<section id="coverage-db">
+ <div class="section-no">04 / PRACTICE</div><h2>Coverage와 SQLite를 직접 시험하기</h2>
+ <h3>A. Coverage: 검사 면적이라는 분모 제공</h3>
+ <p>Coverage는 실제 검사한 영역을 명시하는 JSON 보조 파일입니다. 결함 분포에서 검사 면적을 추정하지 않습니다. 현재는 웨이퍼 중심 원판 <code>full_disk</code>만 지원하고, 반경은 <code>0 &lt; radius_mm ≤ wafer_radius_mm</code>이어야 합니다.</p>
+ <pre><code>{
+  "coverage": {
+    "shape": "full_disk",
+    "radius_mm": 150,
+    "source": "synthetic test only: declared full 150 mm disk"
+  }
+}</code></pre>
+ <ol><li>기본 profile로 <code>klarf_dummy_data/klarf/F01_counts.klarf</code>를 분석합니다. coverage는 비워 두고 면적 보정 밀도가 미상인지 확인합니다.</li><li>coverage 경로에 <code>tests/fixtures/coverage/full_disk_150.json</code>을 입력하고 <b>입력 목록 확인 → 일괄 분석 실행</b>을 다시 누릅니다.</li><li>목록의 <b>면적 보정 밀도</b> 표 또는 요약 CSV의 <code>valid_area_mm2</code>, <code>density_per_mm2</code>를 확인합니다. 표가 넓으면 가로로 스크롤하세요.</li><li>상세보기의 공간 집계·판정 상태와 JSON의 <code>result.provenance.coverage</code>, <code>result.radial_density</code>, <code>result.clark_evans</code>를 확인합니다.</li></ol>
+ <div class="table-wrap"><table><thead><tr><th>F01 시험 기대값</th><th>Coverage 없음</th><th>반경 150mm 전체 원판 선언</th></tr></thead><tbody><tr><td>포함 결함 수</td><td>8</td><td>8</td></tr><tr><td>유효 면적</td><td>미상</td><td>π × 150² ≈ 70,685.8347 mm²</td></tr><tr><td>전체 밀도</td><td>null / 빈 칸</td><td>8 / (π × 150²) ≈ 0.0001131768 /mm²</td></tr></tbody></table></div>
+ <div class="callout warn">이 파일은 시험용 검사 영역 선언입니다. 실제 검사 영역을 모르는 장비 데이터에 그대로 적용하면 안 됩니다. 부분 die·구멍·polygon·sampling 영역은 현재 원판 입력만으로 정확히 표현할 수 없습니다. batch 안의 검사 영역이 다르면 실행을 나누거나 파일별 coverage 지원을 추가해야 합니다.</div>
+ <h3>B. SQLite: 예측과 검토를 보존하는 파일형 DB</h3>
+ <ol><li>기존 폴더 아래 새 DB 경로, 예를 들어 프로젝트 루트의 <code>analysis_test.db</code>를 입력합니다. 파일은 자동 생성되지만 부모 폴더는 존재해야 합니다.</li><li><code>F01_counts.klarf</code>와 <code>F01_up.klarf</code> 두 개를 기본 profile·위 coverage로 실행합니다. 성공 2개, 포함 결함 합 16을 확인합니다.</li><li>동일 입력·설정·코드와 같은 DB 경로로 다시 실행합니다. 개요의 <b>저장 결과 재사용 2</b>를 확인합니다. 계산 자체는 다시 수행하며 DB 결과 중복 저장을 막는 방식입니다.</li><li>첫 파일의 상세보기에서 <code>action=confirm</code>, <code>payload={}</code>로 <b>검토 저장</b>을 누릅니다. <code>revision 1</code>, <code>review_status=confirmed</code>를 확인합니다.</li><li>목록으로 돌아가도 결과가 유지됩니다. 같은 분석 키로 다시 열면 검토가 남습니다. profile·coverage·코드 등이 바뀌면 다른 분석 키가 되어 별도 결과로 저장됩니다.</li></ol>
+ <div class="table-wrap"><table><thead><tr><th>테이블</th><th>역할</th><th>새 DB에서 위 시험 완료 시</th></tr></thead><tbody><tr><td><code>runs</code></td><td>분석 키별 예측 결과 JSON</td><td>2행</td></tr><tr><td><code>attempts</code></td><td>실행 시도 이력</td><td>4행</td></tr><tr><td><code>batches</code></td><td>일괄 실행 정보</td><td>2행</td></tr><tr><td><code>batch_members</code></td><td>batch와 파일·분석 키 연결</td><td>4행</td></tr><tr><td><code>reviews</code></td><td>예측 원본과 분리한 검토 revision</td><td>1행</td></tr></tbody></table></div>
+ <pre><code>-- SQLite 조회 도구에서 확인할 수 있는 읽기 전용 예제
+SELECT COUNT(*) FROM runs;
+SELECT source_name, status, created_at FROM attempts;
+SELECT revision, action, reviewer, created_at FROM reviews;</code></pre>
+ <p>현재 앱에는 과거 batch 목록을 직접 불러오는 메뉴가 없습니다. 같은 입력·설정·DB로 재분석하거나 SQLite 조회 도구로 확인합니다. 검토자 이름은 인증된 사용자 ID가 아닌 입력 문자열이며 운영 인증·권한·백업 정책은 별도 결정 대상입니다.</p>
+ <details><summary>CLI와 보이는 브라우저 시연 명령</summary><pre><code># 단일 파일 CLI: 같은 분석 core 사용
+python -m wafer.cli klarf_dummy_data/klarf/F01_counts.klarf --profile tests/profiles/dummy_die_local_test_profile.yaml --coverage tests/fixtures/coverage/full_disk_150.json --db analysis_test.db --out result.json
+
+# 화면에 보이는 Edge 시연: 매번 별도 시험 DB와 증빙 생성
+python tests/browser_demo.py</code></pre><p>CLI의 <code>--out</code>은 같은 이름의 결과 파일을 덮어씁니다. 시연은 <code>demo_output/&lt;실행시각&gt;/</code>에 DB·캡처·검증 JSON을 남기며, 시연 브라우저를 닫으면 전용 서버도 종료됩니다.</p></details>
+</section>
+
+<section id="migration">
+ <div class="section-no">05 / ADAPTATION</div><h2>사내 데이터 적용 시 무엇을 수정해야 하나요?</h2>
+ <p><strong>YAML 숫자 변경만으로 새로운 장비를 지원할 수 있는 것은 아닙니다.</strong> 먼저 입력 문법·좌표 규약이 기존 구현과 같은지 확인한 뒤, 검증된 규약에 맞춰 profile을 작성합니다. 시험 YAML은 남겨 두고 사내 전용 profile을 별도 관리하는 방식을 권장합니다.</p>
+ <div class="table-wrap"><table><thead><tr><th>대상</th><th>설정만으로 가능한 범위</th><th>코드 수정이 필요한 경우 / 위치</th><th>받아야 할 근거</th></tr></thead><tbody>
+ <tr><td>기본 profile 경로</td><td>화면에 사내 YAML 경로 입력. 고정 기본값 변경은 <code>wafer/ui_inputs.py</code>의 <code>DEFAULT_PROFILE</code></td><td>임의 adapter 이름을 YAML에만 넣을 수 없음. 현재는 등록된 두 합성 adapter만 검증 허용</td><td>승인된 사내 profile 위치·관리 담당자·버전</td></tr>
+ <tr><td>KLARF 문법 / 확장자</td><td>동일 문법이면 기존 파서로 대조 검증</td><td><code>wafer/ingest.py</code>: encoding, record/list, 열, 숫자·종료 규칙. <code>wafer/batch.py</code>: 허용 확장자</td><td>장비·export 버전별 원본 샘플, 필드 명세, 정상 빈 파일</td></tr>
+ <tr><td>좌표·notch·mirror</td><td>검증된 adapter 선택, 단위·side 설정</td><td><code>wafer/ingest.py</code>의 adapter·<code>ADAPTERS</code>·<code>standardize</code>, 필요 시 <code>wafer/profile.py</code> 검증. 실제 mirror/backside/비영점 origin은 규칙 구현·시험 필요</td><td>die index/pitch/origin, XREL/YREL 의미, 중심·축·노치·side·이미 정규화됐는지, 화면 기준점</td></tr>
+ <tr><td>웨이퍼·영역</td><td><code>wafer_radius_mm</code>, <code>zones.E1/E2.interval_mm</code>, <code>zone_8inch_boundary.band_width_mm</code>, enabled</td><td>지원 밖 경계 규칙·영역 형상이 필요하면 geometry/profile 검증 수정. SampleSize와 profile 반경의 일치 검사도 확인 필요</td><td>웨이퍼 규격, E1/E2 edge 거리 구간·경계 규정, 100mm 태그 목적</td></tr>
+ <tr><td>Bin 의미</td><td><code>bin_mapping.version</code>은 버전 표시에 활용 가능</td><td>실제 매핑 테이블 기능은 별도. 현재 <code>ingest.bin_label</code>은 CLASSNUMBER 문자열, 0은 unknown. ROUGH/FINE·review class 정책은 코드 변경 필요</td><td>bin 코드표·0/null 의미·우선순위·버전</td></tr>
+ <tr><td>Coverage / die 지표</td><td>검증된 중심 원판은 JSON sidecar로 지정</td><td><code>wafer/cli.py:load_coverage</code>, <code>wafer/stats.py</code> 등: polygon·mask·검사 die·sampling·파일별 영역 처리. affected/inspected die 지표 현재 null</td><td>ROI, edge exclusion, 미검사 영역, 검사 die 목록, sampling 방식</td></tr>
+ <tr><td>중심 / 시계 경계</td><td><code>clock.center_exclusion_radius_mm</code>, <code>boundary_tolerance_deg</code></td><td>현재 30°/12시 시작 sector 고정. 허용오차 집계 방식 자체를 바꾸면 geometry·집계·테스트 수정</td><td>좌표 분해능, 중심 영역 정의, 경계 중복 집계 해석 승인</td></tr>
+ <tr><td>군집 / ring / line</td><td><code>clustering.*</code>, <code>shapes.ring.*</code>, <code>shapes.line.*</code>, <code>detect.*</code>, <code>stats.radial_bin_mm</code></td><td>중심이 어긋난 ring·여러 ring/line, 다른 탐색 방법은 <code>detect.py / ring.py / line.py</code> 확장 필요</td><td>정답 라벨·반례·점 밀도별 자료, 허용 오검출/미검출, 보정 결과</td></tr>
+ <tr><td>삼발이</td><td><code>signatures.lift_pin</code>의 template·반경 band·위상·허용오차·support·contrast</td><td>현재 3 lobe/120°와 notch-down 기준. 정책 차이는 <code>lift_pin.py</code> 및 profile 검증 수정</td><td>설비/공정별 template, 2개 관측 시 정책, 부분 검사 반례</td></tr>
+ <tr><td>복수 record / metadata</td><td>현재 파일당 wafer 1개 기준. 파일명은 해석하지 않음</td><td><code>ingest.py / batch.py / cli.py / report.py / store.py</code>: record 분리, 파일명·내부 값 출처 보존, 충돌 정책</td><td>파일명 규칙, lot/wafer/job/time·timezone, metadata 우선순위, 복수 record 샘플</td></tr>
+ <tr><td>운영·저장·성능</td><td>DB 경로, UI 입력 상한 변경</td><td>인증·권한·공유 DB·migration·자동 수집·파일 작성 완료 감지는 현재 운영 구현 없음. 대량 다운로드 성능 확인 필요</td><td>사용자 수, 파일 규모·빈도, 실행시간 목표, 보존·백업·배포 요구</td></tr>
+ </tbody></table></div>
+ <div class="callout"><strong>사내 profile 작성 절차</strong><br>① 장비별 입력 계약·adapter 검증 → ② 승인된 값으로 별도 YAML 작성 → ③ 필수 설정 검증 → ④ 기준점·개수·bin 대조 → ⑤ 판정 임계값 보정 → ⑥ 기본 경로 교체. <code>calibrated: true</code>는 정확도를 자동 확보하는 옵션이 아니며 보정 근거·승인 후에만 사용합니다.</div>
+ <details><summary>현재 시험 profile 숫자 — 운영값으로 그대로 사용하지 마세요</summary><p>반경 150mm, 중심 제외 1mm, E1 [0,2)mm / E2 [2,5)mm, 100mm 경계 band 폭 2mm, DBSCAN eps 10mm / min_samples 3, ring 점유 bin 10° / 최소 점유율 0.8, line 상대폭 0.1 등은 합성 시험값입니다. 100mm 태그의 band 폭과 환형 결함의 실측 두께(P95−P5)는 서로 다른 값입니다. <code>units: mm</code>는 표준 출력 단위이며 원본 입력 단위는 <code>coordinates.source_units</code>입니다.</p></details>
+</section>
+
+<section id="requests">
+ <div class="section-no">06 / DATA REQUEST</div><h2>지금 먼저 제공해 주실 자료</h2>
+ <p>한 번에 모든 TBD를 해결할 필요는 없습니다. <strong>먼저 대상 장비/export 계열 하나</strong>를 정하고 아래 묶음을 전달하면, 입력·좌표·개수의 정확성부터 확인할 수 있습니다. 아직 없는 자료는 ‘미확인’과 담당자만 적어 주세요.</p>
+ <div class="grid"><div class="card"><span class="tag">우선 1</span><h4>실제 입력 묶음</h4><p>정상 파일 1~2개로 시작. 실제 확장자·구조를 보존한 KLARF, 장비 모델·export 버전·공정명, 동일 검사의 화면과 총 결함/bin 집계.</p></div><div class="card"><span class="tag">우선 2</span><h4>좌표 명세와 기준점</h4><p>단위·die pitch/origin·중심·축·notch·front/back·mirror 규칙. 원본 좌표와 화면 위치를 짝지은 기준점 여러 개.</p></div><div class="card"><span class="tag">우선 3</span><h4>Bin과 검사 영역</h4><p>CLASS/ROUGH/FINE 코드표, 0/null 의미. 전체 검사인지 부분 검사인지, ROI·edge exclusion·검사 die 목록 위치.</p></div><div class="card"><span class="tag">이어서</span><h4>사내 영역·판정 기준</h4><p>E1/E2 구간, 중심 제외 반경, 100mm 태그 목적, ring/line 정답과 반례, 삼발이 template·위상 기준.</p></div><div class="card"><span class="tag">이어서</span><h4>예외 파일</h4><p>정상 0건, 손상·작성 중, 노치 방향 변형, 복수 wafer/inspection, 열 순서 변경, 파일명·헤더 metadata 충돌 사례.</p></div><div class="card"><span class="tag">운영 전</span><h4>운영 조건</h4><p>한 번/하루 파일 수·크기, 허용 분석시간, 동시 사용자, PC/서버 배포, 권한, 보존기간·백업, 오검출/미검출 허용 기준.</p></div></div>
+ <h3>전달 자료에 붙이면 좋은 표</h3><div class="table-wrap"><table><thead><tr><th>표</th><th>권장 열</th><th>대조 목적</th></tr></thead><tbody><tr><td>파일 manifest</td><td>파일명, 장비/export 버전, lot/wafer/job, 시간·timezone, 총 결함 수, bin별 수, 검사영역, 특이사항</td><td>파싱·metadata·개수·bin의 독립 정답</td></tr><tr><td>좌표 기준점</td><td>파일명, record/결함 ID, XINDEX/YINDEX, XREL/YREL, 예상 표준 x/y(mm), 화면 위치, 허용오차 근거</td><td>단위·축·중심·회전·반전 변환 검증</td></tr><tr><td>판정 라벨</td><td>파일/wafer, 유형, 근거, 검토자, 기준 버전, 반례 여부, 학습/보정/평가 구분</td><td>형상 규칙 보정과 독립 평가</td></tr></tbody></table></div>
+ <p class="muted">자료 전달은 사내 승인된 경로를 사용합니다. 비식별화가 필요하면 파일명과 헤더의 대응·좌표·개수·record 구조를 유지하고 치환 규칙을 함께 전달하세요. 원본 파일명 보존 요구는 사내 반출 정책보다 우선하지 않습니다.</p>
+</section>
+
+<section id="tbd">
+ <div class="section-no">07 / OPEN ITEMS</div><h2>TBD 전체 확인표</h2>
+ <p>우선순위는 이번 안내서의 진행 제안입니다. <b>P0</b>는 실제 입력 검증 시작 전, <b>P1</b>은 판정 기능 확정 전, <b>P2</b>는 운영 적용 전 확인합니다. ‘결정됨’은 재요청하지 않으며 관련 문서·코드의 정합성만 유지합니다.</p>
+ <div class="controls no-print"><label for="priority">구분</label><select id="priority"><option value="all">전체 항목</option><option value="p0">P0 · 입력 / 좌표</option><option value="p1">P1 · 판정 기준</option><option value="p2">P2 · 운영 / 정책</option><option value="done">이미 결정됨</option></select><input id="search" type="search" aria-label="TBD 항목 검색" placeholder="ID, 좌표, coverage, 보존기간 등 검색"><span id="count" aria-live="polite">31개 항목</span></div>
+ <p class="print-only">인쇄에는 필터와 관계없이 전체 TBD 항목을 포함합니다.</p>
+ <div class="table-wrap"><table id="tbd-table"><thead><tr><th style="width:9%">ID / 구분</th><th style="width:19%">주제</th><th style="width:37%">추가로 알려 주실 내용 / 자료</th><th>현재 처리 및 적용 시점</th></tr></thead><tbody>
+ <tr data-priority="p0"><td>T-01 · P0</td><td>좌표 변환</td><td>die index/pitch/origin, 상대좌표·중심·단위 정의와 대조 기준점</td><td>명시적 adapter 필수는 결정됨. 실제 장비 공식은 열림.</td></tr>
+ <tr data-priority="p0"><td>T-02 · P0</td><td>notch / side / mirror</td><td>축 방향, front/back 표기, mirror 여부·필드, 이미 정규화된 export인지, 방향별 샘플</td><td>합성 adapter에서만 검증. 노치 누락의 부분 결과는 구현됨. 미지원 mirror를 추측하지 않음.</td></tr>
+ <tr data-priority="p0"><td>T-03 · P0</td><td>Bin 의미</td><td>CLASS/ROUGH/FINE 정의, 0/null·unknown 의미, 적용 우선순위, 코드표 버전</td><td>CLASSNUMBER 문자열 출력·0→unknown으로 통일. 사내 의미 매핑은 미확정.</td></tr>
+ <tr data-priority="p0"><td>T-04 · P0</td><td>Coverage / sampling</td><td>ROI·edge exclusion·제외영역·sampling, 검사 die 목록 위치와 형식</td><td>중심 원판 sidecar만 지원. 미상은 면적 보정 밀도 null. 실제 검사영역 확보 필요.</td></tr>
+ <tr data-priority="p1"><td>T-05 · P1</td><td>환형 두께 / 100mm 태그</td><td>별도 100mm 경계 태그를 어디에 사용할지와 폭 값</td><td>환형 폭은 측정량이고 P95−P5로 결정됨. 100mm 경계 band와 혼동하지 않음.</td></tr>
+ <tr data-priority="p1"><td>T-06 · P1</td><td>E1 / E2</td><td>edge 거리의 실제 구간 수치와 경계 포함 규칙, 규정 버전</td><td>metric=edge 거리 확정. 시험 구간은 운영 근거가 아님.</td></tr>
+ <tr data-priority="p1"><td>T-07 · P1</td><td>삼발이 template</td><td>설비·공정별 반경, 위상, 허용오차, 좌표 기준, template ID</td><td>사내 template 없음. 기본 시험 profile은 비활성.</td></tr>
+ <tr data-priority="p1"><td>T-08 · P1</td><td>중심 제외 / 경계</td><td>운영 중심 제외 반경, 좌표 분해능, tolerance·snap 정책의 근거</td><td>시험 중심 반경 1mm. 값 미설정이면 clock 분석 불가.</td></tr>
+ <tr data-priority="p0"><td>T-09 · P0</td><td>복수 wafer / inspection</td><td>파일당 wafer·lot·inspection 수, 구분 키, 반복 검사 의미, 실제 샘플</td><td>현재 단일 wafer만 지원. 여러 파일 지원과 한 파일 내 여러 wafer 지원은 다름.</td></tr>
+ <tr data-priority="p2"><td>T-10 · P2</td><td>성능 / 평가 기준</td><td>허용 시간·메모리, 정상 참고군, 독립 blind set, 유형별 오검출/미검출 기준</td><td>실제 성능/정확도 목표 미확정. 합성 통과를 분류 성능으로 해석하지 않음.</td></tr>
+ <tr data-priority="p2"><td>T-11 · P2</td><td>오류와 부분 결과</td><td>미지원 adapter에서 원본 집계만 반환할지, 오류 코드 계약 승인</td><td>노치 누락 일부 결과 구현. 지원 밖 좌표/mirror는 전체 분석 실패·보류.</td></tr>
+ <tr data-priority="p0"><td>T-12 · P0</td><td>지원 버전 / 크기</td><td>장비 파일 버전 목록, SampleSize 단위, profile 반경과 불일치할 때 우선순위·거부 정책</td><td>현재 header 크기와 profile 반경의 일치 검사 없음.</td></tr>
+ <tr data-priority="p0"><td>T-13 · P0</td><td>Affected / inspected die</td><td>die 식별 규칙과 실제 검사 die 분모. 해당 지표가 필요한지</td><td>현재 null. T-01/T-04 확보 후 구현 범위 결정.</td></tr>
+ <tr data-priority="p1"><td>T-14 · P1</td><td>Ring / arc 기준</td><td>라벨·반례, 점유율·상대두께·최소점 수 기준, 짧은 호·offset 사례, 측정 키 이름 확인</td><td>측정과 분류 구현됨. 임계값은 시험용. 부분 호 자유 중심 fit은 미검증.</td></tr>
+ <tr data-priority="p1"><td>T-15 · P1</td><td>경계 ±tolerance 해석</td><td>인접 sector 양쪽 집계가 의도와 같은지, 운영 tolerance 값·명시 정책, ring 점유 bin 적용 필요 여부</td><td>기본 ±5° 집계 구현. 기존 결정대로 라벨·span에는 적용하지 않음.</td></tr>
+ <tr data-priority="p1"><td>T-16 · P1</td><td>점유율 bin 크기</td><td>실제 점 간격별 자료, occupancy bin과 최소 점유율의 공동 보정값</td><td>예: 15° 간격 점과 10° bin은 낮은 점유율 가능. 임계값만 따로 보정하지 않음.</td></tr>
+ <tr data-priority="p1"><td>T-17 · P1</td><td>Calibrated 승인</td><td>보정 자료 ID·날짜·기준 버전·승인자와 true 전환 절차</td><td>현재 자기선언 boolean. true만으로 성능 근거가 생기지 않음.</td></tr>
+ <tr data-priority="p1"><td>T-18 · P1</td><td>Line 기준</td><td>최소 점 수, 상대 폭, gap 비율 기준과 실제 라벨·반례</td><td>선형 측정·후보 판정 구현, 운영 보정값 없음.</td></tr>
+ <tr data-priority="p1"><td>T-19 · P1</td><td>검출 탐색 범위</td><td>반경/직선 inlier 허용, RANSAC 횟수, 여러 ring/line·offset ring 지원 필요성</td><td>현재 중심 기준 밀집 반경 하나·최대 inlier 직선 하나 탐색.</td></tr>
+ <tr data-priority="p2"><td>T-20 · P2</td><td>Data quality 상태</td><td>coverage·방향 부족 시 valid/degraded 기준과 사용자 표시 정책</td><td>현재 성공 결과는 valid일 수 있으므로 기능별 상태·사유를 별도 확인.</td></tr>
+ <tr data-priority="done"><td>T-21 · 임시 결정</td><td>통계 / 판정 상태 분리</td><td>현재 방식을 유지하면 추가 데이터 불필요. 계약 문서 반영 확인</td><td><code>calc_status</code>와 <code>feature_status</code> 구분 유지.</td></tr>
+ <tr data-priority="p1"><td>T-22 · P1</td><td>삼발이 부분 관측</td><td>2개 관측+1개 미검사 시 후보/보류 정책, 최소 contrast, band 경계 승인</td><td>합성 정책 구현. 실제 template·coverage와 함께 결정.</td></tr>
+ <tr data-priority="p2"><td>T-23 · P2</td><td>Export 표현</td><td>결함별 행을 JSON에도 넣을지, null/빈 칸과 경계 추가시각 표기 요구</td><td>현재 결함별 행은 CSV, null은 빈 칸. UI·다운로드 검증은 이미 수행됨.</td></tr>
+ <tr data-priority="p2"><td>T-24 · P2</td><td>저장 / 인증 / 이력</td><td>로컬·공유 저장소, 인증·권한, 보존·백업·복구, schema migration 요구</td><td>SQLite·중복 저장 방지·append-only 검토 구현. coverage·규칙 버전도 분석 키에 반영.</td></tr>
+ <tr data-priority="p2"><td>T-25 · P2</td><td>운영 UI / 배포</td><td>PC/서버, 동시 사용자 수, 사내 인증·브라우저, 화면/리포트 요구</td><td>통합 입력·상세보기·검토는 구현/시험됨. 다중 사용자 운영·API·배포 이미지는 미검증.</td></tr>
+ <tr data-priority="p0"><td>T-26 · P0</td><td>실제 입력 계약 전체</td><td>원본 구조 샘플, 파일명 규칙·timezone·metadata 우선순위, 같은 검사 화면·집계표, 예외 파일</td><td>실제 자료 없으므로 BLOCKED. 다른 실제 입력 항목을 묶는 최우선 계약.</td></tr>
+ <tr data-priority="p2"><td>T-27 · P2</td><td>Batch 운영 정책</td><td>DB에 전체 경로 저장 필요성, 실제 확장자, 초기 예측/검토 기준 요약, 파일 상한, 파일별 coverage 필요성</td><td>basename 저장·서버 확장자 필터·초기 예측 요약·개발용 상한 구현. 점수/등급은 별도 보정 필요.</td></tr>
+ <tr data-priority="p2"><td>T-28 · P2</td><td>코드 버전 해시 범위</td><td>화면 모듈(<code>batch_ui.py</code>·<code>ui_inputs.py</code>)을 <code>code_version</code> 해시에서 뺄지 결정</td><td>현재 <code>app.py</code>만 제외. 화면 수정도 분석 키를 바꿔 같은 DB의 저장 결과를 재사용하지 못함. 코드 변경 없음.</td></tr>
+ <tr data-priority="p1"><td>T-29 · P1</td><td>설비성 후보·검사 중단</td><td>실제 KLARF의 InspectionStationID 형식·일관성, 장비·레시피별 최대 보고 defect 수, KLARF의 중단·완료 표기 여부, 반복 허용치·과다 기준 운영값, 공정 설비 매핑 필요 여부</td><td>같은 검사 설비에서 step과 무관하게 3장 이상 반복된 환형·일자형·몰림형(equip_*)과 과다 defect/검사 중단 의심 구현. 허용치는 시험값, 과다·상한 기준은 미설정.</td></tr>
+ </tbody></table></div>
+ <div class="callout info"><strong>TBD 문서의 과거 표현을 읽을 때</strong><br>2026-10-12에 해결 항목 5개(구 T-01·T-10·T-11·T-30·T-33)는 TBD에서 삭제되어 <code>docs/9_TBD.md</code> 끝의 결정 기록(R-01~R-05)으로 옮겨졌고, 나머지는 T-01~T-29로 번호가 바뀌었습니다(변경표 참조). 원본 TBD(<code>docs/9_TBD.md</code>)의 T-14·T-17·T-23·T-24·T-28에는 2026-10-11 ‘현행’ 주석이 붙어 있습니다. 해당 기능은 구현되어 있고 <b>사내 검증·보정·정책 결정</b>이 남아 있습니다. 이 안내서의 표는 요약이며 상태의 원본은 <code>docs/9_TBD.md</code>입니다.</div>
+</section>
+
+<section id="reply">
+ <div class="section-no">08 / RESPONSE TEMPLATE</div><h2>이 양식으로 정보를 정리해 전달해 주세요</h2>
+ <p>아래 내용을 채워 담당 자료와 함께 전달하면 됩니다. 모르는 값은 추정하지 말고 ‘미확인’으로 적습니다. 입력 내용은 서버 전송이나 자동 저장을 하지 않으므로, 페이지를 닫기 전에 TXT로 저장하세요.</p>
+ <label class="muted" for="response">사내 데이터 적용 답변 양식</label>
+ <textarea id="response" spellcheck="false">[1. 대상 장비와 입력 — T-09/12/26]
+담당자 / 부서:
+장비 모델 / export 소프트웨어 버전 / 공정:
+KLARF 버전 / encoding / 실제 확장자:
+파일당 wafer·lot·inspection 개수:
+파일명 규칙 / 날짜·시간 형식 / timezone:
+파일명과 내부 metadata가 다를 때 우선순위:
+첨부 파일 목록 및 정상·빈·손상·복수 record 구분:
+
+[2. 좌표와 방향 — T-01/02]
+웨이퍼 지름(mm) / SampleSize 의미:
+XREL/YREL 단위와 기준(wafer 전체 / die 내부):
+XINDEX/YINDEX, DiePitch, DieOrigin 의미:
+SampleCenterLocation 의미 / +X·+Y 방향:
+노치 위치 표기 / front·back / mirror 규칙:
+export가 이미 회전·반전 보정됐는지:
+기준점 자료 / 예상 표준 좌표 / 허용오차 근거:
+
+[3. Bin과 검사 영역 — T-03/04/13]
+CLASSNUMBER / ROUGH / FINE 정의와 우선순위:
+0·null·unknown 의미 / 코드표 버전:
+전체 검사 또는 부분 검사 / ROI / edge exclusion:
+검사 die 목록 위치 / 제외영역 / sampling 방식:
+파일별 검사 영역이 같은지:
+affected die 비율이 필요한지:
+
+[4. 영역과 판정 — T-05~08/14~19/22]
+E1/E2 edge 거리 구간(mm) / 경계 포함 규칙:
+중심 제외 반경(mm) / 경계 tolerance(도):
+100mm 내부·경계 태그 목적 / 경계 band 폭:
+ring·line·local 정답과 반례 / 보정 자료:
+다중 ring/line 또는 offset ring 필요 여부:
+삼발이 사용 여부 / template / 반경·위상·허용오차:
+2개 관측+1개 미검사 시 처리 정책:
+calibrated 승인자와 근거 문서:
+
+[5. 운영과 완료 기준 — T-10/11/20/23~25/27/29]
+한 번 / 하루 파일 수·용량 / 허용 분석시간:
+동시 사용자 수 / PC 또는 서버 / 인증·권한:
+저장 위치 / 전체 경로 저장 필요성 / 보존·백업 기간:
+부분 결과·degraded 표시 정책:
+CSV·JSON·리포트 추가 요구:
+오검출/미검출 허용 기준 / 독립 평가 자료:
+미확인 항목별 담당자·예정일:
+</textarea>
+ <div class="controls no-print"><button class="button" type="button" id="download-answer">작성한 답변 TXT 저장</button><button class="button secondary" type="button" id="copy-answer">답변 복사</button></div><p id="answer-status" class="status" aria-live="polite"></p>
+</section>
+
+<section id="acceptance">
+ <div class="section-no">09 / ACCEPTANCE</div><h2>사내 적용 완료는 이 순서로 확인합니다</h2>
+ <div class="checklist">
+ <label><input type="checkbox"><span>대상 장비/export 계열의 입력 계약과 metadata 우선순위를 문서화했다.</span></label>
+ <label><input type="checkbox"><span>정상·빈·손상·복수 record·버전/열 차이를 구분하고 합의된 상태로 처리했다.</span></label>
+ <label><input type="checkbox"><span>기준점으로 단위·중심·축·회전·mirror를 확인했다. 파싱 성공과 좌표 검증을 구분했다.</span></label>
+ <label><input type="checkbox"><span>독립 화면/집계표와 원본 개수·bin 합계를 대조했다. 파싱 = 포함 + 제외, bin 합 = 포함을 확인했다.</span></label>
+ <label><input type="checkbox"><span>실제 coverage로 면적·밀도를 검증했고, 미검사/미상을 0으로 표시하지 않았다.</span></label>
+ <label><input type="checkbox"><span>E1/E2·중심·형상·삼발이 값은 승인된 근거가 있다. 시험값을 운영값으로 복사하지 않았다.</span></label>
+ <label><input type="checkbox"><span>새 사내 fixture·정답 manifest를 준비하고 관련 E/C 시나리오 및 기존 회귀를 통과했다.</span></label>
+ <label><input type="checkbox"><span>UI→CSV/JSON→DB→검토 재조회까지 실제 입력으로 확인하고, 운영 규모·백업·권한·복구를 검증했다.</span></label>
+ </div>
+ <p class="muted">체크는 이 페이지에서 검토 내용을 정리하기 위한 표시입니다. 실제 시험 증빙이나 프로젝트 완료 체크를 대신하지 않으며 새로고침 시 저장되지 않습니다.</p>
+ <h3>현재까지의 증빙과 남은 범위</h3>
+ <p>통합 UI 변경 후 비브라우저 346건, 실제 Edge 13건이 통과했습니다. 이후 profile 기본값 복원 변경은 관련 UI 테스트 10건으로 확인했습니다. 이 기록은 <b>각 변경 시점의 합성 시험</b>이며, 최종 코드 전체를 347건으로 다시 실행했다는 뜻은 아닙니다. 실제 장비 지원·분류 성능·운영 배포는 아직 완료 판정하지 않습니다.</p>
+ <pre><code># 준비된 프로젝트 환경에서 필요한 검증 실행
+python -m pytest -m "not e2e" -q
+python -m pytest -m e2e -q</code></pre>
+ <h3>근거 파일</h3><p><code>README.md</code> · <code>docs/9_TBD.md</code> · <code>docs/6_execution_plan.md</code> · <code>docs/1_domain_definition.md</code>~<code>docs/8_style_guide.md</code> · <code>wafer/profile.py</code> · <code>wafer/ingest.py</code> · <code>wafer/cli.py</code> · <code>wafer/batch.py</code> · <code>wafer/batch_ui.py</code> · <code>wafer/app.py</code> · <code>wafer/store.py</code> · <code>wafer/ui_inputs.py</code> · <code>tests/profiles/</code></p>
+</section>
+<footer>Wafer inspection map · 사용 및 사내 적용 안내서 · 2026.10.10<br>단일 HTML에 내용·스타일·검색 기능을 포함했습니다. 외부 폰트·분석 도구·네트워크 요청을 사용하지 않습니다.</footer>
+</main>
+<script>
+(()=>{
+ const rows=[...document.querySelectorAll('#tbd-table tbody tr')],priority=document.getElementById('priority'),search=document.getElementById('search');
+ function filter(){let n=0;const q=search.value.trim().toLowerCase();rows.forEach(r=>{r.hidden=!((priority.value==='all'||r.dataset.priority===priority.value)&&r.textContent.toLowerCase().includes(q));if(!r.hidden)n++});document.getElementById('count').textContent=`${n} / ${rows.length}개 항목`}
+ priority.addEventListener('change',filter);search.addEventListener('input',filter);
+ document.getElementById('print-btn').addEventListener('click',()=>window.print());
+ window.addEventListener('beforeprint',()=>rows.forEach(r=>r.hidden=false));window.addEventListener('afterprint',filter);
+ const response=document.getElementById('response'),status=document.getElementById('answer-status');
+ document.getElementById('download-answer').addEventListener('click',()=>{const blob=new Blob(['\ufeff'+response.value],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='wafer_internal_data_answers.txt';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);status.textContent='답변 TXT 다운로드를 요청했습니다. 브라우저 다운로드 목록을 확인하세요.'});
+ document.getElementById('copy-answer').addEventListener('click',async()=>{try{if(!navigator.clipboard)throw new Error('clipboard unavailable');await navigator.clipboard.writeText(response.value);status.textContent='답변을 복사했습니다.'}catch{response.focus();response.select();status.textContent='답변을 선택했습니다. Ctrl+C로 복사하거나 TXT 저장을 사용하세요.'}});
+ filter();
+})();
+</script>
+</body>
+</html>

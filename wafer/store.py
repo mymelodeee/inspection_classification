@@ -237,7 +237,7 @@ def review_status(con, key):
 def save_batch(con, config, entries):
     """Link a batch to its members. Results and reviews stay in runs / reviews (one copy each); a run that
     appears in several batches is referenced, never duplicated or overwritten. Only the file name (basename)
-    is stored, as for attempts (T-27); the full relative path stays in the downloaded manifest."""
+    is stored, as for attempts (T-24); the full relative path stays in the downloaded manifest."""
     with _tx(con):
         con.execute("INSERT INTO batches VALUES (?,?,?)",
                     (config["batch_id"], config["created_at"], json.dumps(config, ensure_ascii=False, default=str)))

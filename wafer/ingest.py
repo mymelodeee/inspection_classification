@@ -1,11 +1,11 @@
 """Strict KLARF reader + SYNTHETIC adapter.
 
-klarfrs 0.2.1 silently drops/shifts records (see TBD.md T-01), so the DefectList is
+klarfrs 0.2.1 silently drops/shifts records (see TBD.md R-01), so the DefectList is
 parsed here and any inconsistency raises KlarfError (INVALID_INPUT). Raw fields are kept.
 
 Two syntaxes are read strictly: the flat 1.2-style list (tests/fixtures/klarf) and the KLARF 1.8
 Record/Field/List syntax (klarf_dummy_data). Two SYNTHETIC adapters exist, selected explicitly by
-profile coordinates.adapter_id; neither is a real tool-export rule (TBD T-02/T-03). Unsupported header
+profile coordinates.adapter_id; neither is a real tool-export rule (TBD T-01/T-02). Unsupported header
 values raise AdapterUnsupported instead of being guessed.
 """
 import hashlib
@@ -99,9 +99,9 @@ def _read_18(lines, sha, path):
             if ln.startswith("Record WaferRecord"):
                 wafers += 1
                 if wafers > 1:
-                    raise KlarfError("more than one WaferRecord: multi-wafer files unsupported (T-12)")
+                    raise KlarfError("more than one WaferRecord: multi-wafer files unsupported (T-09)")
             rm = re.match(r'^Record\s+(LotRecord|WaferRecord)\s+"([^"]*)"$', ln)
-            if rm:   # record names kept for display/tracking only (not used for keys, T-29)
+            if rm:   # record names kept for display/tracking only (not used for keys, T-26)
                 header[rm.group(1)] = rm.group(2)
         elif ln.startswith("Field "):
             f = _FIELD.match(ln)
@@ -203,7 +203,7 @@ def read_klarf(path):
             continue
         if closed:
             if ln:
-                raise KlarfError(f"unexpected content after DefectList end (multi-wafer/list unsupported, T-12): line {i + 1 + rec_no}")
+                raise KlarfError(f"unexpected content after DefectList end (multi-wafer/list unsupported, T-09): line {i + 1 + rec_no}")
             continue
         if not ln:
             continue
@@ -226,16 +226,16 @@ def to_standard(k, coords=None):
     if coords is not None and coords.source_units != "um":
         raise AdapterUnsupported("synthetic-um-die00-notch-down reads XREL/YREL as um; profile source_units must be um")
     if h.get("CoordinatesMirrored") != "NO":
-        raise AdapterUnsupported("CoordinatesMirrored != NO: side/mirror rule is TBD (T-03)")
+        raise AdapterUnsupported("CoordinatesMirrored != NO: side/mirror rule is TBD (T-02)")
     notch = h.get("OrientationMarkLocation")
     if notch not in (None, "DOWN"):
-        raise AdapterUnsupported("notch != DOWN: rotation rule for this export is TBD (T-03)")
+        raise AdapterUnsupported("notch != DOWN: rotation rule for this export is TBD (T-02)")
     if h.get("SampleCenterLocation", "").split() != ["0", "0"] or h.get("DieOrigin", "").split() != ["0", "0"]:
-        raise AdapterUnsupported("non-zero SampleCenterLocation/DieOrigin: TBD (T-02)")
+        raise AdapterUnsupported("non-zero SampleCenterLocation/DieOrigin: TBD (T-01)")
     ids, xs, ys, bins, dies = [], [], [], [], []
     for rec_no, r in enumerate(k.records, start=1):
         if r.get("XINDEX", 0) != 0 or r.get("YINDEX", 0) != 0:
-            raise AdapterUnsupported(f"defect {int(r['DEFECTID'])}: die index != (0,0); die pitch/origin rule is TBD (T-02)")
+            raise AdapterUnsupported(f"defect {int(r['DEFECTID'])}: die index != (0,0); die pitch/origin rule is TBD (T-01)")
         ids.append(f"{rec_no}:{int(r['DEFECTID'])}")  # event key = record order + original DEFECTID
         xs.append(r["XREL"] / 1000.0)  # synthetic: um -> mm, single die at wafer center
         ys.append(r["YREL"] / 1000.0)
@@ -245,7 +245,7 @@ def to_standard(k, coords=None):
 
 
 def bin_label(classnumber):
-    """Single bin naming for every adapter (T-04 decision): the CLASSNUMBER value as text; 0 -> unknown."""
+    """Single bin naming for every adapter (T-03 decision): the CLASSNUMBER value as text; 0 -> unknown."""
     n = int(classnumber)
     return None if n == 0 else str(n)
 
@@ -264,19 +264,19 @@ def to_standard_die_local(k, coords):
         px, py = (float(v) for v in h["DiePitch"].split())
         cx, cy = (float(v) for v in h["SampleCenterLocation"].split())
     except (KeyError, ValueError):
-        raise AdapterUnsupported("DiePitch / SampleCenterLocation missing or malformed (T-02)")
+        raise AdapterUnsupported("DiePitch / SampleCenterLocation missing or malformed (T-01)")
     notch = h.get("OrientationMarkLocation")   # absent -> orientation unknown, partial results (16.1)
     if h.get("DieOrigin", "").split() != ["0", "0"]:
-        raise AdapterUnsupported("non-zero DieOrigin: rule is TBD (T-02)")
+        raise AdapterUnsupported("non-zero DieOrigin: rule is TBD (T-01)")
     if not all(math.isfinite(v) for v in (px, py, cx, cy)) or px <= 0 or py <= 0:
         raise AdapterUnsupported("DiePitch must be finite and > 0, SampleCenterLocation finite")
     if h.get("CoordinatesMirrored", "NO") != "NO":
-        raise AdapterUnsupported("CoordinatesMirrored present and not NO: side/mirror rule is TBD (T-03)")
+        raise AdapterUnsupported("CoordinatesMirrored present and not NO: side/mirror rule is TBD (T-02)")
     mark = h.get("SampleOrientationMarkType")
     if (notch is not None or mark is not None) and mark != "NOTCH":   # a flat mark is not this contract
-        raise AdapterUnsupported("SampleOrientationMarkType must be NOTCH for synthetic-die-local-v1 (T-03)")
+        raise AdapterUnsupported("SampleOrientationMarkType must be NOTCH for synthetic-die-local-v1 (T-02)")
     if notch is not None and notch not in ("DOWN", "UP", "LEFT", "RIGHT"):
-        raise AdapterUnsupported(f"notch {notch!r} not supported (T-03)")
+        raise AdapterUnsupported(f"notch {notch!r} not supported (T-02)")
     for col in ("XINDEX", "YINDEX"):
         if col not in k.columns:
             raise AdapterUnsupported(f"{col} column required by synthetic-die-local-v1")
@@ -297,7 +297,7 @@ def to_standard_die_local(k, coords):
 
 
 def standardize(k, coords):
-    """Dispatch on the explicit profile adapter id (required, T-02) -> (adapter_id, orientation, columns)."""
+    """Dispatch on the explicit profile adapter id (required, T-01) -> (adapter_id, orientation, columns)."""
     aid = coords.adapter_id
     if aid == "synthetic-um-die00-notch-down":
         return (aid, *to_standard(k, coords))

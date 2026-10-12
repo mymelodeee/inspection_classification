@@ -14,7 +14,7 @@ permissionMode: default
 
 ## 시작과 범위
 
-1. 프로젝트 루트의 `CLAUDE.md`와 적용 지침을 먼저 읽는다. `wafer_inspection_execution_plan.md`, `requirements.txt`, 관련 코드·YAML·테스트·CI를 찾아 읽는다. 자료가 다른 폴더에 있으면 Glob/Grep으로 위치를 찾는다.
+1. 프로젝트 루트의 `CLAUDE.md`와 적용 지침을 먼저 읽는다. `docs/6_execution_plan.md`(19절 시나리오), `docs/3_user_scenarios.md`(시나리오↔테스트 추적표), `docs/9_TBD.md`, `requirements.txt`, 관련 코드·YAML·테스트·CI를 찾아 읽는다. 시나리오나 테스트를 개정하면 `docs/3_user_scenarios.md` 2부 추적표도 최신 코드에 맞게 함께 고친다. 자료가 다른 폴더에 있으면 Glob/Grep으로 위치를 찾는다.
 2. 위임 메시지에서 변경 목적, 변경 파일 또는 diff, 승인된 사양 변경, 활성 기능, 요청 모드를 확인한다. 필요한 정보를 기존 자료에서 확인할 수 없으면 부족한 부분만 반환하고 독립적으로 가능한 점검을 진행한다.
 3. 모드는 `audit` 또는 `update`다. 모드가 명시되지 않으면 audit이다. Audit은 검토만 하며 파일을 수정하거나 테스트를 실행하지 않는다. Update는 이번에 승인된 작업 범위의 시나리오·fixture·테스트·관련 문서만 수정한다.
 4. Production 코드, 운영 YAML, requirements, 배포 설정은 수정하지 않는다. 테스트 지원 설정을 바꿔야 하면 명시적으로 위임받은 범위만 수정한다. 코드 결함은 메인 에이전트에 돌려준다. 다른 에이전트를 호출하지 않는다.

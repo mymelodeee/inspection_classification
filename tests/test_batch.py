@@ -86,7 +86,7 @@ def mixed_folder(root):
     (root / "broken.klarf").write_bytes(damaged_bytes())
     (root / "notes.txt").write_text("not a klarf file\n", encoding="utf-8")       # allowed ext, bad content
     (root / "overview.png").write_bytes((DD / "maps/overview.png").read_bytes())
-    (root / "export.001").write_bytes((KL / "F01_counts.klarf").read_bytes())    # T-29: ext not in contract
+    (root / "export.001").write_bytes((KL / "F01_counts.klarf").read_bytes())    # T-26: ext not in contract
     shutil.copy(FLAT_F01, root / "flat_f01.klf")                                 # flat syntax, die-local profile
     return root
 
@@ -230,7 +230,10 @@ def test_05_mixed_folder_completes_valid_inputs_and_keeps_every_entry(tmp_path):
     assert ov == {"files_uploaded": 8, "files_targeted": 6, "excluded": 2, "analysis_units": 2, "succeeded": 2,
                   "failed": 2, "held": 1, "duplicates_in_batch": 1, "reused_from_store": 0,
                   "unique_wafers_from_header_unverified": 2, "units_with_unknown_wafer_id": 0,
-                  "total_included_defects": MANIFEST["F01_counts"]["count"] + MANIFEST["empty"]["count"]}
+                  "total_included_defects": MANIFEST["F01_counts"]["count"] + MANIFEST["empty"]["count"],
+                  # E16-NULLWHY (approved spec change 2026-10-11, null reasons): overview gains null_reasons;
+                  # was absent. Nothing here is null (2 units analysed) -> {} (not a missing key).
+                  "null_reasons": {}}
     e = {x["rel_path"]: x for x in b["entries"]}
     dup, src = e["lotA/w2/F01_counts.klarf"], e["lotA/w1/F01_counts.klarf"]
     assert dup["analysis_key"] == src["analysis_key"] is not None            # analysed once, pointed to
@@ -466,7 +469,7 @@ def test_12c_profile_edited_during_the_run_does_not_reach_later_units(tmp_path):
     assert [b["units"][i]["result"]["provenance"]["profile_sha256"] for i in range(3)] == [want] * 3
 
 
-# ---------------------------------------------------------------- 13. store: batch rows (E17, T-27)
+# ---------------------------------------------------------------- 13. store: batch rows (E17, T-24)
 def test_13_batch_rows_stored_before_first_run_basename_only_and_rerun_reuses(tmp_path):
     items = B.folder_items(mixed_folder(tmp_path / "in"))
     db = tmp_path / "w.db"
@@ -644,7 +647,7 @@ def test_17_same_basename_in_different_subfolders_are_two_units(tmp_path):
 # ---------------------------------------------------------------- 18. multi-wafer file (E09-MULTI-BATCH, C02, C15)
 def _two_wafer_bytes():
     """F01_counts with its WaferRecord block repeated under the same LotRecord (second record renamed).
-    Plan 19.3 E09-MULTI / 19.4 E09-MULTI-BATCH, README 6: unsupported -> invalid_input (TBD T-12)."""
+    Plan 19.3 E09-MULTI / 19.4 E09-MULTI-BATCH, README 6: unsupported -> invalid_input (TBD T-09)."""
     lines = (KL / "F01_counts.klarf").read_bytes().decode("utf-8").splitlines(keepends=True)
     start = next(i for i, ln in enumerate(lines) if ln.strip().startswith("Record WaferRecord"))
     end = max(i for i, ln in enumerate(lines) if ln.strip() == "}") - 2      # closes WaferRecord (file, lot after)
@@ -842,3 +845,51 @@ def test_23_total_included_is_null_when_nothing_was_analysed_and_zero_for_a_real
     _, b0 = run([("empty.klarf", (KL / "empty.klarf").read_bytes())])
     assert MANIFEST["empty"]["count"] == 0
     assert B.overview(b0)["total_included_defects"] == 0 and B.overview(b0)["analysis_units"] == 1
+    # E16-NULLWHY (approved spec change 2026-10-11): the null total carries its reason; a real 0 has none
+    why = B.overview(b)["null_reasons"]
+    assert set(why) == {"total_included_defects"} and why["total_included_defects"].startswith("not computable")
+    assert man["overview"]["null_reasons"] == why and B.overview(b0)["null_reasons"] == {}
+
+
+# ---------------------------------------------------------------- 24. null reasons per unit row (approved 2026-10-11)
+NULL_PREFIXES = ("not computable", "not applicable", "not available", "not stored")
+
+
+def _is_reason_col(c):
+    return c in ("reason", "null_reasons") or c.endswith("_reason")
+
+
+def test_24_unit_rows_explain_every_null_cell_and_density_groups_say_why(tmp_path, dummy_cov):
+    """E16-NULLWHY / E10 / E11, C15. Every None cell of a unit row (reason columns excluded) has an entry in the
+    row's null_reasons JSON; a not-analysed row says so under "metrics"; summary.csv keeps the JSON readable.
+    Inputs: dummy set with sidecar, the mixed folder (invalid/held/excluded/duplicate), F01 without notch, no DB."""
+    _, mixed = run(B.folder_items(mixed_folder(tmp_path / "in")))
+    _, nonotch = run([("nonotch.klarf", drop_notch((KL / "F01_counts.klarf").read_bytes()))])
+    checked = 0
+    for b in (dummy_cov, mixed, nonotch):
+        csv_rows = {r["rel_path"]: r for r in csv.DictReader(io.StringIO(B.summary_csv(b)))}
+        for row in B.unit_rows(b):
+            why = json.loads(row["null_reasons"])
+            nulls = {c for c, v in row.items() if v is None and not _is_reason_col(c)}
+            assert nulls <= set(why), (row["rel_path"], nulls - set(why))
+            assert all(isinstance(v, str) and v.startswith(NULL_PREFIXES) for v in why.values()), row["rel_path"]
+            assert json.loads(csv_rows[row["rel_path"]]["null_reasons"]) == why
+            checked += len(nulls)
+    assert checked > 0
+    rows = {r["rel_path"]: r for r in B.unit_rows(mixed)}
+    for p in ("broken.klarf", "notes.txt", "flat_f01.klf", "export.001"):   # failed / held / excluded: no metrics
+        why = json.loads(rows[p]["null_reasons"])
+        assert why["metrics"].startswith("not applicable: not analysed") and rows[p]["status"] in why["metrics"], p
+    assert "metrics" not in json.loads(rows["lotA/w1/F01_counts.klarf"]["null_reasons"])
+    nn = B.unit_rows(nonotch)[0]
+    why = json.loads(nn["null_reasons"])
+    md = [c for c in nn if c.startswith("main_direction") and nn[c] is None]
+    assert md and all("orientation_unknown" in why[c] for c in md)
+
+    # batch density: reason only when the group density is null (C06: unknown coverage is never a 0 density)
+    g = B.batch_density(dummy_cov)
+    assert len(g) == 1 and g[0]["density_per_mm2"] is not None and g[0]["reason"] is None
+    _, nocov = run(dummy_items())
+    g = B.batch_density(nocov)
+    assert len(g) == 1 and g[0]["density_per_mm2"] is None
+    assert g[0]["reason"].startswith("not computable") and "13 excluded" in g[0]["reason"]

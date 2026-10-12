@@ -1,7 +1,7 @@
 """Ingest + CLI on SYNTHETIC KLARF (E01 core path, E03, E09 unknown bin, E13 file errors).
 
 Expected values: tests/fixtures/f01/oracle.json and hand-stated counts. Not a tool-adapter
-validation (real export is TBD, see TBD.md).
+validation (real export is TBD, see docs/9_TBD.md).
 """
 import json
 from pathlib import Path
@@ -18,7 +18,7 @@ oracle = json.loads((HERE / "fixtures/f01/oracle.json").read_text(encoding="utf-
 
 
 def oracle_bin(label):
-    """Approved spec change T-04 (2026-10-09): every adapter reports CLASSNUMBER as text ("1","2","3"), 0 -> unknown.
+    """Approved spec change T-03 (2026-10-09): every adapter reports CLASSNUMBER as text ("1","2","3"), 0 -> unknown.
     The F01 oracle (f01-oracle-1, unchanged) writes "Bn"; "Bn" means CLASSNUMBER n. Explicit mapping, not production."""
     assert label[0] == "B" and label[1:].isdigit(), label
     return label[1:]
@@ -39,7 +39,7 @@ def test_e01_f01_end_to_end_core(tmp_path):
     r = o["result"]
     assert code == 0 and o["job_status"] == "succeeded"
     assert (r["n_parsed"], r["n_included"], r["n_excluded"]) == (8, 8, 0)
-    # E01-UP (T-04, 2026-10-09): was r["bin_totals"] == {"B1": 3, "B2": 3, "B3": 2}; now {"1": 3, "2": 3, "3": 2}
+    # E01-UP (T-03, 2026-10-09): was r["bin_totals"] == {"B1": 3, "B2": 3, "B3": 2}; now {"1": 3, "2": 3, "3": 2}
     assert r["bin_totals"] == oracle_bins(oracle["bin_totals"]) == {"1": 3, "2": 3, "3": 2}
     assert r["center"] == oracle["center"]
     assert r["sectors_clock"] == oracle["sectors_clock"]
@@ -69,7 +69,7 @@ def test_e03_single_and_center_only(tmp_path):
 
 def test_e09_unclassified_bin_preserved(tmp_path):
     r = run_cli("e09_unclassified_bin.klf", tmp_path)[1]["result"]
-    # E09-UP (T-04, 2026-10-09): was {"B1": 3, "B2": 2, "B3": 2, "unknown": 1}; CLASSNUMBER kept as text, 0 -> unknown
+    # E09-UP (T-03, 2026-10-09): was {"B1": 3, "B2": 2, "B3": 2, "unknown": 1}; CLASSNUMBER kept as text, 0 -> unknown
     assert r["bin_totals"] == {"1": 3, "2": 2, "3": 2, "unknown": 1}
     assert sum(r["bin_totals"].values()) == r["n_included"] == 8
 
@@ -162,7 +162,7 @@ def test_non_utf8_klarf_fails_explicitly(tmp_path):
 
 
 def test_e01_cli_includes_stats_and_detect_with_honest_null_states(tmp_path):
-    """Coverage is unknown (T-05 option a): density and Clark-Evans must be null/insufficient, never 0.
+    """Coverage is unknown (T-04 option a): density and Clark-Evans must be null/insufficient, never 0.
     Radial counts with 50 mm bins over R=150 (hand, F01): r in [0,50): D05(0) only -> 1 (D01..D04 are at
     exactly 50); [50,100): D01..D04 -> 4; [100,150]: D06 149, D07 148, D08 100 -> 3."""
     code, o = run_cli("f01.klf", tmp_path)
@@ -236,7 +236,7 @@ def test_bin_sector_table_f01_hand_values(tmp_path):
     """F01 (plan 19.2): B1 = D01 12h, D02 3h, D05 center; B2 = D03 6h, D04 9h, D08 3h; B3 = D06, D07 3h."""
     bs = run_cli("f01.klf", tmp_path)[1]["result"]["bin_sector"]
     nz = {b: {h: n for h, n in row.items() if n} for b, row in bs.items()}
-    # E16-UP (T-04, 2026-10-09): bin keys "B1"/"B2"/"B3" -> "1"/"2"/"3" (same hand values; oracle "Bn" = CLASSNUMBER n)
+    # E16-UP (T-03, 2026-10-09): bin keys "B1"/"B2"/"B3" -> "1"/"2"/"3" (same hand values; oracle "Bn" = CLASSNUMBER n)
     assert nz == {"1": {"12": 1, "3": 1, "center": 1}, "2": {"6": 1, "9": 1, "3": 1}, "3": {"3": 2}}
 
 
@@ -298,8 +298,11 @@ def test_csv_distinguishes_disabled_features_from_real_zero(tmp_path):
     assert main([str(K / "empty_list.klf"), "--profile", PROFILE, "--out", str(tmp_path / "b.json"), "--csv-dir", str(csv_empty)]) == 0
     s_off = list(csv.DictReader(open(csv_off / "spatial_counts.csv", encoding="utf-8")))
     st = {(r["table"], r["key"]): r for r in s_off}
-    assert st[("sector_strict", "*")]["count"] == "" and st[("sector_strict", "*")]["reason"].startswith("disabled")
-    assert st[("zone", "E1")]["count"] == "" and st[("zone", "E1")]["reason"] == "disabled"
+    # E16-NULLWHY (approved spec change 2026-10-11, null reasons): reasons were startswith("disabled") / == "disabled";
+    # now prefixed "not computable: " and the zone reason names the profile as the cause.
+    assert st[("sector_strict", "*")]["count"] == "" and \
+        st[("sector_strict", "*")]["reason"].startswith("not computable: disabled")
+    assert st[("zone", "E1")]["count"] == "" and st[("zone", "E1")]["reason"] == "not computable: zone disabled in profile"
     assert st[("zone_union", "unique")]["count"] == "" and st[("radial", "*")]["count"] == ""
     s_empty = list(csv.DictReader(open(csv_empty / "spatial_counts.csv", encoding="utf-8")))
     se = {(r["table"], r["key"]): r for r in s_empty}
@@ -321,7 +324,7 @@ def test_invariant_violation_is_reported_by_name(tmp_path, monkeypatch):
 
     def broken(*a, **k):                      # injected fault (mock): corrupt one bin_sector cell
         res, pts = real(*a, **k)
-        res["bin_sector"]["1"][12] += 1      # T-04 (2026-10-09): bin key "B1" -> "1" (fault injection target only)
+        res["bin_sector"]["1"][12] += 1      # T-03 (2026-10-09): bin key "B1" -> "1" (fault injection target only)
         return res, pts
     monkeypatch.setattr(c, "aggregate", broken)
     code, o = run_cli("f01.klf", tmp_path)
@@ -341,7 +344,7 @@ def run_cli_path_csv(p, tmp_path, csv_dir):
     return code, json.loads(out.read_text(encoding="utf-8"))
 
 
-# ---- T-02 (2026-10-09): explicit adapter_id is required to run (E12-UP, C13/C17) ----
+# ---- T-01 (2026-10-09): explicit adapter_id is required to run (E12-UP, C13/C17) ----
 @pytest.mark.parametrize("how", ["null", "absent"])
 def test_e12_up_cli_without_adapter_id_is_config_invalid(how, tmp_path):
     import yaml
@@ -359,7 +362,7 @@ def test_e12_up_cli_without_adapter_id_is_config_invalid(how, tmp_path):
     assert "coordinates.adapter_id" in o["keys"] and "result" not in o
 
 
-# ---- Notch position missing (approved 2026-10-09, T-03): partial result, clock withheld (E10-UP, C03/C04/C15) ----
+# ---- Notch position missing (approved 2026-10-09, T-02): partial result, clock withheld (E10-UP, C03/C04/C15) ----
 def _drop_line(text, needle):
     lines = text.splitlines(keepends=True)
     kept = [ln for ln in lines if needle not in ln]

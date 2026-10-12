@@ -23,7 +23,7 @@
   "notes": [
    "Axis points (EDGE/R/CEN/THX) have exact float coordinates when exact=true/ float_ambiguous=false.",
    "Decimal-edge points (e.g. 1.999, 98.9) are exact only to double precision; margin >= 0.001 mm >> eps.",
-   "Points with float_ambiguous=true: expected sector is for the ideal angle; assertion requires a snap/tolerance policy (TBD T-09).",
+   "Points with float_ambiguous=true: expected sector is for the ideal angle; assertion requires a snap/tolerance policy (TBD T-08).",
    "zones lists tags expected from profile; E1/E2 are distance_from_edge_mm, inside/boundary are radius_mm."
   ]
  },

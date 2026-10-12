@@ -5,8 +5,8 @@ profile_id: "f01_test_only"
 units: "mm"
 wafer_radius_mm: 150
 coordinates:
-  adapter_id: "synthetic-um-die00-notch-down"   # explicit (T-02)
-  source_units: "um"   # XREL/YREL are um (fixture README); was "mm" (T-02 note)
+  adapter_id: "synthetic-um-die00-notch-down"   # explicit (T-01)
+  source_units: "um"   # XREL/YREL are um (fixture README); was "mm" (T-01 note)
   target_notch: "DOWN"
   target_x: "RIGHT"
   target_y: "UP"
@@ -44,7 +44,7 @@ clustering:
   min_samples: 3
   retain_noise: true
 shapes:
-  ring:   # TEST-ONLY provisional values (TBD T-17); never copy to an operating profile
+  ring:   # TEST-ONLY provisional values (TBD T-14); never copy to an operating profile
     enabled: true
     occupancy_bin_deg: 10
     ring_min_occupancy: 0.8
@@ -52,13 +52,13 @@ shapes:
     max_relative_thickness: 0.25
     min_points: 20
     calibrated: false
-  line:   # TEST-ONLY provisional values (TBD T-21)
+  line:   # TEST-ONLY provisional values (TBD T-18)
     enabled: true
     min_points: 10
     max_relative_width: 0.1
     max_gap_ratio: 0.2
     calibrated: false
-detect:   # TEST-ONLY provisional search parameters (TBD T-22)
+detect:   # TEST-ONLY provisional search parameters (TBD T-19)
   enabled: true
   ring_radial_tol_mm: 1.0
   line_inlier_mm: 1.0

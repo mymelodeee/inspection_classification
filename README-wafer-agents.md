@@ -22,7 +22,7 @@
 
 ## 기준 파일
 
-프로젝트에 기존 `CLAUDE.md`, `wafer_inspection_execution_plan.md`, `wafer_inspection_map_knowledge.md`, `requirements.txt`를 함께 둔다. 다른 폴더에 있으면 실제 위치를 전달한다. 이 묶음에는 해당 문서의 복사본을 넣지 않았으므로 중복 버전이 생기지 않는다.
+프로젝트에 기존 `CLAUDE.md`, `docs/`(설계 문서 1~9: 실행계획은 `docs/6_execution_plan.md`, 시나리오↔테스트 추적표는 `docs/3_user_scenarios.md`, 보류 항목은 `docs/9_TBD.md`), `wafer_inspection_map_knowledge.md`, `requirements.txt`를 함께 둔다. 다른 폴더에 있으면 실제 위치를 전달한다. 이 묶음에는 해당 문서의 복사본을 넣지 않았으므로 중복 버전이 생기지 않는다.
 
 ## 권장 작업 순서
 

@@ -10,11 +10,26 @@ from pathlib import Path
 RESULT_KEYS = ("n_parsed", "n_included", "n_excluded", "excluded", "bin_totals", "boundary_tolerance_deg",
                "orientation_status", "clock_status", "center", "sectors_clock", "sectors_clock_tolerant", "n_multi_sector", "boundary_ambiguous",
                "bin_sector", "zones", "zones_status", "zone_union_unique", "radial_density", "clark_evans", "detect",
-               "lift_pin", "pattern_summary", "affected_die_count", "inspected_die_count", "provenance")
+               "lift_pin", "pattern_summary", "affected_die_count", "inspected_die_count", "provenance",
+               "null_reasons")
+COUNT_ONLY = "area/density not applicable (count-only table)"
+NULL_CONVENTION = ("empty cell = null (not computable or not applicable; the reason is in the reason/status column "
+                   "or manifest null_reasons), 0 = real zero")
+DIE_COUNT_WHY = "not computable: no die rule / inspected-die list (T-13)"
 
 
 class ResultInvariantError(ValueError):
     """A finished result breaks a counting contract: a program defect, never a data condition."""
+
+
+def null_reasons(res):
+    """Reason for every top-level null field (C15): a null value is never left without a reason.
+    Nested nulls carry their own status/reason (calc_status, feature_status, row reason, withheld)."""
+    cs = res["clock_status"]
+    clock_why = f'not computable: clock {cs["status"]} ({cs["reason"]})'
+    known = {"zone_union_unique": "not computable: no zone enabled in profile",
+             "affected_die_count": DIE_COUNT_WHY, "inspected_die_count": DIE_COUNT_WHY}
+    return {k: known.get(k, clock_why) for k in RESULT_KEYS if k != "null_reasons" and res.get(k) is None}
 
 
 def check_result(res):
@@ -22,6 +37,10 @@ def check_result(res):
     extra = [k for k in res if k not in RESULT_KEYS]
     if missing or extra:
         raise ResultInvariantError(f"result schema mismatch: missing={missing} extra={extra}")
+    nulls = {k for k in RESULT_KEYS if k != "null_reasons" and res[k] is None}
+    nr = res["null_reasons"] or {}
+    if set(nr) != nulls or not all(nr.values()):
+        raise ResultInvariantError(f"null_reasons must explain exactly the null fields {sorted(nulls)}")
     if res["n_parsed"] != res["n_included"] + res["n_excluded"]:
         raise ResultInvariantError("count conservation violated: n_parsed != n_included + n_excluded")
     if sum(res["bin_totals"].values()) != res["n_included"]:
@@ -51,34 +70,49 @@ def _cell(v):
 
 def spatial_rows(res):
     """Long format. A table that was not computed gets one status row (count empty, reason set) so a
-    disabled feature never looks like a real 0."""
-    rows = [("bin_total", b, n, None, None, None) for b, n in res["bin_totals"].items()]
+    disabled feature never looks like a real 0. Every row with a null cell carries a reason."""
+    rows = [("bin_total", b, n, None, None, COUNT_ONLY) for b, n in res["bin_totals"].items()]
     if res["sectors_clock"] is not None:
-        rows += [("sector_strict", h, n, None, None, None) for h, n in res["sectors_clock"].items()]
-        rows += [("center", "center", res["center"], None, None, None)]
-        rows += [("sector_tolerant", h, n, None, None, "not a partition (+-tol neighbours counted twice)")
+        rows += [("sector_strict", h, n, None, None, COUNT_ONLY) for h, n in res["sectors_clock"].items()]
+        rows += [("center", "center", res["center"], None, None, COUNT_ONLY)]
+        rows += [("sector_tolerant", h, n, None, None, f"not a partition (+-tol neighbours counted twice); {COUNT_ONLY}")
                  for h, n in res["sectors_clock_tolerant"].items()]
     else:
         cs = res["clock_status"]
-        why = f'{cs["status"]}: {cs["reason"]}'
+        why = f'not computable: {cs["status"]}: {cs["reason"]}'
         for t in ("sector_strict", "sector_tolerant"):
             rows.append((t, "*", None, None, None, why))
-        rows.append(("center", "center", res["center"], None, None, None if res["center"] is not None else why))
+        rows.append(("center", "center", res["center"], None, None, COUNT_ONLY if res["center"] is not None else why))
     for z, st in res["zones_status"].items():
         if st == "enabled":
-            rows.append(("zone", z, len(res["zones"][z]), None, None, "zones may overlap; use zone_union"))
+            rows.append(("zone", z, len(res["zones"][z]), None, None, f"zones may overlap; use zone_union; {COUNT_ONLY}"))
         else:
-            rows.append(("zone", z, None, None, None, "disabled"))
+            rows.append(("zone", z, None, None, None, "not computable: zone disabled in profile"))
     rows.append(("zone_union", "unique", res["zone_union_unique"], None, None,
-                 None if res["zone_union_unique"] is not None else "no zone enabled"))
+                 COUNT_ONLY if res["zone_union_unique"] is not None else "not computable: no zone enabled in profile"))
     rd = res["radial_density"]
     if "rows" in rd:
         for row in rd["rows"]:
             key = f'{row["r_lo_mm"]:g}-{row["r_hi_mm"]:g}{"]" if row["closed"] == "both" else ")"}'
             rows.append(("radial", key, row["count"], row["area_mm2"], row["density_per_mm2"], row["reason"]))
     else:
-        rows.append(("radial", "*", None, None, None, f'{rd["calc_status"]}: {rd.get("reason")}'))
+        rows.append(("radial", "*", None, None, None, f'not computable: {rd["calc_status"]}: {rd.get("reason")}'))
     return rows
+
+
+def defect_column_null_reasons(res):
+    """Why a defects.csv cell can be empty, per column (written to manifest.json)."""
+    cs = res["clock_status"]
+    clock = (f'not computable for every row: clock {cs["status"]} ({cs["reason"]})' if res["sectors_clock"] is None
+             else "not applicable for excluded (outside_wafer) rows")
+    zones = ("not computable for every row: no zone enabled in profile" if res["zone_union_unique"] is None
+             else "not applicable for excluded (outside_wafer) rows; [] = in no enabled zone")
+    return {"excluded_reason": "not applicable for included rows",
+            "clock": clock,
+            "also_clock_tolerant": "not applicable: point not within +-boundary_tolerance_deg of a sector boundary, "
+                                   "in the center region or excluded" + ("" if res["sectors_clock"] is not None
+                                                                         else f"; {clock}"),
+            "zones": zones}
 
 
 def write_csv(res, points, out_dir):
@@ -110,6 +144,10 @@ def write_csv(res, points, out_dir):
         json.dump({"provenance": res["provenance"], "orientation_status": res["orientation_status"],
                    "coordinate_frame": "notch_down" if res["orientation_status"] == "notch_registered" else "unregistered",
                    "files": ["defects.csv", "spatial_counts.csv", "bin_sector.csv"],
-                   "null_convention": "empty cell = null (not computed / not applicable), 0 = real zero"},
+                   "null_convention": NULL_CONVENTION,
+                   "null_reasons": {"result": res["null_reasons"],
+                                    "defects.csv": defect_column_null_reasons(res),
+                                    "spatial_counts.csv": "reason column of each row",
+                                    "bin_sector.csv": "status column"}},
                   f, ensure_ascii=False, indent=2, default=str)
     return [str(out / n) for n in ("defects.csv", "spatial_counts.csv", "bin_sector.csv", "manifest.json")]

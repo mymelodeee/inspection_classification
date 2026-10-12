@@ -18,17 +18,17 @@ from .detect import detect_groups
 from .groups import summarize_groups
 from .lift_pin import match_lift_pin
 from .profile import ConfigInvalid, load_profile, validate_for_run
-from .report import ResultInvariantError, check_result, write_csv
+from .report import ResultInvariantError, check_result, null_reasons, write_csv
 from . import store, version
 from .stats import clark_evans, radial_density
 
 CODE_VERSION = version.code_version()   # base version + content hash of result-affecting modules
 RULE_VERSION = version.rule_version()
-SCHEMA_VERSION = "result-0.1"
+SCHEMA_VERSION = "result-0.2"   # 0.2: null_reasons for every top-level null (2026-10-11)
 
 
 class CoverageInvalid(ConfigInvalid):
-    """Coverage sidecar rejected; `reason` says why: syntax_error / unsupported_shape / invalid_value (T-05)."""
+    """Coverage sidecar rejected; `reason` says why: syntax_error / unsupported_shape / invalid_value (T-04)."""
 
     def __init__(self, keys, reason, message=""):
         super().__init__(keys, message)
@@ -36,7 +36,7 @@ class CoverageInvalid(ConfigInvalid):
 
 
 def load_coverage(path, profile):
-    """Coverage is an explicit INPUT (a sidecar), never inferred from defects or file size (T-05).
+    """Coverage is an explicit INPUT (a sidecar), never inferred from defects or file size (T-04).
     Supported: {"coverage": {"shape": "full_disk", "radius_mm": R, "source": "..."}}. None -> unknown."""
     if path is None:
         return {"status": "unknown", "inspected_radius_mm": None}
@@ -59,7 +59,7 @@ def load_coverage(path, profile):
 
 
 # Measurement keys that encode a direction or a position in the (unregistered) frame. Radius, thickness,
-# length, occupancy and labels are rotation-invariant and are kept (plan 16.1, E10, TBD T-03).
+# length, occupancy and labels are rotation-invariant and are kept (plan 16.1, E10, TBD T-02).
 ORIENTATION_KEYS = ("occupied_hours", "occupied_hours_tolerant", "center_x_mm", "center_y_mm",
                     "direction_deg", "centroid_mm")
 
@@ -94,7 +94,7 @@ def _radial(r, profile, inspected_radius_mm):
 
 
 def _pattern_summary(n_included, det, lift_pin):
-    """Plan 8.1 labels, kept apart from feature_status (T-10)."""
+    """Plan 8.1 labels, kept apart from feature_status (R-02)."""
     if n_included == 0:
         return ["no_detected_defect"]
     labels = sorted({v["label"] for k, v in det.items() if k in ("ring", "line") and "label" in v})
@@ -134,13 +134,14 @@ def analyze_file(path, profile, profile_sha256=None, return_points=False, covera
     else:
         res["lift_pin"] = match_lift_pin(iid, ix, iy, profile.signatures.lift_pin, uncovered=_uncovered(rc, profile))
     res["pattern_summary"] = _pattern_summary(res["n_included"], det, res["lift_pin"])
-    res["affected_die_count"] = None  # no inspected-die list / real die rule yet (T-02, T-05, T-16)
+    res["affected_die_count"] = None  # no inspected-die list / real die rule yet (T-01, T-04, T-13)
     res["inspected_die_count"] = None
     res["provenance"] = {"source_sha256": k.source_sha256, "profile_id": profile.profile_id,
                          "profile_sha256": profile_sha256, "schema_version": SCHEMA_VERSION,
                          "adapter": adapter, "coverage": coverage, "code_version": CODE_VERSION,
                          "parser": "wafer.ingest-strict-2", "rule_version": RULE_VERSION, "model_version": None,
                          "seed": rnd.seed}
+    res["null_reasons"] = null_reasons(res)
     check_result(res)
     return (res, points) if return_points else res
 

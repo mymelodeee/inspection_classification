@@ -1,8 +1,8 @@
 """E07 lift-pin template match (synthetic; oracle e07-lift-pin-1, independent stdlib generator).
 
 The template (r 60, phase 0, 0/120/240, tol 10 deg / 5 mm, min 3 per lobe) is TEST-ONLY, not an
-in-house value (TBD T-08). min_lobe_contrast 3.0 is a TEST-ONLY provisional value (T-25).
-Policies (T-25): "matched" only when the template is calibrated; absence is concluded only where
+in-house value (TBD T-07). min_lobe_contrast 3.0 is a TEST-ONLY provisional value (T-22).
+Policies (T-22): "matched" only when the template is calibrated; absence is concluded only where
 coverage is known - FULL-coverage fixture cases therefore run with uncovered=[] and the same inputs
 with coverage unknown (uncovered=None) must give insufficient_data (plan 16.2).
 """

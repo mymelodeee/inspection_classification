@@ -1,6 +1,6 @@
 """E05 line / arc measurement and candidate rules (synthetic; oracle e05-line-arc-1, independent stdlib generator).
 
-Thresholds in the classification tests are TEST-ONLY provisional profile values (TBD T-21).
+Thresholds in the classification tests are TEST-ONLY provisional profile values (TBD T-18).
 """
 import json
 from pathlib import Path
@@ -80,7 +80,7 @@ def test_arc_with_known_center():
     assert m["ring_thickness_mm"] == pytest.approx(0.0, abs=0.01)
     assert m["span_deg"] == pytest.approx(e["span_deg"], abs=e["angle_tolerance_deg"])
     assert m["max_gap_deg"] == pytest.approx(360 - e["span_deg"], abs=e["angle_tolerance_deg"])
-    # Tolerance flows through the coverage function (T-18). Clock angles about the arc center run
+    # Tolerance flows through the coverage function (T-15). Clock angles about the arc center run
     # 30..150 deg in 4 deg steps; sectors are 1:[15,45) 2:[45,75) 3:[75,105) 4:[105,135) 5:[135,165).
     # Both arc ends sit at offset 15 (sector centers), i.e. 15 deg from every boundary, so no valid
     # tolerance (< 15) can extend the occupied hours there; interior boundary points only touch hours

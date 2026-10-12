@@ -34,7 +34,7 @@
 | `tests/fixtures/f01/oracle.json`, `tests/profiles/` | 합성 정답과 시험 profile | 탐색에서도 재현 가능한 동일 입력 사용 |
 | `.claude/agents/`, `README-wafer-agents.md` | maintainer·validator·reviewer 3역할 | 비슷한 이름의 agent를 추가하지 않고 재사용 |
 | `requirements.txt` | NumPy/Pandas/SciPy/scikit-learn, Streamlit/Plotly, pytest-playwright 등 | 필요한 기본 패키지는 이미 선언됨. 실제 설치 상태와 구분 |
-| `TBD.md`, 실행계획, 지식 문서 | 실제 장비 좌표/운영 임계값·coverage·성능 평가의 미확정 범위 | MCP나 스킬이 사내 정의·검증 자료를 대신할 수 없음 |
+| `docs/9_TBD.md`, `docs/6_execution_plan.md`, 지식 문서 | 실제 장비 좌표/운영 임계값·coverage·성능 평가의 미확정 범위 | MCP나 스킬이 사내 정의·검증 자료를 대신할 수 없음 |
 
 작성 당시 프로젝트 `.claude/`에는 agents만 있고 프로젝트 스킬이나 settings 파일은 없었으며, 프로젝트 `.mcp.json`도 없었다(2026-10-09 적용 후 상태는 11절). 사용자 전역 Claude Code 설정은 조사하지 않았으므로 “MCP가 어디에도 설치되지 않음”을 뜻하지 않는다. Claude Code에서 실제 agent 로딩 여부 역시 별도 확인 대상이다.
 
@@ -161,23 +161,22 @@ playwright-cli install --skills
 
 ## 8. 기존 환경의 실행 예시
 
-아래 명령은 저장소 루트의 PowerShell 예시다. Python 경로는 `CLAUDE.md`에 기록된 환경을 사용한다. (2026-10-09 실행: `-m "not e2e"` 319 passed, `-m e2e` 4 passed.)
+아래 명령은 저장소 루트(README.md와 requirements.txt가 있는 폴더)의 PowerShell 예시다. README의 설치 절에 따라 준비한 Python 환경을 활성화하고 실행한다. 특정 사용자 경로나 conda 환경 이름에 의존하지 않는다. (2026-10-09 실행: `-m "not e2e"` 319 passed, `-m e2e` 4 passed.)
 
 ```powershell
-$waferPython = 'C:\Users\gongj\anaconda3\envs\insenv\python.exe'
-& $waferPython -c "import sys; print(sys.executable); print(sys.version)"
+python -c "import sys; print(sys.version)"
 
 # UI 로직 회귀: headless AppTest, 실제 브라우저 시험과 구분
-& $waferPython -m pytest tests/test_app.py -q
+python -m pytest tests/test_app.py -q
 
 # 브라우저 E2E: fixture가 임시 포트에서 서버를 시작하고 Edge 사용
-& $waferPython -m pytest tests/test_e2e_browser.py -m e2e -q -rs
+python -m pytest tests/test_e2e_browser.py -m e2e -q -rs
 
 # 넓은 변경일 때 브라우저를 제외한 회귀
-& $waferPython -m pytest tests -m "not e2e" -q
+python -m pytest tests -m "not e2e" -q
 
 # 대화형 화면 탐색용 서버: 별도 터미널에서 필요한 경우 실행
-& $waferPython -m streamlit run wafer/app.py --server.address 127.0.0.1 --server.port 8501 --browser.gatherUsageStats false
+python -m streamlit run wafer/app.py --server.address 127.0.0.1 --server.port 8501 --browser.gatherUsageStats false
 ```
 
 브라우저 E2E 파일은 자체 서버를 시작하므로 마지막 수동 실행 명령이 선행 조건은 아니다. 현재 테스트는 브라우저 실행 실패를 skip으로 처리한다. `-rs`의 사유를 보고 환경 문제를 BLOCKED로 기록하며, 코드의 광범위한 예외 처리가 실제 오류까지 숨기는지도 필요할 때 조사한다.
@@ -231,7 +230,7 @@ JSON과 CSV ZIP을 내려받아 수치·null/0·review revision·provenance 정�
 | Playwright CLI+Skills | 보류(중복 방지) | MCP를 선택했으므로 설치하지 않음 |
 | Context7, DB/파일시스템/Git MCP, 별도 agent | 보류 | 7절 사유 그대로 |
 
-설치 시 주의: Git Bash에서 `claude mcp add ... -- cmd /c ...`를 실행하면 `/c`가 `C:/`로 경로 변환된다. PowerShell에서 실행하거나 `.mcp.json`의 `args`가 `"/c"`인지 확인한다. MCP 도구 인자 이름은 버전에 따라 다르다(0.0.83의 `browser_type`·`browser_click`은 요소 지정에 `target`을 쓴다).
+설치 시 주의: Git Bash에서 `claude mcp add ... -- cmd /c ...`를 실행하면 `/c`가 Windows 드라이브 경로로 변환될 수 있다. PowerShell에서 실행하거나 `.mcp.json`의 `args`가 `"/c"`인지 확인한다. MCP 도구 인자 이름은 버전에 따라 다르다(0.0.83의 `browser_type`·`browser_click`은 요소 지정에 `target`을 쓴다).
 
 남은 조치:
 1. 사용자가 이 저장소에서 `claude`를 실행해 프로젝트 MCP `playwright`를 승인하고 `/mcp`에서 연결을 확인한다.

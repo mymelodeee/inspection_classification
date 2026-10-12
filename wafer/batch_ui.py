@@ -36,6 +36,34 @@ def _input_error(e):
         st.error(f"INPUT_NOT_FOUND: {getattr(e, 'filename', '') or e}")
 
 
+def _set_page(key, page):
+    st.session_state[key] = page
+
+
+def _pager(pages, key="gallery_page", window=9):
+    """<< < [page numbers] > >> buttons; returns the current page (1-based). Shows at most `window` numbers
+    around the current page. The current page is highlighted and disabled; out-of-range arrows are disabled."""
+    cur = min(max(1, int(st.session_state.get(key, 1))), pages)
+    st.session_state[key] = cur
+    lo = max(1, min(cur - window // 2, pages - window + 1))
+    nums = list(range(lo, min(pages, lo + window - 1) + 1))
+    items = [("<<", 1, "first"), ("<", cur - 1, "prev")] + [(str(n), n, f"n{n}") for n in nums] +             [(">", cur + 1, "next"), (">>", pages, "last")]
+    for col, (label, target, name) in zip(st.columns(len(items)), items):
+        col.button(label, key=f"{key}_{name}", on_click=_set_page, args=(key, target),
+                   disabled=not 1 <= target <= pages or target == cur,
+                   type="primary" if label == str(cur) else "secondary", width="stretch")
+    st.caption(f"페이지 {cur} / {pages}")
+    return cur
+
+
+def _types_label(value):
+    """candidate_types cell -> gallery text: 'ring, local'; '' -> 없음; None/missing (older data) -> '-'."""
+    if value is None or (isinstance(value, float) and value != value):
+        return "-"
+    parts = [t for t in str(value).split(",") if t]
+    return ", ".join(parts) if parts else "없음"
+
+
 def _thumb(out, title, R):
     pts = [p for p in out["_points"] if p["included"]]
     step = max(1, -(-len(pts) // MAX_POINTS_PER_THUMB))     # ceil: never more than the cap
@@ -56,13 +84,15 @@ def _thumb(out, title, R):
     return fig, len(shown), len(pts)
 
 
-def _open_detail(unit_index):
-    """Hand one analysed unit to the existing single-map detail / review screen."""
+def _open_detail(unit_index, candidate_types=None):
+    """Hand one analysed unit to the existing single-map detail / review screen, with the SAME candidate_types
+    cell as the unit table (batch-level codes cannot be derived from one result)."""
     b = st.session_state["batch"]
     out = b["units"][unit_index]
     e = next(x for x in b["entries"] if x["index"] == unit_index)
-    st.session_state["job"] = {"out": out, "code": 0, "db": st.session_state.get("batch_db"), "source": e["rel_path"]}
-    for key in ("bin_filter", "overlay", "rv_payload", "rv_reason", "rv_reviewer", "rv_action"):
+    st.session_state["job"] = {"out": out, "code": 0, "db": st.session_state.get("batch_db"), "source": e["rel_path"],
+                               "candidate_types": candidate_types}
+    for key in ("bin_filter", "overlay", "map_color", "rv_payload", "rv_reason", "rv_reviewer", "rv_action"):
         st.session_state.pop(key, None)
     st.session_state["show_detail"] = True
 
@@ -119,7 +149,7 @@ def render():
     st.subheader("파일 분석")
     st.caption("파일 1개 또는 여러 개를 같은 방식으로 분석합니다. 결과에서 파일을 선택하고 상세보기를 여세요.")
     st.caption("업로드한 파일은 서버 메모리에서만 처리하고 분석 후 임시 파일을 지웁니다. 파일명은 해석하지 않으며 "
-               "lot/wafer는 KLARF 헤더 값(검증 전, TBD T-29)입니다. 합성 adapter 기준이며 실제 장비 검증이 아닙니다.")
+               "lot/wafer는 KLARF 헤더 값(검증 전, TBD T-26)입니다. 합성 adapter 기준이며 실제 장비 검증이 아닙니다.")
 
     uploaded = [(f.name, f.getvalue()) for f in (files or []) + (folder or [])]
     try:
@@ -180,6 +210,8 @@ def render():
                                 "wafer": e["meta"]["wafer"], "job": e["meta"]["job"], "parser": e["parser"],
                                 "adapter": e["adapter"], "profile": e["profile_id"], "sha256": e["sha256"][:12]}
                                for e in scanned["entries"]]).astype(str), key="batch_scan_table")
+    st.caption("None = 해당 없음(사유·중복 대상 없음) 또는 값 없음(KLARF 헤더에 lot/wafer 없음, job 필드는 읽지 않음, "
+               "파싱 전 제외된 파일의 parser).")
 
     if st.button("일괄 분석 실행", key="batch_run_btn"):
         st.session_state.pop("batch", None)
@@ -224,6 +256,8 @@ def _results(b):
                                     ("succeeded", "성공"), ("failed", "실패"), ("held", "보류"),
                                     ("total_included_defects", "포함 결함 합")]):
         c.metric(label, "-" if ov[k] is None else ov[k])     # "-" = not computed (nothing analysed), not 0
+    for k, why in ov["null_reasons"].items():
+        st.caption(f"{k} 계산 불가: {why}")
     st.caption(f"제외 {ov['excluded']} · 배치 내 중복 {ov['duplicates_in_batch']} · 저장 결과 재사용 {ov['reused_from_store']} · "
                f"고유 wafer(KLARF 헤더 값, 미검증) {ov['unique_wafers_from_header_unverified']} · wafer ID 미상 단위 {ov['units_with_unknown_wafer_id']}")
 
@@ -235,10 +269,21 @@ def _results(b):
             con.close()
     df = pd.DataFrame(rows)
 
+    # still part of section 2 (overview): counts come from the same candidate_types as the unit table
+    cc = B.candidate_type_counts(rows)
+    st.markdown("**candidate_types별 분석 단위 수·비율**")
+    st.dataframe(pd.DataFrame([{"코드": r["type"], "유형": r["label"], "단위 수": r["units"],
+                                "비율(%)": "-" if r["percent"] is None else f'{r["percent"]:.1f}'}
+                               for r in cc["rows"]]), hide_index=True, key="batch_type_counts")
+    st.caption(f'분모 = 분석 단위 {cc["denominator_units"]}개(배치 내 중복 파일은 같은 단위라 다시 세지 않음). '
+               "한 단위가 여러 유형을 가질 수 있어 합이 100%를 넘을 수 있습니다."
+               + (f' 비율 계산 불가: {cc["reason"]}' if cc["reason"] else ""))
+
     st.markdown("#### 3. 분석 단위별 요약")
     f1, f2, f3, f4 = st.columns(4)
     statuses = f1.multiselect("상태", sorted(df["status"].unique()), key="flt_status")
-    types = f2.multiselect("후보 유형", list(B.TYPES), key="flt_type")
+    types = f2.multiselect("후보 유형", list(B.TYPES) + list(B.EQUIP_TYPES), key="flt_type",
+                           format_func=lambda t: f"{t} ({B.TYPE_LABELS.get(t, t)})")
     direc = f3.text_input("주요 방향(시) 포함", key="flt_dir")
     meta = f4.text_input("lot/wafer/경로 포함", key="flt_meta")
     view = df
@@ -251,6 +296,8 @@ def _results(b):
     if meta:
         view = view[view[["rel_path", "lot", "wafer"]].astype(str).apply(lambda r: meta in " ".join(r), axis=1)]
     st.caption(f"표시 {len(view)} / 전체 {len(df)} 행 (필터는 화면만 바꾸며 batch 결과·총수는 그대로)")
+    st.caption("None = 계산 불가(not computable) 또는 해당 없음(not applicable) · 0 = 실제 0. "
+               "셀별 사유는 null_reasons 열(JSON)에 있습니다.")
     st.dataframe(view.astype(str), key="batch_unit_table")
     st.download_button("필터된 표 CSV(화면 기준)", view.to_csv(index=False), file_name="batch_filtered_view.csv",
                        key="dl_filtered")
@@ -259,13 +306,14 @@ def _results(b):
     if analysed:
         pick = st.selectbox("상세 조회할 분석 단위", analysed, key="batch_pick",
                             format_func=lambda i: next(r["rel_path"] for r in rows if r["index"] == i))
-        st.button("상세 맵·검토 화면 열기", key="batch_open", on_click=_open_detail, args=(pick,))
+        st.button("상세 맵·검토 화면 열기", key="batch_open", on_click=_open_detail,
+                  args=(pick, next(r.get("candidate_types") for r in rows if r["index"] == pick)))
 
     st.markdown("#### 4. 유형별 요약")
     st.caption("유형은 서로 겹칠 수 있어 합이 분석 단위 수와 같지 않습니다. 실패·보류 파일은 '평가 안 됨'이며 '유형 없음'이 아닙니다. "
                "candidate는 보정 전 후보, matched는 보정된 규칙의 판정입니다.")
     st.dataframe(pd.DataFrame(B.type_summary(b)).astype(str), key="batch_type_table")
-    st.markdown("**면적 보정 밀도(비교 가능 그룹별 sum(count)/sum(유효 면적))**")
+    st.markdown("**면적 보정 밀도(비교 가능 그룹별 sum(count)/sum(유효 면적))** — None이면 reason 열에 계산 불가 사유")
     st.dataframe(pd.DataFrame(B.batch_density(b)).astype(str), key="batch_density_table")
     st.markdown("**원본 bin 합계(profile·adapter 그룹별)**")
     st.dataframe(pd.DataFrame(B.bin_totals_by_group(b)).astype(str), key="batch_bins_table")
@@ -275,12 +323,19 @@ def _results(b):
                f"맵당 최대 {MAX_POINTS_PER_THUMB}점만 표시하며 통계에는 영향이 없습니다.")
     idx = list(b["units"])
     pages = max(1, -(-len(idx) // GALLERY_PAGE))
-    page = st.number_input("페이지", 1, pages, 1, key="gallery_page")
+    page = _pager(pages)
     sub = idx[(page - 1) * GALLERY_PAGE: page * GALLERY_PAGE]
+    st.caption("후보 코드: " + " · ".join(f"{t}={B.TYPE_LABELS[t]}" for t in (*B.TYPES, *B.EQUIP_TYPES))
+               + ". equip_*는 같은 검사 설비(InspectionStationID)에서 step과 무관하게 "
+               + f"{(cfg.get('equipment_signature') or {}).get('min_wafers', '?')}장 이상 반복된 후보이며 "
+               + "설비 원인 확정이 아닙니다. 근거·판정 불가 사유는 단위 표의 equipment_signature_*, defect_volume_* 열.")
     grid = st.columns(3)
+    # same candidate_types as section 3 (unit_rows), joined on the entry index - never recomputed here
+    types_by_index = {r["index"]: r.get("candidate_types") for r in rows}
     for k, i in enumerate(sub):
         e = next(x for x in b["entries"] if x["index"] == i)
-        fig, shown, total = _thumb(b["units"][i], f"#{i} {e['rel_path']}", b["config"]["wafer_radius_mm"])
+        fig, shown, total = _thumb(b["units"][i], f"#{i} {e['rel_path']} · 후보: {_types_label(types_by_index.get(i))}",
+                                   b["config"]["wafer_radius_mm"])
         with grid[k % 3]:
             st.plotly_chart(fig, width="stretch", key=f"thumb_{i}")
             if shown < total:

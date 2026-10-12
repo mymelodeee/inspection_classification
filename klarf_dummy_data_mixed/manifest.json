@@ -1,0 +1,353 @@
+{
+ "seed": 20261012,
+ "synthetic_only": true,
+ "style": "MixedWM38-like class list (38), inline defect dots",
+ "adapter": "synthetic-die-local-v1",
+ "profile": "tests/profiles/dummy_die_local_test_profile.yaml",
+ "coverage_sidecar": "klarf_dummy_data/synthetic_profile.json (full_disk 150, synthetic declaration)",
+ "generator": "klarf_dummy_data_mixed/generate_mixed.py (stdlib only)",
+ "cases": [
+  {
+   "name": "N00_normal",
+   "class_label": "Normal",
+   "mixed_order": 0,
+   "count": 712,
+   "n_included": 711,
+   "n_excluded": 1,
+   "file_sha256": "bc274f871c03aff2c14fa9c965d123d4de4bbd64a8b930b4cfcf492fef4d77fe"
+  },
+  {
+   "name": "S01_C",
+   "class_label": "C",
+   "mixed_order": 1,
+   "count": 823,
+   "n_included": 822,
+   "n_excluded": 1,
+   "file_sha256": "baecfbde57d7078c69493e61491c26257f40b41453c0c3789467ec920b77404c"
+  },
+  {
+   "name": "S02_D",
+   "class_label": "D",
+   "mixed_order": 1,
+   "count": 1098,
+   "n_included": 1097,
+   "n_excluded": 1,
+   "file_sha256": "7fae1678f7ba87940e214cb88a2ee3d51224c038c69e5900e649c299c596b175"
+  },
+  {
+   "name": "S03_EL",
+   "class_label": "EL",
+   "mixed_order": 1,
+   "count": 1018,
+   "n_included": 1014,
+   "n_excluded": 4,
+   "file_sha256": "889f7e927e5a00703054200d08bac7e8a46d0669a918f843e5083a9e5d50b0a6"
+  },
+  {
+   "name": "S04_ER",
+   "class_label": "ER",
+   "mixed_order": 1,
+   "count": 1063,
+   "n_included": 1062,
+   "n_excluded": 1,
+   "file_sha256": "474f2c5c9df4777ee9d06b7b175db288e8bd871d05eea4797203ae770b002b4e"
+  },
+  {
+   "name": "S05_L",
+   "class_label": "L",
+   "mixed_order": 1,
+   "count": 959,
+   "n_included": 957,
+   "n_excluded": 2,
+   "file_sha256": "3d073bbf9426c390dee142b410aedb427ddb403b5a22744bccd934cd0b04f471"
+  },
+  {
+   "name": "S06_NF",
+   "class_label": "NF",
+   "mixed_order": 1,
+   "count": 2245,
+   "n_included": 2241,
+   "n_excluded": 4,
+   "file_sha256": "3d8ce4c109387e9042b4eef8ddb5eba36ef62d32d5620574a1c44fb0f624293b"
+  },
+  {
+   "name": "S07_S",
+   "class_label": "S",
+   "mixed_order": 1,
+   "count": 1028,
+   "n_included": 1027,
+   "n_excluded": 1,
+   "file_sha256": "e19d5baeb72c3abcf12e6108fa6e1cf6e12fb6ec4c98e0953fed40d31f2d9ffb"
+  },
+  {
+   "name": "S08_R",
+   "class_label": "R",
+   "mixed_order": 1,
+   "count": 1585,
+   "n_included": 1581,
+   "n_excluded": 4,
+   "file_sha256": "a446d2c5347f10476bcf42927ad50befa3be6b368f00d572fca0757a759cbc81"
+  },
+  {
+   "name": "M2_01_C+EL",
+   "class_label": "C+EL",
+   "mixed_order": 2,
+   "count": 1434,
+   "n_included": 1431,
+   "n_excluded": 3,
+   "file_sha256": "b80ab136a6b459c0d09f4334d34f509feb708d9a7fcd7711570fd824031a4307"
+  },
+  {
+   "name": "M2_02_C+ER",
+   "class_label": "C+ER",
+   "mixed_order": 2,
+   "count": 1538,
+   "n_included": 1534,
+   "n_excluded": 4,
+   "file_sha256": "19db778a06288eda4c0c97381cb5335c93f95646fc31cbd9ddf2397771c92492"
+  },
+  {
+   "name": "M2_03_C+L",
+   "class_label": "C+L",
+   "mixed_order": 2,
+   "count": 1321,
+   "n_included": 1319,
+   "n_excluded": 2,
+   "file_sha256": "8010a4447949031544a6cae678f4aaba2fac0fe757d01ce7663e3d12f2273ce8"
+  },
+  {
+   "name": "M2_04_C+S",
+   "class_label": "C+S",
+   "mixed_order": 2,
+   "count": 1334,
+   "n_included": 1334,
+   "n_excluded": 0,
+   "file_sha256": "c14354e8e1dd0ec56d1dc0a6c41818171fe6a0760698793d437b3832616c1a00"
+  },
+  {
+   "name": "M2_05_D+EL",
+   "class_label": "D+EL",
+   "mixed_order": 2,
+   "count": 1181,
+   "n_included": 1178,
+   "n_excluded": 3,
+   "file_sha256": "94fe3b3c2ae13278ced7250be0f648f8d1f7bd529b17ed28651106f2a14ac49d"
+  },
+  {
+   "name": "M2_06_D+ER",
+   "class_label": "D+ER",
+   "mixed_order": 2,
+   "count": 1539,
+   "n_included": 1538,
+   "n_excluded": 1,
+   "file_sha256": "2af43983bca71ddee42ffb1c21d1490cb3767bcfa8a38f2d8c5afc4cf0abc48d"
+  },
+  {
+   "name": "M2_07_D+L",
+   "class_label": "D+L",
+   "mixed_order": 2,
+   "count": 1036,
+   "n_included": 1036,
+   "n_excluded": 0,
+   "file_sha256": "bdbbc352a7f1e2d53e82493a70da262e452fd509dcde71aefaecee1f4c7cf44c"
+  },
+  {
+   "name": "M2_08_D+S",
+   "class_label": "D+S",
+   "mixed_order": 2,
+   "count": 1497,
+   "n_included": 1496,
+   "n_excluded": 1,
+   "file_sha256": "1e1821323de7462a87512c3088676138eb7dd7c50eb47f58a910f29f86c02618"
+  },
+  {
+   "name": "M2_09_EL+L",
+   "class_label": "EL+L",
+   "mixed_order": 2,
+   "count": 1276,
+   "n_included": 1274,
+   "n_excluded": 2,
+   "file_sha256": "f57e6483ec3144f124fed83756c7f1fe8822f9034cab064f3255759d482a3ae2"
+  },
+  {
+   "name": "M2_10_EL+S",
+   "class_label": "EL+S",
+   "mixed_order": 2,
+   "count": 1158,
+   "n_included": 1158,
+   "n_excluded": 0,
+   "file_sha256": "b0053a9aded5186d24a8aebc671893034c89d869fdd636626989c04cbd3f257d"
+  },
+  {
+   "name": "M2_11_ER+L",
+   "class_label": "ER+L",
+   "mixed_order": 2,
+   "count": 1520,
+   "n_included": 1520,
+   "n_excluded": 0,
+   "file_sha256": "57a03ef314553e028ef7a00579685fe73ae4b621ef48d96dff3154889a4a76af"
+  },
+  {
+   "name": "M2_12_ER+S",
+   "class_label": "ER+S",
+   "mixed_order": 2,
+   "count": 1336,
+   "n_included": 1336,
+   "n_excluded": 0,
+   "file_sha256": "79ff8156781ae22683154119ded68eb45f11583dd51975e1583a064a2a17c719"
+  },
+  {
+   "name": "M2_13_L+S",
+   "class_label": "L+S",
+   "mixed_order": 2,
+   "count": 1042,
+   "n_included": 1040,
+   "n_excluded": 2,
+   "file_sha256": "275e60b63bc3a4488b60b11688f5da5e954d5389b1e398d5b6c31a9cd62421f0"
+  },
+  {
+   "name": "M3_01_C+EL+L",
+   "class_label": "C+EL+L",
+   "mixed_order": 3,
+   "count": 1248,
+   "n_included": 1245,
+   "n_excluded": 3,
+   "file_sha256": "40f70c1135763a41a19283309d1ae5ec934bbe0e404adfd018fffa1681358e70"
+  },
+  {
+   "name": "M3_02_C+EL+S",
+   "class_label": "C+EL+S",
+   "mixed_order": 3,
+   "count": 1599,
+   "n_included": 1597,
+   "n_excluded": 2,
+   "file_sha256": "d86135e3898b864e63411473271fcf2fc20973fe08261a7dad9fd3a3661ff4b4"
+  },
+  {
+   "name": "M3_03_C+ER+L",
+   "class_label": "C+ER+L",
+   "mixed_order": 3,
+   "count": 1670,
+   "n_included": 1669,
+   "n_excluded": 1,
+   "file_sha256": "99ae20d50b41d75a49df66f0a1c46072e3fb6612929302333a48a12a153df6ff"
+  },
+  {
+   "name": "M3_04_C+ER+S",
+   "class_label": "C+ER+S",
+   "mixed_order": 3,
+   "count": 1747,
+   "n_included": 1745,
+   "n_excluded": 2,
+   "file_sha256": "dc854d816c7454f7b3a539adae8f24c1aa4ec43d0c67ec224c828140ff20b1e0"
+  },
+  {
+   "name": "M3_05_C+L+S",
+   "class_label": "C+L+S",
+   "mixed_order": 3,
+   "count": 1678,
+   "n_included": 1678,
+   "n_excluded": 0,
+   "file_sha256": "98a283010e5721036bcb8a90bb618d03b2add9c61596379ed7ade0f7287ef883"
+  },
+  {
+   "name": "M3_06_D+EL+L",
+   "class_label": "D+EL+L",
+   "mixed_order": 3,
+   "count": 1552,
+   "n_included": 1550,
+   "n_excluded": 2,
+   "file_sha256": "7c7e35cbaa085d066f71303bdfa51d9130a53fc1b20e56c00844ee6fb5f429e2"
+  },
+  {
+   "name": "M3_07_D+EL+S",
+   "class_label": "D+EL+S",
+   "mixed_order": 3,
+   "count": 1562,
+   "n_included": 1561,
+   "n_excluded": 1,
+   "file_sha256": "18a03e882640184754a2cc7b6e832da28b29cb9ef865bae413527b1bf5b4a416"
+  },
+  {
+   "name": "M3_08_D+ER+L",
+   "class_label": "D+ER+L",
+   "mixed_order": 3,
+   "count": 1855,
+   "n_included": 1854,
+   "n_excluded": 1,
+   "file_sha256": "6e13682d9b9eefe684df124bd71cb53f23c1c69621d30c6a4393f1bf354fe3b8"
+  },
+  {
+   "name": "M3_09_D+ER+S",
+   "class_label": "D+ER+S",
+   "mixed_order": 3,
+   "count": 2096,
+   "n_included": 2093,
+   "n_excluded": 3,
+   "file_sha256": "576d78bccfa51de0746365478b581b369a0a7624b301c92910803ce522562db7"
+  },
+  {
+   "name": "M3_10_D+L+S",
+   "class_label": "D+L+S",
+   "mixed_order": 3,
+   "count": 1834,
+   "n_included": 1830,
+   "n_excluded": 4,
+   "file_sha256": "96e20502f4c043ec1c40478d66ba18e2df14a9b33ec45de47b193b8698a859f1"
+  },
+  {
+   "name": "M3_11_EL+L+S",
+   "class_label": "EL+L+S",
+   "mixed_order": 3,
+   "count": 1533,
+   "n_included": 1531,
+   "n_excluded": 2,
+   "file_sha256": "47e8edb76bc24a96c32aca5a69acfb623cc46e5a4ba5ad9fe89cb17f33af3c14"
+  },
+  {
+   "name": "M3_12_ER+L+S",
+   "class_label": "ER+L+S",
+   "mixed_order": 3,
+   "count": 1616,
+   "n_included": 1614,
+   "n_excluded": 2,
+   "file_sha256": "e440835f7cf6523a324a3f12bf4e027e8fe599fad7ac901ddc54df0e424a1397"
+  },
+  {
+   "name": "M4_01_C+L+EL+S",
+   "class_label": "C+L+EL+S",
+   "mixed_order": 4,
+   "count": 1718,
+   "n_included": 1717,
+   "n_excluded": 1,
+   "file_sha256": "1fff52307449341e83537af092bbc6e4107a17ffbc48d3c4d162ac11a69a5cb6"
+  },
+  {
+   "name": "M4_02_C+L+ER+S",
+   "class_label": "C+L+ER+S",
+   "mixed_order": 4,
+   "count": 2012,
+   "n_included": 2010,
+   "n_excluded": 2,
+   "file_sha256": "8e578dcfe2e6cbb5b005b0940a25fd3c0538cc0698af44ad72909edbc5cbaf8b"
+  },
+  {
+   "name": "M4_03_D+L+EL+S",
+   "class_label": "D+L+EL+S",
+   "mixed_order": 4,
+   "count": 1625,
+   "n_included": 1621,
+   "n_excluded": 4,
+   "file_sha256": "ade6f4d11d177e44e53c0aaf696dfcca61edc1f494acda5722db93b7fcfae9a0"
+  },
+  {
+   "name": "M4_04_D+L+ER+S",
+   "class_label": "D+L+ER+S",
+   "mixed_order": 4,
+   "count": 2174,
+   "n_included": 2171,
+   "n_excluded": 3,
+   "file_sha256": "42ff68d1d11d142b2667f727e816ea28d8d98c449037eaedbc5d2aa454cc6832"
+  }
+ ]
+}

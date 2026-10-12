@@ -46,7 +46,7 @@ clustering:
   min_samples: 3
   retain_noise: true
 shapes:
-  ring:   # TEST-ONLY provisional values (TBD T-17); never copy to an operating profile
+  ring:   # TEST-ONLY provisional values (TBD T-14); never copy to an operating profile
     enabled: true
     occupancy_bin_deg: 10
     ring_min_occupancy: 0.8
@@ -54,16 +54,27 @@ shapes:
     max_relative_thickness: 0.25
     min_points: 20
     calibrated: false
-  line:   # TEST-ONLY provisional values (TBD T-21)
+  line:   # TEST-ONLY provisional values (TBD T-18)
     enabled: true
     min_points: 10
     max_relative_width: 0.1
     max_gap_ratio: 0.2
     calibrated: false
-detect:   # TEST-ONLY provisional search parameters (TBD T-22)
+detect:   # TEST-ONLY provisional search parameters (TBD T-19)
   enabled: true
   ring_radial_tol_mm: 1.0
   line_inlier_mm: 1.0
   line_ransac_trials: 300
 stats:    # TEST-ONLY
   radial_bin_mm: 50
+equipment_signature:   # TEST-ONLY tolerances (2026-10-12): wafer-to-wafer position spread of the synthetic sets;
+  enabled: true        # never copy to an operating profile. Grouping = InspectionStationID (inspection tool).
+  min_wafers: 3        # user decision 2026-10-12
+  ring_radius_tol_mm: 5
+  line_angle_tol_deg: 10
+  line_offset_tol_mm: 10
+  local_distance_tol_mm: 15
+  local_min_points: 20
+defect_volume:         # tool/recipe values unknown -> not evaluated (reason shown); set both from the tool recipe
+  excess_defect_count: null
+  inspection_defect_limit: null

@@ -153,7 +153,7 @@ def test_thickness_is_outlier_robust_but_extent_is_not():
 
 
 def test_e08_15_and_345_deg_points_are_flagged_ambiguous_and_counts_conserved():
-    """Exact 15/345 deg points cannot be represented in float xy (T-18). They are flagged via the
+    """Exact 15/345 deg points cannot be represented in float xy (T-15). They are flagged via the
     +-5 deg tolerance (flag only); their sector may be either neighbour but the total is conserved."""
     amb = [p for p in e08["points"] if p.get("float_ambiguous")]
     assert amb
@@ -177,7 +177,7 @@ def test_tolerance_is_configurable_through_profile():
     assert a["boundary_ambiguous"]["count"] == len(pts)
 
 
-# ---- ring/arc classification (TBD T-17; thresholds are TEST-ONLY profile values) ----
+# ---- ring/arc classification (TBD T-14; thresholds are TEST-ONLY profile values) ----
 from wafer.ring import classify_ring  # noqa: E402
 
 RULE = PROFILE.shapes.ring

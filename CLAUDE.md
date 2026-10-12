@@ -8,12 +8,21 @@
 
 2026-10-10 입력 UI 보완: `wafer/ui_inputs.py`에 단일/일괄 공통 기본 profile 경로(`tests/profiles/dummy_die_local_test_profile.yaml`)와 입력 도움말을 둔다. 경로 파일은 매 분석 때 다시 읽고, batch UI는 profile 변경을 감지하면 목록을 재검증한다(core의 hash 불변 계약은 유지). batch UI의 전체 삭제·선택/제외는 업로드 메모리와 현재 결과에만 적용하며 원본 파일·DB 이력은 지우지 않는다. coverage·SQLite 시험 방법은 README의 해당 절 참조.
 
-**현재 상태(Phase 1 합성 경로 구현 중):** `wafer/`(geometry, profile, aggregate, ingest, cli, clustering[DBSCAN, noise 보존], ring[환형 반지름·두께(P95−P5)·직경 측정], line[PCA 직선 측정·후보], detect[ring/line/local 검출기→지원 ID], groups[그룹 지원·고유 ID union 집계], lift_pin[삼발이 template 일치 — 기본 비활성], report[결과 스키마 검사·CSV export], store[SQLite 실행·검토 이력, append-only], app[Streamlit 검토 화면 — core(`cli.run_job`)만 호출], batch·batch_ui[여러 파일·폴더 일괄 분석: 입력 목록→고정 입력으로 `run_job` 순차 호출→개요·유형 요약·원시 정도 지표·갤러리·CSV/ZIP, SQLite에는 batch·구성원 연결 행만], stats[반경 밀도·Clark–Evans; coverage 미상이면 null, `--coverage` sidecar 입력 시 계산])와 `tests/`(합성 KLARF·F01 oracle·시험 profile 포함)가 있다. 실제 장비 KLARF, 사내 E1/E2·삼발이 정의, coverage는 없어 **`TBD.md`에 보류 항목(T-01~)을 관리하며 사용자 확인을 계속 요청한다.** 입력 처리는 합성 규약에서만 검증됐고 사내 입력 지원은 미완료다(실제 데이터 도입 시 입력 계약 재검증: 실행계획 5.3·19.3, TBD T-29). 완료 체크는 합성 증빙으로 충족되는 항목(P1-06, P2-02, P2-03, C01·C07·C08·C14 구현 검증)만 "합성 증빙" 표기와 함께 체크했고, 실제 장비·사내 정의·blind set·배포가 필요한 항목은 미완료다. 실행: `C:\Users\gongj\anaconda3\envs\insenv\python.exe -m pytest tests -q`(브라우저 E2E 제외 시 `-m "not e2e"`; E2E는 시스템 Edge를 Playwright로 사용, 브라우저 다운로드 불필요), CLI `python -m wafer.cli <klf> --profile tests/profiles/f01_test_profile.yaml [--out result.json] [--csv-dir out/] [--db runs.db] [--coverage sidecar.json]`(합성 KLARF 1.8: `klarf_dummy_data/` + `tests/profiles/dummy_die_local_test_profile.yaml`), UI `python -m streamlit run wafer/app.py`. Claude Code 도구: 서브에이전트 3개(`.claude/agents/`), 프로젝트 스킬 `/wafer-verify`·`/wafer-contract-audit`(`.claude/skills/`), Playwright MCP(`.mcp.json`, 시스템 Edge·isolated, 첫 사용 시 `claude`에서 프로젝트 MCP 승인 필요) — `CLAUDE_CODE_TOOLING_GUIDE.md`. (구조가 바뀌면 이 절을 갱신한다.)
+**현재 상태(Phase 1 합성 경로 구현 중):** `wafer/`(geometry, profile, aggregate, ingest, cli, clustering[DBSCAN, noise 보존], ring[환형 반지름·두께(P95−P5)·직경 측정], line[PCA 직선 측정·후보], detect[ring/line/local 검출기→지원 ID], groups[그룹 지원·고유 ID union 집계], lift_pin[삼발이 template 일치 — 기본 비활성], report[결과 스키마 검사·CSV export], store[SQLite 실행·검토 이력, append-only], app[Streamlit 진입점·상세/검토 화면 — 분석은 `batch_ui`→`batch`를 거쳐 core(`cli.run_job`)만 호출], ui_inputs[화면 기본 profile 경로·도움말], batch·batch_ui[여러 파일·폴더 일괄 분석: 입력 목록→고정 입력으로 `run_job` 순차 호출→개요·유형 요약·원시 정도 지표·갤러리·CSV/ZIP, SQLite에는 batch·구성원 연결 행만; batch 단위 후보 `batch_candidates`=같은 검사 설비(InspectionStationID) 반복 `equip_*`·defect 과다/검사 중단 의심, docs/1 4.1], stats[반경 밀도·Clark–Evans; coverage 미상이면 null, `--coverage` sidecar 입력 시 계산])와 `tests/`(합성 KLARF·F01 oracle·시험 profile 포함)가 있다. 실제 장비 KLARF, 사내 E1/E2·삼발이 정의, coverage는 없어 **`docs/9_TBD.md`에 보류 항목(T-01~)을 관리하며 사용자 확인을 계속 요청한다.** 입력 처리는 합성 규약에서만 검증됐고 사내 입력 지원은 미완료다(실제 데이터 도입 시 입력 계약 재검증: 실행계획 5.3·19.3, TBD T-26). 완료 체크는 합성 증빙으로 충족되는 항목(P1-06, P2-02, P2-03, C01·C07·C08·C14 구현 검증)만 "합성 증빙" 표기와 함께 체크했고, 실제 장비·사내 정의·blind set·배포가 필요한 항목은 미완료다. 실행: `python -m pytest tests -q`(브라우저 E2E 제외 시 `-m "not e2e"`; E2E는 시스템 Edge를 Playwright로 사용, 브라우저 다운로드 불필요), CLI `python -m wafer.cli <klf> --profile tests/profiles/f01_test_profile.yaml [--out result.json] [--csv-dir out/] [--db runs.db] [--coverage sidecar.json]`(합성 KLARF 1.8: `klarf_dummy_data/` + `tests/profiles/dummy_die_local_test_profile.yaml`; 잡음 많은 MixedWM38 스타일 38종: `klarf_dummy_data_mixed/`, 생성기 `generate_mixed.py`·독립 기대값 포함 — 형상 라벨은 생성 의도이며 정답 아님), UI `python -m streamlit run wafer/app.py`. Claude Code 도구: 서브에이전트 3개(`.claude/agents/`), 프로젝트 스킬 `/wafer-verify`·`/wafer-contract-audit`(`.claude/skills/`), Playwright MCP(`.mcp.json`, 시스템 Edge·isolated, 첫 사용 시 `claude`에서 프로젝트 MCP 승인 필요) — `CLAUDE_CODE_TOOLING_GUIDE.md`. (구조가 바뀌면 이 절을 갱신한다.)
 
 | 파일                                                  | 역할                                                                                                                                                                                                                                                                                                                                             |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `CLAUDE.md`                                           | 작업 지침(이 파일). 우선순위·분석 계약·작업 흐름·보고 형식                                                                                                                                                                                                                                                                                       |
-| `wafer_inspection_execution_plan.md` (v1.1 + 2026-10-09 보완) | **구현 기준 문서.** 1~4절 범위·구조·Phase 0~4 일정, 5~8절 데이터/좌표/특징/rule 상세(삼발이, E1/E2, 100mm zone), 9절 YAML 계약 초안, 10절 결과 JSON, 11~13절 검증·ML·배포, 16절 공통 계약(상태 필드, 개수 규칙), 17절 완료 체크리스트(P0~P4 ID), 18절 위배 검증표(C01~C20), 19절 E2E 시나리오(F01 fixture, E01~E24), 20절 실행 기록·release 판정 |
+| `docs/1_domain_definition.md`                         | 도메인 정의서: 용어, 좌표계, 상태 어휘, 개수·null 규칙, profile 스키마(코드 기준), 오류 코드 |
+| `docs/2_PRD.md`                                       | 사용자·목표·비목표, 기능 요구사항(FR)·비기능 요구사항(NFR)별 구현 상태 |
+| `docs/3_user_scenarios.md`                            | 사용자 시나리오(US), **E01~E24·하위 case ↔ 테스트 함수 ↔ 상태 추적표**, 시나리오 유지 규칙 |
+| `docs/4_architecture_diagram.md`                      | 실행 구성, 모듈 의존, `run_job` 흐름, 일괄 분석 시퀀스, 화면 상태 전이(mermaid) |
+| `docs/5_ERD.md`                                       | SQLite 테이블·관계, 분석 키, 결과 JSON·일괄 다운로드 데이터 모델 |
+| `docs/6_execution_plan.md` (v1.1 + 2026-10-09~11 보완, 2026-10-11 루트에서 이동) | **구현 기준 문서.** 1~4절 범위·구조·Phase 0~4 일정, 5~8절 데이터/좌표/특징/rule 상세(삼발이, E1/E2, 100mm zone), 9절 YAML 계약 초안, 10절 결과 JSON, 11~13절 검증·ML·배포, 16절 공통 계약(상태 필드, 개수 규칙), 17절 완료 체크리스트(P0~P4 ID), 18절 위배 검증표(C01~C20), 19절 E2E 시나리오(F01 fixture, E01~E24), 20절 실행 기록·release 판정 |
+| `docs/7_wireframe.md`                                 | 현재 Streamlit 화면 배치·라벨·위젯 key(테스트가 쓰는 값) |
+| `docs/8_style_guide.md`                               | 값 표시(null/0/`-`)·판정 용어·지도·내보내기·문서 작성 규약 |
+| `docs/9_TBD.md` (2026-10-11 루트 `TBD.md`에서 이동)     | 보류 항목·결정 기록(T-01~). 코드 주석의 "TBD.md T-xx"는 이 파일을 가리킨다 |
+| `docs/wafer_usage_and_internal_data_guide.html`      | 사용자용 사용 안내·사내 데이터 적용 시 필요 자료(HTML) |
 | `wafer_inspection_map_knowledge.md`                   | 배경 지식·문헌(R1~R11, T1~T6). inspection map vs 전기적 WBM 차이, 분류 체계, 이미지 추출, 시계방향/sector 식, 모델 선택. 입력 우선순위·분석 단위는 실행계획이 우선                                                                                                                                                                               |
 | `requirements.txt`                                    | 범위 지정 직접 의존성(CPython 3.11/3.12). klarfrs==0.2.1, numpy/pandas/scipy, scikit-learn, opencv-python-headless, shapely, pydantic, PyYAML, plotly/matplotlib/streamlit, pytest/playwright. fastapi·xgboost·torch는 주석 처리된 선택 항목. 락파일이 아님                                                                                      |
 
@@ -24,7 +33,7 @@
 - 판정 단위 4층: `defect` → `cluster` → `signature_group` → `wafer_summary`. 라벨 축은 `morphology / zone / signature_match / review_status`로 분리한다.
 - 책임 구분 예시(필요한 것만 생성): ingest, geometry, coverage, grid, features, clustering, signatures, rules, model, report, interface(CLI → Streamlit → 필요 시 FastAPI).
 - 구현 순서: 원본 파싱 → 좌표 검증 → 개수/bin 집계 → CLI → 특징/rule → 리포트 → UI. 첫 완성 목표는 "KLARF 한 파일로 defect/bin count 보존 + 노치 6시 map + 12 sector 표를 출력하는 CLI"이다.
-- 명령: 아직 확정된 빌드/실행/테스트 명령이 없다. 6절의 환경 명령만 유효하며, 구현 후 실제 명령을 6절에 기록한다.
+- 명령: 위 "현재 상태" 문단의 pytest·CLI·Streamlit 명령과 README "테스트" 절이 현재 확정 명령이다. 6절의 venv 명령은 새 환경 준비용이다.
 
 ## 1. 최우선 수칙
 
@@ -37,7 +46,7 @@
 
 작업 시작 시 다음 파일을 읽는다. 다른 폴더에 있으면 `rg --files`로 실제 위치를 찾는다.
 
-1. `wafer_inspection_execution_plan.md`: 단계별 범위, 완료 체크, C01~C20 위배 검증, F01 fixture 명세, E01~E24 E2E 시나리오.
+1. `docs/6_execution_plan.md`: 단계별 범위, 완료 체크, C01~C20 위배 검증, F01 fixture 명세, E01~E24 E2E 시나리오. 현재 구현의 정의·화면·데이터·시험 상태는 `docs/1`~`5`, `7`, `8`을 작업 범위에 맞게 읽고, 보류 항목은 `docs/9_TBD.md`를 읽는다.
 2. `wafer_inspection_map_knowledge.md`: 배경 지식, 문헌, 알고리즘의 적용 한계.
 3. `requirements.txt`: 현재 의존성과 선택 기능, 환경 조건. 범위 지정 파일이며 완전한 배포 lockfile이 아니다.
 4. 기존 README, 적용되는 작업 지침, 코드, YAML profile, 테스트 및 CI 설정.
@@ -86,6 +95,7 @@
 4. 변경한 시나리오에는 기존/신규 기대값, 변경 사유, 요구사항 근거, fixture/oracle 버전, 연계 E/C ID를 남긴다. 기존 ID는 보존하고 변형은 `E02-UP` 같은 하위 ID로 추가한다.
 5. 실패를 숨기기 위한 assert 삭제, 근거 없는 허용오차 확대, skip/xfail 추가, 구현 결과를 그대로 golden 정답으로 복사하는 행위를 금지한다. 정당한 제외는 범위와 사유를 기록한다.
 6. 예상값은 독립 계산, 도메인 검토 또는 검증된 실제 자료에서 얻는다. Production 함수를 호출해 그 함수의 정답을 생성하는 순환 검증을 피한다.
+7. **테스트 시나리오는 항상 최신 코드에 맞춘다(2026-10-11 사용자 지시).** 코드·설정·화면·결과 스키마를 바꾸는 작업은 같은 변경 안에서 `docs/3_user_scenarios.md` 2부 추적표(테스트 함수명·합성 결과·상위 판정·실행 기록)와 `docs/6_execution_plan.md` 19절의 해당 시나리오를 갱신한다. 화면 라벨·위젯 key가 바뀌면 `docs/7_wireframe.md`, 용어·스키마·DB가 바뀌면 `docs/1`·`docs/5`도 함께 고친다. 문서가 코드와 다르면 위 3번 원칙(원래 계약 위반이면 코드 수정, 승인된 변경이면 문서·시나리오 개정)으로 판단한다.
 
 ### 구현 및 수정 후 검증
 
@@ -99,8 +109,8 @@
 ### 실행 환경과 검증 명령
 
 1. 이미 준비된 프로젝트 가상환경을 사용한다.
-2. 현재 개발 환경 이름은 `insenv`(conda, `C:\Users\gongj\anaconda3\envs\insenv\python.exe`, Python 3.12)이다.
-3. 사용자별 환경 이름이 다르면 실제 이름 또는 Python 실행 경로를 사용한다.
+2. 저장소 루트(이 파일과 `requirements.txt`가 있는 폴더)에서 준비된 Python 3.11/3.12 환경을 활성화한 뒤 `python` 명령을 사용한다. 기존 검증은 Python 3.12의 `insenv`에서 수행했지만 그 환경 이름은 실행 조건이 아니다.
+3. 프로젝트 내부 경로는 루트 기준 상대 경로로 작성한다. 특정 사용자 홈·프로젝트 설치 위치·Python 절대 경로를 문서나 실행 예제에 기록하지 않는다. 새 PC의 환경 준비는 README의 설치 절을 따른다.
 4. 환경 이름을 애플리케이션 코드에 하드코딩하지 않는다.
 5. 기존 환경이 준비되어 있으면 새 venv 생성이나 requirements 재설치를 매 작업마다 수행하지 않는다.
 6. 실행 전 Python 경로와 버전을 확인하고, 설치·앱 실행·테스트에 동일한 환경의 Python을 사용한다.
@@ -123,7 +133,7 @@ python -m pytest <영향받는_실제_테스트_경로> -q
 2. 기본 대상은 64-bit CPython 3.11/3.12다. 대상 OS의 parser wheel/glibc 조건은 requirements 주석과 실제 환경에서 확인한다. 다른 환경을 지원하려면 근거와 실행 증빙을 추가한다.
 3. OpenCV는 `opencv-python-headless` 한 배포판만 사용한다. 현재 Browser E2E(`tests/test_e2e_browser.py`, marker `e2e`)는 Python Playwright로 **Windows 시스템 Edge**(`channel="msedge"`)를 사용하므로 별도 browser 다운로드가 필요 없다. Edge를 띄울 수 없으면 해당 테스트는 "BLOCKED" 사유로 skip되며 PASS로 계산하지 않는다. Linux CI 등 Edge가 없는 환경은 실제 image에서 browser 준비 방법을 따로 확인한다.
 4. 배포 lock은 격리된 목표 환경에서 검증 후 생성한다. 기존 작업 환경의 무관한 패키지를 `pip freeze`로 통째로 넣지 않는다. 신규 정적 분석 도구는 프로젝트에 없으면 검증 명령만 만들지 않는다.
-5. **첫 검증 기준은 계획의 F01/E01이다.** 이미지 없이 included=8, B1=3/B2=3/B3=2(출력 bin 표기는 "1"/"2"/"3", T-04), center=1, 12시=1/3시=4/6시=1/9시=1을 독립 기대값과 대조한다. F01은 좌표·집계용이며 형상 정답을 강요하지 않는다.
+5. **첫 검증 기준은 계획의 F01/E01이다.** 이미지 없이 included=8, B1=3/B2=3/B3=2(출력 bin 표기는 "1"/"2"/"3", T-03), center=1, 12시=1/3시=4/6시=1/9시=1을 독립 기대값과 대조한다. F01은 좌표·집계용이며 형상 정답을 강요하지 않는다.
 6. 초기 핵심 회귀는 E02 좌표/side, E03 빈 입력/center, E04 noise 보존, E08 경계, E09 이벤트/bin, E10 정보 부족, E11 coverage, E12 설정, E13 파일 오류다. 형상 rule 추가 시 E05~E07/E14/E23을 연결한다.
 7. UI/export는 E15/E16, 저장·검토는 E17~E19, 성능/실제 평가/배포는 E20~E22, 후속 ML/repeater/gripper는 E24의 적용 case를 실행한다. 상세 입력·정답·통과 기준은 실행계획을 따른다.
 8. 시험 상태는 `PASS/FAIL/NOT_RUN/BLOCKED/N/A`다. 비활성·범위 제외 기능만 근거 있는 N/A로 둔다. 활성 기능의 실패/자료 부족을 N/A로 숨기지 않는다. 상위 시나리오는 필수 하위 case를 모두 통과해야 PASS다.
@@ -145,5 +155,6 @@ python -m pytest <영향받는_실제_테스트_경로> -q
 3. 상호 위배 검증 결과: 적용 C ID, 확인한 계약, 발견한 충돌과 해결 또는 남은 문제.
 4. 실행 명령·환경·PASS/FAIL/NOT_RUN/BLOCKED/N/A 및 증빙. 미실행 항목은 이유와 다음 조건.
 5. 갱신한 완료 체크 ID와 남은 자료/결정.
+6. 갱신한 설계 문서(`docs/`)와 시험 추적표 변경 내용. 갱신이 필요 없었다면 확인한 범위.
 
 **완료란 요청한 범위의 구현, 필요한 시나리오 개정, 수정 후 계약 정합성 확인, 적용 테스트 실행 및 증빙 기록까지 마친 상태다. 알려진 핵심 실패나 미검증을 숨긴 채 완료로 선언하지 않는다.**

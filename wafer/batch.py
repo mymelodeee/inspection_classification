@@ -3,11 +3,11 @@
 
 Small orchestration only (no queue, no new DB): one SQLite file may store runs (existing tables) plus a
 batch/member link table. Uploaded names are kept as display/tracking paths only; files are written to
-temp paths named by position, never by the uploaded name. File names are not parsed (TBD T-29); the
+temp paths named by position, never by the uploaded name. File names are not parsed (TBD T-26); the
 lot/wafer shown comes from the KLARF header and is marked unverified.
 
 Counting units: an uploaded file is an entry; an analysis unit is one analysed wafer record. The current
-parsers accept exactly one wafer record per file (more is INVALID_INPUT, T-12), so a successful entry
+parsers accept exactly one wafer record per file (more is INVALID_INPUT, T-09), so a successful entry
 yields one unit. Identical content (same sha256) inside a batch is analysed once and the other entries
 point to it (`duplicate_of`); nothing is merged silently.
 """
@@ -15,6 +15,7 @@ import csv
 import hashlib
 import io
 import json
+import math
 import tempfile
 import uuid
 import zipfile
@@ -24,13 +25,19 @@ from pathlib import Path, PurePosixPath
 from . import ingest, store
 from .cli import CODE_VERSION, RULE_VERSION, load_coverage, run_job
 from .profile import ConfigInvalid, load_profile, validate_for_run
-from .report import write_csv
+from .report import NULL_CONVENTION, write_csv
 
 # current input contract: the single-file uploader accepts these; anything else is excluded with a reason.
-# The extension only selects candidates - the content must still parse (T-29: real exports, e.g. ".001", TBD).
+# The extension only selects candidates - the content must still parse (T-26: real exports, e.g. ".001", TBD).
 SUPPORTED_EXTENSIONS = (".klf", ".klarf", ".txt")
 DEFAULT_LIMITS = {"max_files": 500, "max_file_bytes": 50 * 1024 * 1024, "max_total_bytes": 300 * 1024 * 1024}
 TYPES = ("ring", "line", "local", "lift_pin")
+# batch-level candidates (2026-10-12): repeat on the same inspection tool, defect volume. Appended to
+# candidate_types after the per-wafer TYPES; the per-wafer codes are unchanged.
+EQUIP_TYPES = ("equip_ring", "equip_line", "equip_local", "inspection_abort_suspect", "excess_defect")
+TYPE_LABELS = {"ring": "환형", "line": "일자형", "local": "몰림형", "lift_pin": "삼발이",
+               "equip_ring": "설비 반복 환형", "equip_line": "설비 반복 일자형", "equip_local": "설비 반복 몰림형",
+               "inspection_abort_suspect": "과다 defect·검사 중단 의심", "excess_defect": "과다 defect(중단 미확인)"}
 
 
 def _now():
@@ -41,11 +48,19 @@ def _clean(v):
     return None if v is None else str(v).strip().strip('"').strip() or None
 
 
+def _station(v):
+    """InspectionStationID as one comparable text: quotes dropped, whitespace collapsed (flat keeps the quotes,
+    1.8 joins the values)."""
+    return " ".join(str(v).replace('"', " ").split()) or None if v else None
+
+
 def _meta(header):
-    """lot / wafer as written inside the file (flat: LotID / WaferID fields; 1.8: record names). job: no field."""
+    """lot / wafer as written inside the file (flat: LotID / WaferID fields; 1.8: record names). job: no field.
+    equipment = inspection tool (InspectionStationID), step = StepID; display and batch grouping only (T-26)."""
     return {"lot": _clean(header.get("LotID") or header.get("LotRecord")),
             "wafer": _clean(header.get("WaferID") or header.get("WaferRecord")),
-            "job": None, "source": "klarf_header (unverified, T-29)"}
+            "job": None, "equipment": _station(header.get("InspectionStationID")),
+            "step": _clean(header.get("StepID")), "source": "klarf_header (unverified, T-26)"}
 
 
 def _sha_file(path):
@@ -70,7 +85,8 @@ def scan(items, profile_path, limits=None, coverage_path=None):
             rel = str(PurePosixPath(*Path(str(rel).replace("\\", "/")).parts)) if rel else f"file_{i}"
             e = {"index": i, "rel_path": rel, "size": len(data), "sha256": hashlib.sha256(data).hexdigest(),
                  "status": "ready", "reason": None, "parser": None, "adapter": prof.coordinates.adapter_id,
-                 "profile_id": prof.profile_id, "meta": {"lot": None, "wafer": None, "job": None, "source": None},
+                 "profile_id": prof.profile_id, "meta": {"lot": None, "wafer": None, "job": None, "equipment": None, "step": None,
+                          "source": None},
                  "duplicate_of": None}
             entries.append(e)
             if Path(rel).suffix.lower() not in SUPPORTED_EXTENSIONS:
@@ -143,7 +159,10 @@ def run_batch(items, scanned, profile_path, coverage_path=None, db=None, progres
         config = {"batch_id": uuid.uuid4().hex, "created_at": _now(), "profile_id": prof.profile_id,
                   "profile_sha256": prof_sha, "coverage_sidecar_sha256": cov_sha, "code_version": CODE_VERSION,
                   "rule_version": RULE_VERSION, "limits": scanned["limits"],
-                  "wafer_radius_mm": prof.wafer_radius_mm, "adapter": prof.coordinates.adapter_id}
+                  "wafer_radius_mm": prof.wafer_radius_mm, "adapter": prof.coordinates.adapter_id,
+                  # frozen with the batch: cross-wafer settings are evaluated from this copy, not the live profile
+                  "equipment_signature": prof.equipment_signature.model_dump(),
+                  "defect_volume": prof.defect_volume.model_dump()}
         entries = [dict(e) for e in scanned["entries"]]
         for e in entries:   # duplicates point at the analysed entry; nothing is run twice
             if e["status"] == "duplicate_in_batch":
@@ -285,6 +304,158 @@ def unit_metrics(res):
     return m
 
 
+# ------------------------------------------------------------------ batch-level candidates (2026-10-12)
+def _ang_diff(a, b):
+    d = abs(a - b) % 180.0
+    return min(d, 180.0 - d)
+
+
+def _shape_features(out, es):
+    """Normalized-frame features of one unit for the repeat comparison, or a reason per type.
+    ring: center radius (rotation invariant). line / local: need the notch-registered frame."""
+    r = out["result"]
+    ts = type_status(r)
+    det = r["detect"] if isinstance(r["detect"], dict) else {}
+    feats, why = {}, {}
+    ring = (det.get("ring") or {}).get("measurement") or {}
+    if ts["ring"] in ("candidate", "matched") and ring.get("center_radius_mm") is not None:
+        feats["ring"] = ring["center_radius_mm"]
+    else:
+        why["ring"] = f'no ring candidate (ring_status={ts["ring"]})'
+    registered = r["orientation_status"] == "notch_registered"
+    line = (det.get("line") or {}).get("measurement") or {}
+    if not registered:
+        why["line"] = why["local"] = "not comparable: orientation_unknown (positions are not in the notch-down frame)"
+        return feats, why
+    if ts["line"] in ("candidate", "matched") and line.get("direction_deg") is not None:
+        a = math.radians(line["direction_deg"])
+        cx, cy = line["centroid_mm"]
+        feats["line"] = (line["direction_deg"], -math.sin(a) * cx + math.cos(a) * cy)   # signed offset from center
+    else:
+        why["line"] = f'no line candidate (line_status={ts["line"]})'
+    pos = {p["defect_id"]: (p["x_mm"], p["y_mm"]) for p in out.get("_points") or [] if p["included"]}
+    cents = []
+    for c in det.get("clusters", {}).values():
+        if c["same_as"] is None and len(c["ids"]) >= es["local_min_points"] and all(i in pos for i in c["ids"]):
+            xs, ys = zip(*(pos[i] for i in c["ids"]))
+            cents.append((sum(xs) / len(xs), sum(ys) / len(ys)))
+    if cents:
+        feats["local"] = cents
+    else:
+        why["local"] = f'no local cluster with >= {es["local_min_points"]} points'
+    return feats, why
+
+
+def _match(t, a, b, es):
+    if t == "ring":
+        return abs(a - b) <= es["ring_radius_tol_mm"]
+    if t == "line":
+        (da, oa), (db, ob) = a, b
+        flipped = abs(da - db) % 180.0 > 90.0     # direction wraps at 0/180: the normal (and offset sign) flips
+        return _ang_diff(da, db) <= es["line_angle_tol_deg"] and \
+            abs(oa - (-ob if flipped else ob)) <= es["line_offset_tol_mm"]
+    return any(math.hypot(p[0] - q[0], p[1] - q[1]) <= es["local_distance_tol_mm"] for p in a for q in b)
+
+
+def _clique(i, near, match, m):
+    """A set of >= m wafers containing i whose features ALL match pairwise, or None. Small search: groups are
+    one equipment's wafers in one batch and the match graph is sparse."""
+    def grow(clique, cand):
+        if len(clique) >= m:
+            return clique
+        for v in sorted(cand):
+            rest = {w for w in cand if w > v and match(v, w)}
+            if len(clique) + 1 + len(rest) >= m:
+                found = grow(clique | {v}, rest)
+                if found:
+                    return found
+        return None
+    found = grow({i}, set(near))
+    if found:   # extend to a maximal mutually matching set so rows of the same repeat list the same peers
+        for v in sorted(set(near) - found):
+            if all(match(v, w) for w in found):
+                found = found | {v}
+    return found
+
+
+def batch_candidates(batch):
+    """Per analysed unit index: batch-level candidate codes plus the status and reason behind each axis.
+    Equipment repeat: same InspectionStationID, any StepID, >= min_wafers wafers whose features match pairwise
+    within the profile tolerances (the unit itself counts). Defect volume: reported events vs profile limits.
+    Settings come from the frozen batch config; a batch without them (older batch) reports 'not configured'."""
+    cfg = batch["config"]
+    es, dv = cfg.get("equipment_signature"), cfg.get("defect_volume")
+    entries = {e["index"]: e for e in batch["entries"]}
+    out = {i: {"codes": [], "equipment_id": (entries[i]["meta"] or {}).get("equipment"),
+               "step_id": (entries[i]["meta"] or {}).get("step")} for i in batch["units"]}
+    # --- equipment repeat
+    if not es:
+        for v in out.values():
+            v.update(equipment_status="not_configured", equipment_reason="no equipment_signature settings in this batch",
+                     equipment_detail={})
+    elif not es["enabled"]:
+        for v in out.values():
+            v.update(equipment_status="disabled", equipment_reason="equipment_signature.enabled is false in profile",
+                     equipment_detail={})
+    else:
+        groups = {}
+        for i, v in out.items():
+            if v["equipment_id"] is None:
+                v.update(equipment_status="insufficient_data", equipment_detail={},
+                         equipment_reason="no InspectionStationID in the KLARF header (equipment unknown)")
+            else:
+                groups.setdefault(v["equipment_id"], []).append(i)
+        for members in groups.values():
+            if len(members) < es["min_wafers"]:
+                for i in members:
+                    out[i].update(equipment_status="insufficient_data", equipment_detail={},
+                                  equipment_reason=f'{len(members)} wafer(s) on this equipment in the batch '
+                                                   f'(< min_wafers {es["min_wafers"]})')
+                continue
+            feats = {i: _shape_features(batch["units"][i], es) for i in members}
+            for i in members:
+                detail = {}
+                for t in ("ring", "line", "local"):
+                    if t not in feats[i][0]:
+                        detail[t] = {"repeat": False, "reason": feats[i][1][t]}
+                        continue
+                    near = {j for j in members if j != i and t in feats[j][0]
+                            and _match(t, feats[i][0][t], feats[j][0][t], es)}
+                    peers = _clique(i, near, lambda a, b: _match(t, feats[a][0][t], feats[b][0][t], es),
+                                    es["min_wafers"])
+                    hit = peers is not None
+                    peers = sorted(peers) if hit else sorted({i} | near)
+                    detail[t] = {"repeat": hit, "peers": peers, "n": len(peers),
+                                 "peers_rule": "all pairs match" if hit else "matching neighbours (not all pairs)",
+                                 "steps": sorted({str(out[j]["step_id"]) for j in peers})}
+                    if hit:
+                        out[i]["codes"].append(f"equip_{t}")
+                out[i].update(equipment_status="computed", equipment_detail=detail,
+                              equipment_reason=None if out[i]["codes"] else
+                              f'no repeat on {len(members)} wafers of this equipment (min_wafers {es["min_wafers"]})')
+    # --- defect volume
+    for i, v in out.items():
+        n = batch["units"][i]["result"]["n_parsed"]
+        ex, lim = (dv or {}).get("excess_defect_count"), (dv or {}).get("inspection_defect_limit")
+        if not dv:
+            st, why = "not_configured", "no defect_volume settings in this batch"
+        elif ex is None and lim is None:
+            st, why = "disabled", "defect_volume thresholds not set in profile"
+        elif lim is not None and n >= lim:
+            st, why = "abort_suspect", f"reported {n} defects reached inspection_defect_limit {lim} (abort evidence)"
+            v["codes"].append("inspection_abort_suspect")
+        elif ex is not None and n >= ex:
+            st = "excess_abort_unconfirmed"
+            why = f"reported {n} >= excess_defect_count {ex}; abort " + (
+                "not verifiable: inspection_defect_limit not set" if lim is None else f"evidence absent ({n} < limit {lim})")
+            v["codes"].append("excess_defect")
+        else:
+            st = "not_excess" if ex is not None else "below_limit"
+            why = f"reported {n} < " + (f"excess_defect_count {ex}" if ex is not None else f"inspection_defect_limit {lim}")
+        v.update(defect_volume_status=st, defect_volume_reason=why)
+    return out
+
+
 # ------------------------------------------------------------------ summaries
 def overview(batch):
     es = batch["entries"]
@@ -300,25 +471,101 @@ def overview(batch):
             "unique_wafers_from_header_unverified": len(known),
             "units_with_unknown_wafer_id": sum(1 for k in unit_meta if not (k[0] and k[1])),
             # nothing analysed -> null (not a real zero)
-            "total_included_defects": sum(u["result"]["n_included"] for u in units.values()) if units else None}
+            "total_included_defects": sum(u["result"]["n_included"] for u in units.values()) if units else None,
+            "null_reasons": {} if units else {"total_included_defects": "not computable: no analysed unit"}}
+
+
+def _row_null_reasons(row, e, out, met, ts):
+    """Why each null cell of a unit row is null. 'not computable' = 계산 불가, 'not applicable' = 해당 없음.
+    Reason columns themselves (reason, *_reason) are not explained."""
+    if out is None:
+        why = {"metrics": f'not applicable: not analysed (status={e["status"]}'
+                          + (f'; {e["reason"]})' if e["reason"] else ")")}
+    else:
+        why = {}
+    det = out["result"]["detect"] if out else {}
+    lp = out["result"]["lift_pin"] if out else {}
+
+    def shape_why(t, key):
+        if ts[t] not in ("candidate", "matched"):
+            return f"not applicable: {t}_status={ts[t]}"
+        withheld = ((det.get(t) or {}).get("measurement") or {}).get("withheld") or {}
+        if key in withheld.get("keys", []):
+            return f'not computable: withheld ({withheld.get("reason")})'
+        return "not computable: measurement not available"
+
+    shape_keys = {"ring_radius_mm": ("ring", "center_radius_mm"), "ring_diameter_mm": ("ring", "diameter_mm"),
+                  "ring_thickness_mm": ("ring", "ring_thickness_mm"), "ring_radial_extent_mm": ("ring", "radial_extent_mm"),
+                  "line_length_mm": ("line", "length_mm"), "line_width_mm": ("line", "width_mm"),
+                  "line_rms_residual_mm": ("line", "rms_residual_mm"), "line_direction_deg": ("line", "direction_deg")}
+    for col, v in row.items():
+        if v is not None or col == "reason" or col.endswith("_reason"):
+            continue
+        if col in ("lot", "wafer"):
+            why[col] = "not available: no value in the KLARF header (unverified source, T-26)"
+        elif col == "job":
+            why[col] = "not available: no job field is read (T-26)"
+        elif col == "candidate_types":
+            why[col] = "not applicable: not analysed"
+        elif col == "equipment_id":
+            why[col] = "not available: no InspectionStationID in the KLARF header"
+        elif col == "step_id":
+            why[col] = "not available: no StepID in the KLARF header"
+        elif col == "duplicate_of":
+            why[col] = "not applicable: not a duplicate"
+        elif col == "reused":
+            why[col] = "not applicable: not analysed in this batch"
+        elif col == "analysis_key":
+            why[col] = "not stored: no SQLite path" if out else "not applicable: not analysed"
+        elif col.startswith("main_direction"):
+            why[col] = f'not computable: {met["direction_reason"]}'
+        elif col in ("valid_area_mm2", "density_per_mm2"):
+            why[col] = f'not computable: {met["density_reason"]}'
+        elif col in shape_keys:
+            why[col] = shape_why(*shape_keys[col])
+        elif col == "lift_pin_lobes":
+            why[col] = f'not applicable: lift_pin_status={ts["lift_pin"]}' + (f' ({lp["reason"]})' if lp.get("reason") else "")
+        elif col == "support_union_all_types":
+            why[col] = "not computable: no evaluable type"
+        elif col.endswith("_support") or col.endswith("_support_ratio"):
+            t = col.split("_support")[0]
+            why[col] = f'{"not applicable" if ts[t] == "disabled" else "not computable"}: {met["support_reason"][t]}'
+        elif col == "review_latest_revision":
+            why[col] = "not applicable: no review revision"
+        else:
+            why[col] = "not computable"
+    return why
 
 
 def unit_rows(batch, con=None):
     """One row per entry (files that did not analyse keep their status and reason; nothing is counted as
     'no pattern'). Review columns come from the store at view time and are labelled separately."""
     rows = []
+    bc = batch_candidates(batch)
     for e in batch["entries"]:
         src = e["duplicate_of"] if e["status"] == "duplicate_in_batch" else e["index"]
         out = batch["units"].get(src)
-        row = {"index": e["index"], "rel_path": e["rel_path"], "lot": e["meta"]["lot"], "wafer": e["meta"]["wafer"],
-               "job": e["meta"]["job"], "status": e["status"], "reason": e["reason"], "duplicate_of": e["duplicate_of"],
-               "reused": e.get("reused"), "analysis_key": e.get("analysis_key")}
+        met = ts = None
+        cand = bc.get(src)
         if out:
             r = out["result"]
             met = unit_metrics(r)
             ts = type_status(r)
+        # candidate_types sits right after status; None (not analysed) is explained in null_reasons
+        row = {"index": e["index"], "rel_path": e["rel_path"], "lot": e["meta"]["lot"], "wafer": e["meta"]["wafer"],
+               "job": e["meta"]["job"], "status": e["status"],
+               "candidate_types": ",".join([t for t in TYPES if ts[t] in ("candidate", "matched")] + cand["codes"])
+               if out else None,
+               "reason": e["reason"], "duplicate_of": e["duplicate_of"],
+               "reused": e.get("reused"), "analysis_key": e.get("analysis_key")}
+        if out:
+            row.update(equipment_id=cand["equipment_id"], step_id=cand["step_id"],
+                       equipment_signature_status=cand["equipment_status"],
+                       equipment_signature_reason=cand["equipment_reason"],
+                       equipment_signature_detail=json.dumps(cand["equipment_detail"], ensure_ascii=False),
+                       defect_volume_status=cand["defect_volume_status"],
+                       defect_volume_reason=cand["defect_volume_reason"])
             row.update(data_quality=out.get("data_quality_status"),
-                       candidate_types=",".join(t for t in TYPES if ts[t] in ("candidate", "matched")),
                        n_included=r["n_included"], bins=json.dumps(r["bin_totals"], ensure_ascii=False),
                        main_direction=(",".join(str(h) for h in met["main_direction"]["hours"])
                                        if met["main_direction"] else None),
@@ -346,8 +593,27 @@ def unit_rows(batch, con=None):
             revs = store.reviews(con, row["analysis_key"])
             row["review_status_now"] = store.review_status(con, row["analysis_key"])
             row["review_latest_revision"] = revs[-1]["revision"] if revs else None
+        # JSON text so the cell survives CSV and the screen table unchanged
+        row["null_reasons"] = json.dumps(_row_null_reasons(row, e, out, met, ts), ensure_ascii=False)
         rows.append(row)
     return rows
+
+
+def candidate_type_counts(rows):
+    """Per candidate code: analysis units carrying it and percent of analysis units, counted from the SAME
+    unit_rows candidate_types (no re-judging). Denominator = succeeded rows (duplicates in the batch are the same
+    unit and are not counted again). Codes overlap, so percents may sum above 100."""
+    units = [r for r in rows if r["status"] == "succeeded"]
+    n = len(units)
+    sets = [set(t for t in (r.get("candidate_types") or "").split(",") if t) for r in units]
+    pct = (lambda c: round(100.0 * c / n, 1)) if n else (lambda c: None)
+    out = [{"type": t, "label": TYPE_LABELS[t], "units": sum(t in s for s in sets), "percent": None}
+           for t in (*TYPES, *EQUIP_TYPES)]
+    out.append({"type": "(none)", "label": "후보 없음", "units": sum(not s for s in sets), "percent": None})
+    for o in out:
+        o["percent"] = pct(o["units"])
+    return {"denominator_units": n, "rows": out,
+            "reason": None if n else "not computable: no analysed unit (percent denominator 0)"}
 
 
 def type_summary(batch):
@@ -399,7 +665,11 @@ def batch_density(batch):
                      "inspected_radius_mm": radius, "schema_version": schema, "units_in_density": g["units"],
                      "units_excluded_no_valid_area": g["excluded_no_coverage"], "sum_count": g["count"],
                      "sum_area_mm2": g["area_mm2"] or None,
-                     "density_per_mm2": (g["count"] / g["area_mm2"]) if g["area_mm2"] else None})
+                     "density_per_mm2": (g["count"] / g["area_mm2"]) if g["area_mm2"] else None,
+                     "reason": None if g["area_mm2"] else
+                     (f'not computable: no unit with a valid inspected area ({g["excluded_no_coverage"]} excluded: '
+                      "coverage unknown, radial table disabled or points outside the inspected window)"
+                      if g["excluded_no_coverage"] else "not computable: zero inspected area")})
     return rows
 
 
@@ -452,7 +722,7 @@ def export_zip(batch, con=None):
                                                        "reused", "exit_code")} for e in batch["entries"]],
                     "type_summary": type_summary(batch), "density_by_group": batch_density(batch),
                     "bin_totals_by_group": bin_totals_by_group(batch),
-                    "null_convention": "empty cell / null = not computed or not applicable, 0 = real zero"}
+                    "null_convention": NULL_CONVENTION + "; summary.csv: null_reasons column per row, density_by_group: reason, overview: null_reasons"}
         z.writestr("batch_manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2, default=str))
         z.writestr("summary.csv", summary_csv(batch, con))
         z.writestr("type_summary.csv", type_csv(batch))

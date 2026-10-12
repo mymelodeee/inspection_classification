@@ -35,7 +35,7 @@ def test_minimal_profile_all_features_disabled_by_default():
 
 
 def test_draft_profile_loads_but_not_runnable():  # E12: eps missing
-    # E12-UP (T-02, approved 2026-10-09): an explicit coordinates.adapter_id is required before analysis.
+    # E12-UP (T-01, approved 2026-10-09): an explicit coordinates.adapter_id is required before analysis.
     # Was ["clustering.eps_mm", "clustering.min_samples"]; the draft also has no adapter_id, so its key is added.
     p = parse_profile(base())
     with pytest.raises(ConfigInvalid) as e:
@@ -45,7 +45,7 @@ def test_draft_profile_loads_but_not_runnable():  # E12: eps missing
 
 
 def test_e12_up_missing_adapter_id_alone_blocks_the_run():
-    """E12-UP (T-02): a profile complete except for adapter_id reports exactly that key."""
+    """E12-UP (T-01): a profile complete except for adapter_id reports exactly that key."""
     import yaml
     d = yaml.safe_load(open(F01_YAML, encoding="utf-8"))
     d["coordinates"]["adapter_id"] = None
@@ -141,7 +141,7 @@ def test_lift_pin_enabled_missing_phase():  # E12
     d = base() | {"signatures": {"lift_pin": {
         "enabled": True, "template_id": "x", "radius_band_mm": [55, 65],
         "angular_tolerance_deg": 5, "radial_tolerance_mm": 3, "min_support_per_lobe": 3,
-        "min_lobe_contrast": 3}}}  # min_lobe_contrast: required since T-25 (E07-UP)
+        "min_lobe_contrast": 3}}}  # min_lobe_contrast: required since T-22 (E07-UP)
     with pytest.raises(ConfigInvalid) as e:
         parse_profile(d)
     assert e.value.keys == ["signatures.lift_pin.phase_deg"]
@@ -154,7 +154,7 @@ def test_lift_pin_enabled_lists_all_missing_keys():
     assert e.value.keys == [
         "signatures.lift_pin." + k for k in (
             "template_id", "radius_band_mm", "phase_deg", "angular_tolerance_deg",
-            "radial_tolerance_mm", "min_support_per_lobe", "min_lobe_contrast")]  # + T-25 key
+            "radial_tolerance_mm", "min_support_per_lobe", "min_lobe_contrast")]  # + T-22 key
 
 
 def test_lift_pin_disabled_with_nulls_stays_disabled():

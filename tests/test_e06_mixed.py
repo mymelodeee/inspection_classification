@@ -3,8 +3,8 @@
 Expected values: tests/fixtures/e06_mixed (independent stdlib generator, oracle e06-mixed-1).
 SCOPE: E06 is PARTIAL - detectors (wafer.detect) produce the supports from the fixture points, but only
 single wafer-centered ring / single line are searched, nothing is wired into the CLI, thresholds are
-provisional (TBD T-20, T-22).
-Ring thresholds come from the TEST-ONLY profile and are provisional (TBD T-17).
+provisional (TBD T-17, T-19).
+Ring thresholds come from the TEST-ONLY profile and are provisional (TBD T-14).
 """
 import json
 from pathlib import Path
@@ -67,13 +67,13 @@ def _classify(case, bin_deg):
 
 
 def test_ring_support_classification_depends_on_the_occupancy_bin_size():
-    """Finding for TBD T-17: points are 15 deg apart, so 10 deg bins leave empty bins.
+    """Finding for TBD T-14: points are 15 deg apart, so 10 deg bins leave empty bins.
     Intact ring (24 pts at 15 deg + 2 on-ring extras in occupied bins): 24 of 36 bins = 0.667
     with 10 deg bins; with 30 deg bins all 12 bins are hit. Broken ring with
     30 deg bins: empty bins are [90,120) and [210,240) -> 10/12 = 0.833.
     The test thresholds are not tuned to make this pass; they are provisional."""
     # Occupancy values are threshold-free hand counts; labels are NOT asserted because they depend
-    # on the provisional test thresholds (they will change after calibration, TBD T-17/T-19).
+    # on the provisional test thresholds (they will change after calibration, TBD T-14/T-16).
     assert _classify("intact", 10)["occupancy"] == pytest.approx(24 / 36)
     assert _classify("intact", 30)["occupancy"] == pytest.approx(1.0)
     c = _classify("broken_ring", 30)

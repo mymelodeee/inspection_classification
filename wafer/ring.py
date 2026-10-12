@@ -1,7 +1,7 @@
 """Ring/band measurement: circle fit and angular coverage.
 
 ring thickness here = P95 - P5 (5th-95th percentile range, linear interpolation) of the point distances about the ring center (user decision 2026-10-09; robust to outliers). Extremes are reported separately as r_min/r_max. It is a
-measured quantity of a ring pattern, unrelated to zone_8inch_boundary (TBD.md T-06).
+measured quantity of a ring pattern, unrelated to zone_8inch_boundary (TBD.md T-05).
 Classification thresholds (ring / arc / not_ring) are NOT set here (TBD).
 """
 import numpy as np
@@ -12,7 +12,7 @@ from . import geometry as g
 def fit_circle(x, y):
     """Algebraic (Kasa) least-squares circle fit -> (cx, cy, radius), or None if under-determined
     (fewer than 3 points or collinear). Known limit: biased on short arcs / thick bands
-    (TBD.md T-17); only full-ring fits are validated."""
+    (TBD.md T-14); only full-ring fits are validated."""
     x, y = np.asarray(x, float), np.asarray(y, float)
     if len(x) < 3:
         return None
@@ -27,7 +27,7 @@ def fit_circle(x, y):
 def angular_coverage(x, y, center=(0.0, 0.0), tol_deg=0.0):
     """Clock-angle occupancy about `center`: max_gap_deg, span_deg (=360-max_gap), occupied clock hours
     (strict) and occupied_hours_tolerant (a point within +-tol_deg of a sector boundary also occupies the
-    adjacent hour). max_gap_deg / span_deg are always strict (tolerance is not applied to them, T-18)."""
+    adjacent hour). max_gap_deg / span_deg are always strict (tolerance is not applied to them, T-15)."""
     dx, dy = np.asarray(x, float) - center[0], np.asarray(y, float) - center[1]
     if len(dx) == 0:
         return {"max_gap_deg": None, "span_deg": None, "occupied_hours": [], "occupied_hours_tolerant": []}
@@ -71,12 +71,12 @@ def angular_occupancy(x, y, center, bin_deg):
 
 def classify_ring(x, y, rule, center=None, tol_deg=0.0):
     """tol_deg only fills measurement["occupied_hours_tolerant"]; the label is decided by occupancy bins
-    (whether tolerance should enter the decision is an open question, TBD T-18).
+    (whether tolerance should enter the decision is an open question, TBD T-15).
 
     Candidate ring/arc classification from profile thresholds (rule = profile.shapes.ring).
 
     center=None: the center is fitted and only a full ring can be reported (partial-arc fits are
-    biased, TBD T-17). center given: an arc candidate is allowed. Pattern match is a shape candidate
+    biased, TBD T-14). center given: an arc candidate is allowed. Pattern match is a shape candidate
     only, never a cause (C19); "matched" appears only when rule.calibrated is True.
     """
     if not rule.enabled:

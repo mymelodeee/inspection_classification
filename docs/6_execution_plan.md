@@ -3,7 +3,8 @@
 작성일: 2026년 10월 9일  
 문서 버전: 1.1 · 완료 체크리스트, 일관성 검증표, E2E 시험 명세 추가  
 설계 상태: 구현 착수용 초안. 실제 KLARF, 사내 유형 정의 및 검증 라벨은 아직 확인하지 않음.  
-입력 근거: 기존 `wafer_inspection_map_knowledge.md`의 현행 내용, 추가 제공 지식, 본 문서 말미의 재확인 문헌.
+입력 근거: 기존 `wafer_inspection_map_knowledge.md`의 현행 내용, 추가 제공 지식, 본 문서 말미의 재확인 문헌.  
+문서 위치(2026-10-11): 저장소 루트 `wafer_inspection_execution_plan.md`에서 `docs/6_execution_plan.md`로 이동했다. 설계 문서 묶음: [1 도메인 정의](1_domain_definition.md) · [2 PRD](2_PRD.md) · [3 사용자 시나리오·시험 추적표](3_user_scenarios.md) · [4 아키텍처](4_architecture_diagram.md) · [5 ERD](5_ERD.md) · 6 실행계획(이 문서) · [7 와이어프레임](7_wireframe.md) · [8 스타일 가이드](8_style_guide.md) · [9 TBD](9_TBD.md). 이 문서는 단계·계약·시나리오 명세의 원본이며, **현재 구현된 스키마·화면·시험 상태는 1·3·5·7번 문서가 코드 기준으로 갱신한다.** 아래 본문에 남은 구현 전 설명과 다르면 해당 절의 "현재 구현" 주석과 그 문서들을 따른다.
 
 ## 1. 목표와 1차 구현 범위
 
@@ -99,7 +100,7 @@ DBSCAN의 noise point는 삭제하지 않는다. Scratch·희박한 ring·repeat
 
 ### 5.3 실제 사내 데이터 도입 시 입력 계약 재검증
 
-현재 구현은 **합성 입력 규약에서만 검증**됐다(`tests/fixtures/klarf`, `klarf_dummy_data`). 이는 사내 입력 지원 완료가 아니다. 실제 샘플이 들어오면 아래 다섯 영역을 export 계열별로 다시 확인하고, 확인된 차이만 Phase 1 수정 작업(P1-07)으로 반영한다. 실제 샘플·명세 없이 파싱 규칙이나 코드를 추측해 바꾸지 않는다. 추적 항목은 TBD.md T-29다.
+현재 구현은 **합성 입력 규약에서만 검증**됐다(`tests/fixtures/klarf`, `klarf_dummy_data`). 이는 사내 입력 지원 완료가 아니다. 실제 샘플이 들어오면 아래 다섯 영역을 export 계열별로 다시 확인하고, 확인된 차이만 Phase 1 수정 작업(P1-07)으로 반영한다. 실제 샘플·명세 없이 파싱 규칙이나 코드를 추측해 바꾸지 않는다. 추적 항목은 [9_TBD.md](9_TBD.md) T-29다.
 
 **현재 합성 가정(2026-10-09 코드 기준)**
 
@@ -338,6 +339,8 @@ bin_mapping:
 
 위 예시는 YAML 구조를 제시한 것이며, 필수값이 미설정되어 있어 운영 설정으로 바로 실행할 수는 없다.
 
+> **현재 구현(2026-10-11, `wafer/profile.py`):** 위 초안에 없는 키가 추가됐다 — `wafer_radius_mm`(R-03), `clock.boundary_tolerance_deg`(T-15), `shapes.ring`·`shapes.line`(분류 임계값·`calibrated`, T-14·T-18), `detect`(후보 탐색 파라미터, T-19), `stats.radial_bin_mm`, `signatures.lift_pin.min_lobe_contrast`·`calibrated`(T-22). `coordinates.adapter_id`는 필수(누락 시 `CONFIG_INVALID`, T-01), `coordinates.side_convention`은 die-local adapter에서 필수다. coverage는 profile의 `coverage` 블록이 아니라 별도 sidecar 입력으로 받는다(T-04). 키 전체 표는 [1_domain_definition.md](1_domain_definition.md) 9절.
+
 설정 검증기는 음수 폭, 역전된 구간, wafer보다 큰 존, 의도하지 않은 같은 계층의 존 중첩, 서로 모순되는 side·방향 설정을 검사한다. 제품·step·공정설비별 profile의 적용 우선순위를 명시하고, 실제 적용값과 config hash를 결과에 저장한다. 이미지만 들어온 경우 물리단위·방향 조건을 만족하지 않으면 관련 기능을 자동 보류한다.
 
 ## 10. 사용자 화면과 결과 계약
@@ -350,11 +353,13 @@ bin_mapping:
 4. Bin×시계방향 표 및 반경 밀도. 계산 불가 값은 사유와 함께 표시.
 5. 검토: 맞음·유형 수정·군집 병합·군집 분리·판정 보류 및 사유 기록.
 
+> **현재 구현(2026-10-11):** ②~⑤는 상세 화면에 있다(②는 bin 필터·signature group 강조, ③은 판정 상태 표와 일괄 단위 표, ⑤는 revision 입력 폼). ①의 원본 장비 map 대조 overlay와 패턴별 template 문장 리포트는 미구현이다. 화면 배치는 [7_wireframe.md](7_wireframe.md).
+
 MVP 리포트는 확정 계산값을 template 문장으로 작성한다. LLM 요약은 선택 확장이다. 예시 문장은 ‘삼발이 템플릿과 일치하는 세 군집이 관찰됨’으로 두고 ‘lift pin이 불량 원인임’으로 자동 바꾸지 않는다.
 
 ### 10.1a 일괄 분석 흐름 (2026-10-10 구현, 합성 검증)
 
-업로드(여러 파일·폴더) → 입력 목록(상태·사유·hash·헤더 메타데이터·적용 parser/adapter/profile) → 고정된 입력으로 단일 core 순차 실행 → batch 개요·분석 단위 표·유형별 요약·정도 원시 지표 → 기존 상세/검토 화면 → 요약 CSV·유형 CSV·ZIP. 정도 지표는 원시 값과 분모만 제공하며 0~100 점수나 정상/위험 등급을 만들지 않는다(등급은 사내 보정 자료와 합의된 임계값 필요, TBD T-31). 상세 정의는 README "일괄 분석"과 19.4.
+업로드(여러 파일·폴더) → 입력 목록(상태·사유·hash·헤더 메타데이터·적용 parser/adapter/profile) → 고정된 입력으로 단일 core 순차 실행 → batch 개요·분석 단위 표·유형별 요약·정도 원시 지표 → 기존 상세/검토 화면 → 요약 CSV·유형 CSV·ZIP. 정도 지표는 원시 값과 분모만 제공하며 0~100 점수나 정상/위험 등급을 만들지 않는다(등급은 사내 보정 자료와 합의된 임계값 필요, TBD T-27). 상세 정의는 README "일괄 분석"과 19.4. **(2026-10-10 이후)** 단일/일괄 모드 구분 없이 파일 1개도 같은 흐름으로 분석하며, 상세 화면은 일괄 결과에서 단위를 골라 연다. 현재 화면 구성은 [7_wireframe.md](7_wireframe.md).
 
 ### 10.2 JSON 주요 필드
 
@@ -368,6 +373,8 @@ MVP 리포트는 확정 계산값을 template 문장으로 작성한다. LLM 요
 | signature_groups | group_id, 구성 cluster IDs, 유형·template·근거·support defect IDs |
 | spatial_counts | bin·zone·sector·count·area·density 및 분모 정의 |
 | review | 검토 상태, 수정 label·점 집합·버전 |
+
+> **현재 구현(2026-10-11, 결과 스키마 `result-0.2` — 0.2에서 최상위 `null_reasons` 추가):** 위 객체 구분은 설계 묶음이며 실제 결과는 평탄한 키 집합(`report.RESULT_KEYS`)이다. 대응: provenance → `provenance`; geometry → `orientation_status`·`clock_status`·`provenance.adapter`(wafer 반경은 profile 값); quality → `n_parsed`/`n_included`/`n_excluded`/`excluded`·`provenance.coverage`·`data_quality_status`(최상위); wafer_summary → `bin_totals`·`pattern_summary`; clusters·signature_groups → `detect.clusters`·`detect.signature_groups`·`detect.shape_supports`; spatial_counts → `sectors_clock`·`center`·`bin_sector`·`zones`·`radial_density`(CSV `spatial_counts.csv`); review → DB `reviews`와 화면 다운로드의 `review` 블록. 필드 정의는 [5_ERD.md](5_ERD.md) 3절.
 
 빈 배열·0·null의 의미를 구분한다. 0은 측정 또는 집계 결과가 0인 경우, null은 입력 부족으로 계산하지 못한 경우다. 전체 합산은 데이터 계약에서 정의한 고유 이벤트 키를 기준으로 한다. 작업 실행 상태와 분석 판정 상태는 별도 필드로 저장한다. 예를 들어 결과 저장은 succeeded여도 입력의 방향 정보가 없으면 방향 판정은 insufficient_data일 수 있다. 상세 계약은 16절을 따른다.
 
@@ -455,7 +462,7 @@ CI 제안 순서는 `설정·schema 검증 → 단위/좌표 시험 → golden �
 
 | 순서 | 작업 | 담당 역할 | 완료 결과 |
 |---|---|---|---|
-| 1 | KLARF·화면·집계표의 동일 검사 묶음 확보(파일명 원본 유지, export 계열별) | 데이터 제공/도메인 검토 | 샘플 manifest(5.3, T-29) |
+| 1 | KLARF·화면·집계표의 동일 검사 묶음 확보(파일명 원본 유지, export 계열별) | 데이터 제공/도메인 검토 | 샘플 manifest(5.3, T-26) |
 | 2 | Header와 column 이름·단위·건수 조사 | 개발 | 필드 매핑표와 parser 실패 목록 |
 | 3 | 몇 개의 식별 가능한 defect를 화면과 좌표로 대조 | 개발+도메인 검토 | 중심·축·반전·노치 변환 명세 |
 | 4 | E1/E2·100mm 존·삼발이 template 정의 | 도메인 검토 | 미정값이 표시된 YAML profile |
@@ -556,7 +563,7 @@ CI 제안 순서는 `설정·schema 검증 → 단위/좌표 시험 → golden �
 - [ ] P0-04 형태·zone·signature·보류 상태의 라벨 가이드를 확정했다. 증빙: 전형·반례·혼합 예시.
 - [ ] P0-05 E1/E2, 100mm zone, 삼발이 설정의 확정값과 미정값을 구분했다. 증빙: 검토된 YAML profile.
 - [ ] P0-06 Gold oracle·lot/time split·성능 목표·허용오차를 고정했다. 증빙: 버전 있는 manifest와 acceptance profile.
-- [ ] P0-07 대상 장비/export 계열별 입력 계약(파일명 규칙, 내부 형식, 메타데이터 우선순위, 좌표·bin 의미)을 실제 샘플로 확인해 문서화했다(5.3 ①~④). 증빙: 계열별 입력 계약서, 검토된 샘플 manifest(필드 추출 정답 포함). 상태: BLOCKED(실제 샘플 없음, TBD T-29).
+- [ ] P0-07 대상 장비/export 계열별 입력 계약(파일명 규칙, 내부 형식, 메타데이터 우선순위, 좌표·bin 의미)을 실제 샘플로 확인해 문서화했다(5.3 ①~④). 증빙: 계열별 입력 계약서, 검토된 샘플 manifest(필드 추출 정답 포함). 상태: BLOCKED(실제 샘플 없음, TBD T-26).
 
 ### Phase 1 · 파싱과 정규화
 
@@ -567,7 +574,7 @@ CI 제안 순서는 `설정·schema 검증 → 단위/좌표 시험 → golden �
 - [ ] P1-05 방향·coverage 부족을 기능별 보류로 반환한다. 증빙: E10/E11.
 - [x] P1-06 KLARF가 있는 경로에서 이미지 추출에 의존하지 않는다. 증빙: 이미지가 없는 E01 완료 결과. **(2026-10-09, 합성 증빙)** 코드에 이미지 경로 없음; F01·klarf_dummy_data 13개를 KLARF만으로 CLI/CSV/UI(AppTest·Edge E2E) 처리 — `pytest tests -q`(304+E2E 4 PASS). 실제 장비 KLARF는 미검증.
 
-- [ ] P1-07 승인된 실제 입력 계약을 parser·adapter·파일명 profile·메타데이터 보존에 최소 범위로 반영하고 영향 기능을 재검증했다(5.3 ⑤). 증빙: 19.3 하위 case 결과, 영향 회귀, 입력→출력 실제 흐름 기록. 완료 기준: 5.3 완료 기준 ①~⑤. 합성 fixture 통과만으로 체크하지 않는다. 상태: BLOCKED(T-29).
+- [ ] P1-07 승인된 실제 입력 계약을 parser·adapter·파일명 profile·메타데이터 보존에 최소 범위로 반영하고 영향 기능을 재검증했다(5.3 ⑤). 증빙: 19.3 하위 case 결과, 영향 회귀, 입력→출력 실제 흐름 기록. 완료 기준: 5.3 완료 기준 ①~⑤. 합성 fixture 통과만으로 체크하지 않는다. 상태: BLOCKED(T-26).
 
 ### Phase 2 · 특징과 후보
 
@@ -641,7 +648,7 @@ E2E 범위는 ‘운영과 같은 실행 환경에서 입력 제출 → 파싱·
 
 각 scenario는 원본 fixture, frozen profile, 기대 좌표·count·상태·패턴, 비교 tolerance, seed, input hash를 manifest에 연결한다. 운영 parser·classifier로 기대값을 생성하지 않는다. 단순 계산 oracle은 독립적으로 작성하고, 실제 패턴 정답은 사전 검토 자료로 고정한다. 합성 자료의 통과는 내부 실제 데이터 성능 검증을 대체하지 않는다.
 
-Fixture 상태: 아래 자료는 제작 명세이며 KLARF fixture 파일과 애플리케이션은 아직 준비되지 않았다. 아래 E01~E24의 실행 상태는 모두 NOT_RUN이다. **(2026-10-09 갱신)** 이후 합성 fixture(`tests/fixtures`, `klarf_dummy_data`)와 CLI·UI가 준비되어 일부 E 하위 case를 합성 범위에서 실행했다. 시나리오별 "상태: NOT_RUN" 표기는 실제 데이터 기준 상태로 유지하며, 합성 실행 기록은 작업 보고와 TBD.md에 있다. 사내 데이터 시험(19.3 포함)은 NOT_RUN/BLOCKED다. 시험에 주입한 mock·fault는 반드시 표시하며, mock을 쓴 구성요소의 실제 정확도까지 검증했다고 보고하지 않는다.
+Fixture 상태: 아래 자료는 제작 명세이며 KLARF fixture 파일과 애플리케이션은 아직 준비되지 않았다. 아래 E01~E24의 실행 상태는 모두 NOT_RUN이다. **(2026-10-09 갱신)** 이후 합성 fixture(`tests/fixtures`, `klarf_dummy_data`)와 CLI·UI가 준비되어 일부 E 하위 case를 합성 범위에서 실행했다. 시나리오별 "상태: NOT_RUN" 표기는 실제 데이터 기준 상태로 유지하며, 합성 실행 기록은 20.2와 [9_TBD.md](9_TBD.md)에 있다. **(2026-10-11)** 시나리오별 현재 테스트 함수·합성 결과·상위 판정은 [3_user_scenarios.md](3_user_scenarios.md) 2부 추적표가 최신 코드 기준으로 관리한다. 사내 데이터 시험(19.3 포함)은 NOT_RUN/BLOCKED다. 시험에 주입한 mock·fault는 반드시 표시하며, mock을 쓴 구성요소의 실제 정확도까지 검증했다고 보고하지 않는다.
 
 ### 19.2 공통 정량 fixture F01
 
@@ -902,7 +909,7 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 
 증빙: 하위 case별 manifest·좌표/label diff·반복 instance 표·template 버전. 상태: NOT_RUN. 연계: C03/C18.
 
-### 19.3 실제 사내 입력 계약 하위 case (5.3, TBD T-29)
+### 19.3 실제 사내 입력 계약 하위 case (5.3, TBD T-26)
 
 기존 E/C ID를 유지하고 실제 입력 계약용 하위 case만 추가한다. 모두 **실제 샘플 또는 승인된 명세가 있어야 실행할 수 있으며 현재 상태는 BLOCKED**다. 합성 fixture로 같은 이름의 case를 대신 통과 처리하지 않는다. 기대값은 사전 검토된 샘플 manifest(필드 추출 정답 포함)로 고정한다.
 
@@ -921,7 +928,7 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 | E02-REAL | 실제 기준점으로 단위·die index/pitch·중심·축·notch·side 변환 대조 | gold 기준점 허용오차 내. 파싱 성공과 좌표 검증을 별도 상태로 기록 | C03, C04 |
 | E09-BIN-REAL | classification/rough/fine bin 의미 대조 | 사내 매핑 버전과 일치, unknown 보존 | C02 |
 
-### 19.4 일괄 분석 하위 case (2026-10-10, TBD T-31)
+### 19.4 일괄 분석 하위 case (2026-10-10, TBD T-27)
 
 기존 E/C ID를 유지하고 일괄 분석용 하위 case만 추가한다. 합성 fixture 기준이며 실제 장비·운영 상한 검증이 아니다.
 
@@ -941,6 +948,15 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 | E16-BATCH-SELECT | 여러 파일·폴더 업로드 후 일부 선택/전체 제외/전체 선택; 선택 변경 시 과거 결과 무효화; 선택 파일만 분석·다운로드. 전체 삭제 후 두 uploader 비움 및 재업로드 가능 | C01, C15, C17 |
 | E12-DEFAULT / E18-PROFILE-RELOAD | 단일/일괄 기본 경로는 dummy profile. 같은 경로 YAML 수정 후 최신 profile ID/hash로 분석; batch는 재검증 후 실행. F01 fixture 전용 profile 유지 | C17, C20 |
 | E02-BATCH-COUNT | wafer ID 미상 수는 분석 단위 수(중복 튜플 1개로 합치지 않음), 분석 단위 0이면 포함 결함 합 null, 평가 가능 유형 없음 → 전체 union null | C02, C15 |
+| E01-MIXED38 (2026-10-12) | 잡음 많은 MixedWM38 스타일 합성 38종(`klarf_dummy_data_mixed`): 파일별 parsed/included/excluded·bin(unknown 포함)·center·12 sector·제외 ID·결함별 시계방향 = 생성기 독립 기대값, 생성기 결정론. 형상 라벨은 검사하지 않음(생성 의도) | C01, C02, C14 |
+| E09-MIXED (2026-10-12) | 같은 위치의 서로 다른 이벤트를 병합하지 않음, unknown bin 보존 | C02, C11 |
+| E01-BATCH-MIXED (2026-10-12) | 하위 폴더 6개 파일 일괄 분석: 포함 결함 합·그룹 bin·밀도 합 = 기대값 | C02, C06 |
+| E06-EQUIP (2026-10-12, T-29) | 같은 검사 설비(`InspectionStationID`)·서로 다른 StepID 3장 이상 반복 → `equip_ring/line/local`, 다른 설비 혼입 없음, 설비 2장·설비 ID 없음은 판정 불가 사유, 노치 미상은 line/local 비교 불가 | C09, C10, C19 |
+| E13-VOLUME (2026-10-12, T-29) | 보고 결함 수 ≥ 장비 최대 보고 수 → `inspection_abort_suspect`, 과다 기준만 → `excess_defect`(중단 미확인), 미설정 → 평가 안 함 | C15, C19 |
+| E16-GALLERY-TYPES (2026-10-12) | `candidate_types`가 status 바로 오른쪽, 갤러리 제목의 후보 = 단위 표 같은 index 값, 복수 유형·빈 값·이전 자료 표시 | C15 |
+| E16-OVERVIEW-TYPECOUNT (2026-10-12) | 개요의 candidate_types별 단위 수·비율 = 단위 표 값 집계, 분모 = 성공 분석 단위(중복·실패 제외), 0이면 비율 null+사유, 중첩 허용 | C11, C15 |
+| E16-GALLERY-PAGER / E16-DETAIL-TYPES / E16-MAP-TYPECOLOR (2026-10-12) | 갤러리 << < 번호 > >> 이동·비활성·범위 고정, 상세 상태의 candidate_types = 단위 표 값, 지도 후보 유형 색(저장 support 기준, 겹침 별도, 개수·bin 필터 불변) | C11, C15 |
+| E12-EQUIP-CONFIG (2026-10-12) | 활성 equipment_signature의 허용치 누락·min_wafers<2·과다 기준>상한 → CONFIG_INVALID | C05, C12 |
 
 ## 20. 실행 기록과 Release 완료 판정
 
@@ -961,13 +977,18 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 | CHECK_ID / E2E_ID | release / commit / image | input / profile / oracle hash | 실행일·실행 역할 | 실행 상태 | 기대값과 실제값 | 증빙 위치 | 결함 ID·조치 | 재시험 결과 |
 |---|---|---|---|---|---|---|---|---|
 | 예: P1-04 / E01 | 미정 | 미정 | 미실행 | NOT_RUN | 기대: 19.2 / 실제: 미측정 | 없음 | 없음 | 미실행 |
-| E01-UP / E09-UP / E16-UP (2026-10-09, 승인된 사양 변경 T-04) | 미커밋 작업 트리 | f01-oracle-1(불변), 테스트에서 "Bn"≡CLASSNUMBER n 명시 매핑 | 메인·test-maintainer | PASS(합성) | 기존 bin 기대 "B1/B2/B3" → 신규 "1/2/3", 개수 불변 | tests/test_ingest_cli.py, tests/test_app.py | 없음(사양 변경) | `pytest -m "not e2e"` 312 passed, `-m e2e` 4 passed |
-| E12-UP (T-02) | 동상 | — | 동상 | PASS(합성) | adapter_id 누락 → CONFIG_INVALID `coordinates.adapter_id` | tests/test_profile.py, tests/test_ingest_cli.py | 없음(사양 변경) | 동상 |
-| E10-UP / E07-UP (T-03 노치 미상 부분 결과) | 동상 | klarf_dummy_data manifest·expected, f01-oracle-1 | 동상 | PASS(합성) | 노치 필드 제거 시 개수·bin·zone·radial·center 반환, clock·위상 null/insufficient_data | tests/test_ingest_cli.py, tests/test_dummy_klarf18.py | 없음 | 동상 |
-| E11-UP (T-05) | 동상 | — | 동상 | PASS(합성) | sidecar 오류 reason 구분(syntax/unsupported_shape/invalid_value) | tests/test_dummy_klarf18.py | 없음 | 동상 |
+| E01-UP / E09-UP / E16-UP (2026-10-09, 승인된 사양 변경 T-03) | 미커밋 작업 트리 | f01-oracle-1(불변), 테스트에서 "Bn"≡CLASSNUMBER n 명시 매핑 | 메인·test-maintainer | PASS(합성) | 기존 bin 기대 "B1/B2/B3" → 신규 "1/2/3", 개수 불변 | tests/test_ingest_cli.py, tests/test_app.py | 없음(사양 변경) | `pytest -m "not e2e"` 312 passed, `-m e2e` 4 passed |
+| E12-UP (T-01) | 동상 | — | 동상 | PASS(합성) | adapter_id 누락 → CONFIG_INVALID `coordinates.adapter_id` | tests/test_profile.py, tests/test_ingest_cli.py | 없음(사양 변경) | 동상 |
+| E10-UP / E07-UP (T-02 노치 미상 부분 결과) | 동상 | klarf_dummy_data manifest·expected, f01-oracle-1 | 동상 | PASS(합성) | 노치 필드 제거 시 개수·bin·zone·radial·center 반환, clock·위상 null/insufficient_data | tests/test_ingest_cli.py, tests/test_dummy_klarf18.py | 없음 | 동상 |
+| E11-UP (T-04) | 동상 | — | 동상 | PASS(합성) | sidecar 오류 reason 구분(syntax/unsupported_shape/invalid_value) | tests/test_dummy_klarf18.py | 없음 | 동상 |
 | E16-DL / E19-DL (2026-10-09, 다운로드 내용 대조) | 동상 | f01.klf + f01_test_profile.yaml, 기대값은 테스트 내 독립 oracle(plan 19.2 + fixture 본문)·sha256 재계산 | 메인 | PASS(합성) | 실제 브라우저 다운로드 JSON/CSV zip = 8/8/0, bin 1·2·3 = 3·3·2, center 1, 12h·3h·6h·9h = 1·4·1·1, radial count 1/4/3 & area·density null(coverage_unknown), sector 0은 0으로 기록, review null→deferred rev1, provenance·manifest 동일 | tests/test_e2e_browser.py | 없음(제품 결함 미발견; selectbox 재시도는 테스트 타이밍 보정) | `pytest tests/test_e2e_browser.py -q` 7 passed |
-| E01-BATCH1 / E09-MULTI-BATCH / E06-BATCH / E17-BATCH / E19-BATCH / E18-BATCH / E02-BATCH-COUNT (2026-10-10, 일괄 분석 T-31) | 미커밋 작업 트리 | klarf_dummy_data manifest·expected(file_sha256 일치), dummy_die_local_test_profile.yaml, synthetic_profile.json; 손상·복수 WaferRecord·헤더 미상 파일은 테스트 안에서 생성 | 메인·test-maintainer·e2e-validator·contract-reviewer | PASS(합성) | 1파일 batch = 단일 run_job 결과 전체 일치; 같은 이름·다른 폴더 2단위(8/240); 복수 WaferRecord = invalid_input, 파일 1·단위 0, 0건 저장 없음; 파일 간 같은 DEFECTID 비충돌 합 488; 두 batch 같은 DB 격리·rerun 재사용·review 보존; profile/coverage/파일 변경 시 실행 거부, 실행 중 profile 수정 미반영; wafer ID 미상 3단위 = 3 | tests/test_batch.py(test_01~23, 12b, 12c) | 검토 지적 M1(입력 고정 불완전)·M2(미상 wafer 수)·M3(정도 지표 미노출)·m1·m2·m3·m7·m8·m10 수정 | `pytest tests/test_batch.py -q` 26 passed, `-m "not e2e"` 345 passed, `-m e2e` 11 passed(Edge) |
+| E01-BATCH1 / E09-MULTI-BATCH / E06-BATCH / E17-BATCH / E19-BATCH / E18-BATCH / E02-BATCH-COUNT (2026-10-10, 일괄 분석 T-27) | 미커밋 작업 트리 | klarf_dummy_data manifest·expected(file_sha256 일치), dummy_die_local_test_profile.yaml, synthetic_profile.json; 손상·복수 WaferRecord·헤더 미상 파일은 테스트 안에서 생성 | 메인·test-maintainer·e2e-validator·contract-reviewer | PASS(합성) | 1파일 batch = 단일 run_job 결과 전체 일치; 같은 이름·다른 폴더 2단위(8/240); 복수 WaferRecord = invalid_input, 파일 1·단위 0, 0건 저장 없음; 파일 간 같은 DEFECTID 비충돌 합 488; 두 batch 같은 DB 격리·rerun 재사용·review 보존; profile/coverage/파일 변경 시 실행 거부, 실행 중 profile 수정 미반영; wafer ID 미상 3단위 = 3 | tests/test_batch.py(test_01~23, 12b, 12c) | 검토 지적 M1(입력 고정 불완전)·M2(미상 wafer 수)·M3(정도 지표 미노출)·m1·m2·m3·m7·m8·m10 수정 | `pytest tests/test_batch.py -q` 26 passed, `-m "not e2e"` 345 passed, `-m e2e` 11 passed(Edge) |
 | E01-BATCH13 / E13-BATCH(일부) / E03-BATCH(일부) / E16-BATCH(CSV·ZIP 수치) | 동상 | 동상 + 메모리 생성 손상 2·비대상 1·중복 1 | e2e-validator(독립 스크립트) | PASS(합성, 일부) | 13단위 개수·bin·center·sector = manifest, 총 1412; 손상 파일 runs 행 없음·CSV 빈 칸; ZIP manifest sha256 17건 = 실제 파일; unit result.json = DB; batch 밀도 1412/(13·π·150²) | 검증 스크립트(세션 scratchpad, 저장소 밖) | 없음 | 검토 지적 수정 후 같은 스크립트(scan에 coverage 전달만 변경) 재실행: 15/15 PASS, 수치 동일(1412, 밀도 1.53659337e-3, rerun 13 재사용) |
+| E16-NULLWHY / E10-UP-NULLWHY / E11·E13-BATCH 개정 (2026-10-11, 승인된 사양 변경 R-05) | 미커밋 작업 트리, 결과 스키마 result-0.1 → result-0.2 | klarf_dummy_data manifest·expected, f01-oracle-1, 시험 profile(시험 전용) | 메인·test-maintainer | PASS(합성) | 기존: spatial 사유 `insufficient_data: orientation_unknown`·`disabled`, overview에 null_reasons 없음 → 신규: `not computable: …` 접두사, count-only 행 사유, 최상위 `null_reasons` = null 필드 집합(기본 F01: die count 2개, 노치 미상 +시계방향 5개), 단위 행 `null_reasons` 열, 밀도 `reason` | tests/test_null_reasons.py, test_batch.py::test_05·test_23·test_24, test_dummy_klarf18.py::test_e10_up_*, test_ingest_cli.py::test_csv_distinguishes_*, test_app.py::test_e16_nullwhy_*, test_e2e_browser.py 다운로드 대조 | 없음(사양 변경: 계산 불가 값은 None 유지, 사유 표기) | `pytest -m "not e2e"` 359 passed, `-m e2e` 13 passed(Edge) |
+| E01-MIXED38 / E09-MIXED / E01-BATCH-MIXED (2026-10-12, 사용자 요청 신규 fixture) | 미커밋 작업 트리 | `klarf_dummy_data_mixed` seed 20261012, 생성기 stdlib 독립 기대값, 시험 profile·합성 sidecar | 메인·test-maintainer | PASS(합성) | 38/38 개수·bin·center·sector·제외 ID 일치, 생성기 재실행 바이트 동일, 일괄 6파일 합 일치. 관찰(정답 아님): ring 후보 38/38, line 후보 Scratch 18개 중 8·비Scratch 20개 중 7, local 38/38 → T-14 관찰 기록 | tests/test_dummy_mixed.py(80), klarf_dummy_data_mixed/README.md | 없음. 판단 보류: 제외 행이 있으면 `defects.csv`가 레코드 순서가 아님(포함 행 뒤에 제외 행) | `pytest tests/test_dummy_mixed.py` 80 passed, `-m "not e2e"` 439 passed |
+| E06-EQUIP / E06-EQUIP-PAIRWISE / E13-VOLUME / E16-GALLERY-TYPES / E12-EQUIP-CONFIG (2026-10-12, 사용자 요청, T-29) | 미커밋 작업 트리 | klarf_dummy_data 변형(메모리 생성: InspectionStationID·StepID·노치·좌표 배율), 시험 profile 사본 | 메인·test-maintainer | PASS(합성) | candidate_types: status 바로 오른쪽, 기존 wafer별 코드 불변(13개 파일 대조) + batch 코드 뒤에 추가; 갤러리 제목 후보 = 같은 index 표 값; 같은 검사 설비·다른 step 3장 이상 → equip_*; 2장·설비 ID 없음·노치 미상(line/local) → 판정 불가 사유; 상한 도달만 inspection_abort_suspect, 과다만 excess_defect | tests/test_equipment_candidates.py(31) | 결함 1건 수정: 반복 판정이 '중심 wafer와만 일치'(80/84/88에서 84만 후보)였음 → 모든 쌍 일치(_clique) + 최대 묶음으로 peers 통일 | `-m "not e2e"` 470 passed, `-m e2e` 13 passed(수정 전 마지막 전체 실행), 수정 후 관련 69 passed |
+| E16-OVERVIEW-TYPECOUNT / E06-EQUIP-PAIRWISE 최대 묶음 (2026-10-12, 사용자 요청) | 미커밋 작업 트리 | klarf_dummy_data 13개 + 중복·손상 파일, TOOL_L 변형 | 메인·test-maintainer | PASS(합성) | 개요 유형별 단위 수·비율: dummy 13 → ring 3(23.1)·line 4(30.8)·local 7(53.8)·후보 없음 5(38.5), 중복·실패는 분모 제외, 0 단위 → null+사유, 중첩 합 175%; 동일 4장 → 모든 행 peers 4개 | tests/test_equipment_candidates.py(36) | 없음 | `-m "not e2e"` 475 passed, `-m e2e` 13 passed(Edge) |
+| E16-GALLERY-PAGER / E16-DETAIL-TYPES / E16-MAP-TYPECOLOR + TBD 번호 재부여 (2026-10-12) | 미커밋 작업 트리 | klarf_dummy_data, mixed.klarf, TOOL_A 변형 | 메인·test-maintainer | PASS(합성) | 페이지 창 9개·화살표 비활성·고정 동작, 상세 candidate_types = 표 값, mixed 300점 모두 정확히 한 trace, bin 필터 180/300. TBD 해결 5건 삭제(R-01~R-05)·나머지 T-01~T-29 재부여, 참조 355건 일괄 변경 | tests/test_gallery_pager_detail.py(5) | 없음. 관찰: 시험 profile eps 10 mm에서 mixed의 local_0이 300점 전체를 덮어 ring·line 점이 모두 겹침으로 표시 | `-m "not e2e"` 480 passed, `-m e2e` 13 passed(Edge) |
 
 각 E2E 변형은 E02-UP, E07-SINGLE, E11-NOCOVERAGE처럼 하위 ID를 부여한다. 상위 시나리오는 적용 가능한 필수 하위 case를 모두 통과했을 때만 PASS다. 실패 수정 후 영향받는 case와 연결된 C 항목을 다시 실행한다.
 
@@ -982,9 +1003,11 @@ Zone 기대값: E1={D06}, E2={D07}, 내부 r<100={D01,D02,D03,D04,D05}, 100mm �
 - [ ] RL-07 Staging의 실제 image에서 스모크·재시도·rollback을 확인했다.
 - [ ] RL-08 운영 사용자에게 대상 범위·입력 제한·보류 상태·검토 방법을 제공했다.
 
-현재 release 판정: NOT_READY. 사유: 본 작업은 실행계획과 시험 명세의 작성·문서 정합성 점검까지 수행했으며, 프로그램 구현·fixture 제작·사내 KLARF 대조·E2E 실행은 수행하지 않았다. **(2026-10-09 갱신)** 판정은 NOT_READY로 유지한다. 합성 범위의 구현·fixture·CLI/UI E2E는 진행됐지만 사내 KLARF 대조, 실제 입력 계약(5.3, T-29), blind 평가, 배포가 남아 있다.
+현재 release 판정: NOT_READY. 사유: 본 작업은 실행계획과 시험 명세의 작성·문서 정합성 점검까지 수행했으며, 프로그램 구현·fixture 제작·사내 KLARF 대조·E2E 실행은 수행하지 않았다. **(2026-10-09 갱신)** 판정은 NOT_READY로 유지한다. 합성 범위의 구현·fixture·CLI/UI E2E는 진행됐지만 사내 KLARF 대조, 실제 입력 계약(5.3, T-26), blind 평가, 배포가 남아 있다.
 
 ### 20.4 이번 문서 개정에서 실제 수행한 점검
+
+문서 경로 이식성 보완: 프로젝트 HTML·Markdown 22개 검사에서 개인 사용자명·로컬 절대 경로 잔존 0건. 문서 명령을 루트 기준 상대 경로와 활성 환경의 `python`으로 통일하고 새 PC 환경 준비 절차를 추가했다. 별도 폴더 복사본에서 상대 경로 CLI로 F01 포함 8개·coverage 적용 및 UI 기본 profile이 복사본 위치를 가리킴을 확인했다. HTML의 검색/필터·한글 TXT 저장·전체 항목 인쇄·데스크톱/모바일 표시 검증 통과. 분석 코드는 변경하지 않았다(C17/C20: 문서 경로 변경과 실행 검증 범위를 구분).
 
 2026-10-10 profile 기본값 표시 보완: `batch_profile_path` 입력 위젯의 `value`에 기본 YAML 절대 경로를 명시하고, 공백 입력은 변경 callback에서 기본값으로 복원한다. 사용자 지정 경로는 유지한다. E12-DEFAULT에 빈 기존 세션·빈 값 편집·위젯 기본값·사용자 경로 유지 검증을 추가했다. `python -m pytest tests/test_app.py -q`: **10 passed** (insenv Python 3.12.15); `git diff --check` 통과. C17/C20: 설정 내용·분석 로직은 변경하지 않았으며 이번 범위의 UI 회귀만 실행했다.
 

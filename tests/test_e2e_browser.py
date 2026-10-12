@@ -152,7 +152,7 @@ def test_e19_review_through_the_browser(server, browser, tmp_path):
 # ---- E16 download contents (added 2026-10-09): the files the browser actually downloads are opened and
 # compared against independently derived expectations, not against the screen. Oracle source: plan 19.2
 # F01 table + the fixture text itself (XREL/YREL um / 1000 = mm, event key "record:DEFECTID",
-# CLASSNUMBER as the bin label per T-04); provenance hashes are recomputed here with hashlib.
+# CLASSNUMBER as the bin label per T-03); provenance hashes are recomputed here with hashlib.
 F01 = {
     "counts": (8, 8, 0),
     "bin_totals": {"1": 3, "2": 3, "3": 2},
@@ -218,6 +218,9 @@ def test_e16_downloaded_json_matches_independent_f01_expectations(server, browse
         assert w["area_mm2"] is None and w["density_per_mm2"] is None and w["reason"] == "coverage_unknown"
     assert r["clark_evans"]["calc_status"] == "insufficient_data"   # not 0, not "random"
     assert r["affected_die_count"] is None and r["inspected_die_count"] is None
+    # E16-NULLWHY (approved 2026-10-11, result-0.2): every top-level null carries a reason; nothing else does
+    assert set(r["null_reasons"]) == {"affected_die_count", "inspected_die_count"}
+    assert all(v.startswith("not computable") for v in r["null_reasons"].values())
     assert r["lift_pin"] == {"feature_status": "disabled"}          # disabled, not no_match
 
     # provenance: hashes recomputed here from the input bytes, not copied from the screen
@@ -277,6 +280,8 @@ def test_e16_downloaded_csv_zip_matches_the_same_expectations(server, browser):
     assert man["provenance"] == doc["result"]["provenance"]      # same provenance in both channels
     assert man["orientation_status"] == "notch_registered" and man["coordinate_frame"] == "notch_down"
     assert "empty cell = null" in man["null_convention"]
+    assert man["null_reasons"]["result"] == doc["result"]["null_reasons"]       # E16-NULLWHY (2026-10-11)
+    assert all(by[k]["reason"] for k in by if "" in (by[k]["count"], by[k]["area_mm2"], by[k]["density_per_mm2"]))
     assert json.loads(z.read("review.json").decode("utf-8")) is None
 
 

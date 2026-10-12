@@ -1,4 +1,4 @@
-"""Line measurement (PCA) and candidate classification from profile thresholds (TBD T-21).
+"""Line measurement (PCA) and candidate classification from profile thresholds (TBD T-18).
 
 Eigenvalue ratio alone never decides "line": two distant blobs are elongated too, so continuity
 (largest gap along the axis relative to length) and width are part of the rule.

@@ -1,13 +1,15 @@
 ---
 name: wafer-verify
-description: Verify a change in this wafer-inspection project - pick the tests that match the changed files, compare against independent oracles (not production output), run them with the existing insenv Python, and report PASS / FAIL / NOT_RUN / BLOCKED / N/A with evidence. Use after editing wafer/*, tests/*, profiles, fixtures, or before reporting a task as done.
+description: Verify a change in this wafer-inspection project - pick the tests that match the changed files, compare against independent oracles (not production output), run them with the prepared active Python environment, and report PASS / FAIL / NOT_RUN / BLOCKED / N/A with evidence. Use after editing wafer/*, tests/*, profiles, fixtures, or before reporting a task as done.
 ---
 
 # wafer-verify
 
 Repeatable verification for this repository. The contracts live in `CLAUDE.md` (sections 4-6),
-`wafer_inspection_execution_plan.md` (16, 17-20) and `TBD.md`; read the parts that apply instead of
-relying on memory. Do not copy the contracts into the report - cite the C/E IDs.
+`docs/6_execution_plan.md` (16, 17-20) and `docs/9_TBD.md`; read the parts that apply instead of
+relying on memory. Do not copy the contracts into the report - cite the C/E IDs. The current
+scenario-to-test map is `docs/3_user_scenarios.md` part 2: after a verified run, update its test
+names, results and run log (section 2.5) so the scenarios always match the latest code.
 
 ## 1. Scope first
 
@@ -34,18 +36,19 @@ Wide or cross-cutting change: `pytest tests -q -m "not e2e"`, then `-m e2e`.
 
 ## 2. Environment (do not rebuild it)
 
-- Use the prepared conda env `insenv`: `C:\Users\gongj\anaconda3\envs\insenv\python.exe` (Python 3.12).
-  Print `sys.executable` and `sys.version` once. Do not create a venv or reinstall requirements;
+- Activate the prepared Python 3.11/3.12 conda or venv environment and use `python` from the project root.
+  The historical `insenv` name is not required. Check the interpreter and version locally; do not put
+  personal absolute paths in committed documentation or command examples. Do not create a venv or reinstall requirements;
   install only when dependencies actually changed.
 - Browser E2E uses the system Edge through Python Playwright (`channel="msedge"`); no browser download.
 - The project Playwright MCP (`.mcp.json`) is for interactive exploration by the main session, not a
   replacement for the pytest E2E.
 
 ```powershell
-$py = 'C:\Users\gongj\anaconda3\envs\insenv\python.exe'
-& $py -m pytest <selected test files> -q
-& $py -m pytest tests -q -m "not e2e"
-& $py -m pytest tests -q -m e2e -rA      # -rA shows PASSED / SKIPPED reasons
+# Example focused check; select the test files appropriate to the change.
+python -m pytest tests/test_app.py -q
+python -m pytest tests -q -m "not e2e"
+python -m pytest tests -q -m e2e -rA      # -rA shows PASSED / SKIPPED reasons
 ```
 
 ## 3. Oracle rules
@@ -55,7 +58,7 @@ $py = 'C:\Users\gongj\anaconda3\envs\insenv\python.exe'
   spec change (see TBD decisions) recorded as `<E-ID>-UP` with old/new values and the reason.
 - Do not widen tolerances, delete assertions, or add skip/xfail to make a run pass.
 - Synthetic fixtures prove the synthetic contract only. A pass is not equipment-adapter validation,
-  shape-classification performance, or support for in-house input (TBD T-29).
+  shape-classification performance, or support for in-house input (TBD T-26).
 
 ## 4. Status vocabulary
 

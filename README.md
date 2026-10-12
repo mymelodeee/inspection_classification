@@ -30,6 +30,8 @@ KLARF 결함 좌표를 기반으로 웨이퍼의 **bin·영역·시계방향 분
 
 대상 환경은 **64-bit CPython 3.11 또는 3.12**입니다. 아래 명령은 저장소 루트에서 실행합니다.
 
+**프로젝트 루트는 이 README와 `requirements.txt`가 있는 폴더입니다.** 다운로드한 프로젝트에서 터미널을 열고 아래 상대 경로 명령을 그대로 실행하세요. 설치 위치나 사용자 이름은 명령에 넣지 않습니다. HTML 안내서의 경로도 HTML 파일이 있는 `docs/`가 아닌 프로젝트 루트 기준입니다. 기존 가상환경을 사용한다면 활성화한 뒤 `python`을 실행하며, 새 환경은 다음 순서로 준비합니다.
+
 ```bash
 python -m venv .venv
 ```
@@ -108,21 +110,23 @@ F01은 **좌표·개수 집계 검증용** 샘플입니다. 기대 결과는 다
 python -m streamlit run wafer/app.py
 ```
 
-- 입력: KLARF·profile을 업로드하거나 경로로 지정, coverage sidecar 경로(선택), SQLite 경로(선택, 검토 저장에 필요).
-- 표시: `job_status`·`data_quality_status`·개수, 입력 파일명·source hash·profile·버전·coverage 상태, wafer map(profile 반경 기준 원, 노치가 확인된 경우에만 노치 표시, bin 표시 필터는 개수를 바꾸지 않음, signature group 강조), bin × 시계방향 표, 공간 집계(빈 칸=미계산, 0=실제 0), 판정 상태와 보류 사유.
+화면은 하나의 **파일 분석** 흐름입니다(단일/일괄 모드 구분 없음). 파일 1개도 6절의 일괄 흐름으로 분석한 뒤, 분석 단위를 골라 **상세 맵·검토 화면**을 엽니다. 화면 배치는 [docs/7_wireframe.md](docs/7_wireframe.md)에 있습니다.
+
+- 입력(왼쪽): 여러 파일·폴더 업로드 또는 서버 KLARF 경로(한 줄에 하나), profile 업로드 또는 경로(기본 `tests/profiles/dummy_die_local_test_profile.yaml`), coverage sidecar 경로(선택), SQLite 경로(선택, 검토 저장에 필요).
+- 상세 화면 표시: `job_status`·`data_quality_status`·개수, 입력 파일명·source hash·profile·버전·coverage 상태, wafer map(profile 반경 기준 원, 노치가 확인된 경우에만 노치 표시, bin 표시 필터는 개수를 바꾸지 않음, signature group 강조), bin × 시계방향 표, 공간 집계(빈 칸=미계산, 0=실제 0), 판정 상태와 보류 사유.
 - 검토: `review_status`, 검토 반영 군집, revision 목록, revision 입력 폼(잘못된 입력은 거부).
-- 다운로드: JSON, CSV(zip). 둘 다 분석 키·검토 상태·최신 revision을 함께 담습니다.
+- 상세 화면 다운로드: JSON, CSV(zip). 둘 다 분석 키·검토 상태·최신 revision을 함께 담습니다.
 - 업로드한 파일은 분석 후 임시 폴더에서 삭제합니다. 화면은 CLI와 같은 `wafer.cli.run_job`을 호출하며 분석 로직을 따로 갖지 않습니다.
 
 #### 화면에서 처음 분석하기
 
 1. 저장소 루트에서 위 Streamlit 명령을 실행하고 터미널에 표시된 Local URL을 엽니다(기본 `http://localhost:8501`). 종료할 때는 실행 터미널에서 `Ctrl+C`를 누릅니다.
-2. 왼쪽 **또는 KLARF 경로**에 `tests/fixtures/klarf/f01.klf`, **또는 profile 경로**에 `tests/profiles/f01_test_profile.yaml`을 입력합니다. 업로드 방식도 가능하며, 같은 입력에 업로드와 경로를 모두 지정하면 업로드 파일이 우선합니다.
+2. 왼쪽 **또는 KLARF 경로 (한 줄에 하나)**에 `klarf_dummy_data/klarf/F01_counts.klarf`를 입력하거나 **여러 파일 선택**으로 업로드합니다. **또는 profile 경로**는 기본값(dummy 시험용 profile)을 그대로 둡니다. 평면 F01 파일(`tests/fixtures/klarf/f01.klf`)을 쓸 때는 profile 경로를 `tests/profiles/f01_test_profile.yaml`로 바꿉니다(5절 표).
 3. coverage 경로는 첫 실행에서 비워 두고, 검토를 저장하려면 **SQLite 저장 경로**에 `analysis.db`를 입력합니다. 상대 경로는 Streamlit을 실행한 디렉터리 기준이며, DB의 부모 디렉터리는 미리 존재해야 합니다.
-4. **분석 실행**을 누릅니다. F01에서는 `included=8`, `center=1`과 위의 bin·시계방향 기대값을 확인합니다.
-5. 지도에서 bin을 선택하거나 signature group을 강조합니다. bin 선택은 표시만 바꾸며 전체 집계값이나 저장 결과를 바꾸지 않습니다.
+4. **입력 목록 확인** → 상태가 `ready`인지 확인 → **일괄 분석 실행**을 누릅니다. 개요에서 포함 결함 합 8을 확인합니다.
+5. **상세 조회할 분석 단위**를 고르고 **상세 맵·검토 화면 열기**를 누릅니다. `included=8`, `center=1`과 위의 bin·시계방향 기대값을 확인합니다. 지도에서 bin을 선택하거나 signature group을 강조해도 전체 집계값이나 저장 결과는 바뀌지 않습니다.
 6. **검토**에서 action과 JSON payload를 입력하고 **검토 저장**을 누릅니다. `review_status`와 revision 목록에서 반영 여부를 확인합니다.
-7. **JSON 다운로드** 또는 **CSV(zip) 다운로드**를 누릅니다. UI의 JSON에는 `review`, CSV ZIP에는 `review.json`이 추가됩니다. CLI export에는 이 UI 검토 메타데이터가 추가되지 않습니다.
+7. **JSON 다운로드** 또는 **CSV(zip) 다운로드**를 누릅니다. UI의 JSON에는 `review`, CSV ZIP에는 `review.json`이 추가됩니다. CLI export에는 이 UI 검토 메타데이터가 추가되지 않습니다. **← 분석 목록으로 돌아가기**로 목록 화면에 돌아옵니다.
 
 현재 화면에는 저장된 분석 목록을 불러오는 메뉴가 없습니다. 이전 검토를 다시 보려면 같은 입력·profile·coverage와 같은 DB로 재분석합니다. 분석 키가 같으면 이전 revision이 표시되고, 코드나 설정 등이 달라지면 별도 분석으로 저장됩니다.
 
@@ -146,6 +150,7 @@ python -m streamlit run wafer/app.py
 |---|---|---|
 | `tests/fixtures/klarf/*.klf`의 정상 합성 파일 | `tests/profiles/f01_test_profile.yaml` | `synthetic-um-die00-notch-down` |
 | `klarf_dummy_data/klarf/*.klarf` | `tests/profiles/dummy_die_local_test_profile.yaml` | `synthetic-die-local-v1` |
+| `klarf_dummy_data_mixed/klarf/*.klarf`(잡음 많은 38종, [안내](klarf_dummy_data_mixed/README.md)) | `tests/profiles/dummy_die_local_test_profile.yaml` | `synthetic-die-local-v1` |
 
 환형 예제를 JSON·CSV·SQLite로 함께 저장하는 실행 예제입니다.
 
@@ -179,12 +184,15 @@ UI에서도 위 KLARF와 YAML을 입력하고 **coverage sidecar 경로**에 `kl
 - **입력 목록(분석 전):** 상대 경로, 크기, 상태(`ready` / `excluded` / `invalid_input` / `held` / `duplicate_in_batch`)와 사유, 내용 sha256, KLARF 헤더의 lot/wafer(검증 전, 파일명은 해석하지 않음), 적용 parser·adapter·profile. 확장자 `.klf`·`.klarf`·`.txt` 외 파일은 제외하며, 확장자가 맞아도 내용이 파싱돼야 `ready`입니다. profile의 adapter로 해석할 수 없는 파일은 `held`(보류)이고 다른 파일은 계속 처리합니다.
 - **실행:** 목록 확인 시점의 파일·profile·coverage를 고정해 기존 단일 분석 core(`run_job`)를 순차 호출합니다. 목록 확인 때 profile·coverage sidecar·파일 내용의 sha256을 기록하고, 실행 시 하나라도 다르면 분석 없이 `CONFIG_INVALID`(profile / coverage / inputs)로 멈춥니다. 실행 중에는 처음 읽은 profile·sidecar 사본만 쓰므로 원본 파일을 고쳐도 같은 batch의 결과가 섞이지 않습니다. 경로가 없으면 `INPUT_NOT_FOUND`를 표시합니다. 진행률과 현재 파일을 표시합니다. 한 파일의 실패가 다른 파일을 멈추지 않으며, 실패를 0건으로 저장하지 않습니다. 같은 내용의 파일은 한 번만 분석하고(`duplicate_in_batch`), SQLite를 지정하면 기존 분석 키로 저장 결과를 재사용합니다. 필터 변경이나 화면 재실행으로 재분석하지 않습니다.
 - **입력 상한(화면에서 변경 가능, 개발용 기본값):** 파일 500개, 파일당 50 MB, 총 300 MB. 넘는 파일은 사유와 함께 제외합니다. 파일 수 상한은 확장자·크기 조건을 통과한 파일만 셉니다.
-- **수 구분:** 업로드 파일 수, 분석 단위 수, 고유 wafer 수(헤더 값, 미검증), wafer ID 미상 분석 단위 수를 따로 셉니다. 분석된 단위가 없으면 포함 결함 합은 0이 아니라 "-"(null)입니다. 현재 파서는 파일당 wafer record 1개만 허용하므로(복수 record는 `invalid_input`, TBD T-12) 성공한 파일 1개 = 분석 단위 1개입니다.
+- **유형별 개수·비율(개요):** `candidate_types` 코드마다 해당 분석 단위 수와 비율(%)을 표로 보여 줍니다. 단위 표와 같은 값을 세며, 분모는 성공한 분석 단위(배치 내 중복 제외)입니다. 유형이 겹칠 수 있어 합이 100%를 넘을 수 있고, 분석 단위가 없으면 비율은 `-`와 사유로 표시합니다.
+- **수 구분:** 업로드 파일 수, 분석 단위 수, 고유 wafer 수(헤더 값, 미검증), wafer ID 미상 분석 단위 수를 따로 셉니다. 분석된 단위가 없으면 포함 결함 합은 0이 아니라 "-"(null)입니다. 현재 파서는 파일당 wafer record 1개만 허용하므로(복수 record는 `invalid_input`, TBD T-09) 성공한 파일 1개 = 분석 단위 1개입니다.
 - **정도 지표(원시 값, 점수·등급 없음):** 포함 결함 수; 유형별 고유 support 수와 비율(분모 = 포함 결함 수, 0이면 null); 평가 불가(disabled/insufficient_data) 유형은 0이 아니라 null; 유효 검사면적과 면적 보정 밀도(coverage sidecar가 있고 창 밖 결함이 없을 때만, 아니면 null+사유); ring 반경·직경·두께(P95−P5)·극단 폭, line 길이·폭·RMS 잔차·방향; 주요 시계방향과 개수·분모·비율(분모 = 포함 결함 수 − center, 방향 미상이면 보류); 삼발이는 lobe별 방향·개수를 JSON 그대로 둡니다(비활성이면 빈 칸); 평가 가능한 유형이 하나도 없으면 전체 유형 union도 null입니다. 위 값은 화면 표와 요약 CSV에 모두 열로 나옵니다. 배치 내 중복 행(`duplicate_in_batch`)은 원본 행의 값을 그대로 보여 주므로, 열을 합산할 때는 `status = succeeded` 행만 더하세요. batch 밀도는 비교 가능한 그룹(profile·adapter·coverage·스키마)별 `sum(count)/sum(유효 면적)`이며 제외 단위 수를 표시합니다.
 - **유형별 요약:** ring/line/삼발이는 규칙 판정, local은 DBSCAN 군집에서 파생한 후보(규칙·보정 없음)입니다. candidate와 matched를 구분하고, 평가 가능/불가 분모를 표시합니다. 유형은 겹칠 수 있어 합이 분석 단위 수와 같지 않습니다. 실패·보류 파일은 "평가 안 됨"이며 "유형 없음"이 아닙니다. 요약은 최초 예측 기준이고, 검토 상태·최신 revision은 별도 열입니다.
-- **맵 갤러리:** 표준 좌표(mm, 노치 6시), profile 반경의 원, 페이지당 12개, 맵당 최대 2000점 표시(통계에는 영향 없음).
+- **맵 갤러리:** 표준 좌표(mm, 노치 6시), profile 반경의 원, 페이지당 12개, 맵당 최대 2000점 표시(통계에는 영향 없음). 각 맵 제목의 파일 이름 옆에 단위 표와 같은 `candidate_types`를 표시합니다. 페이지는 `<<` `<` 번호 `>` `>>` 버튼으로 이동합니다.
+- **상세 화면:** 상태에 `candidate_types`를 표시하고, 지도 색을 bin 또는 후보 유형(저장된 ring·line·local·삼발이 support 기준)으로 바꿀 수 있습니다. 두 유형 이상에 속한 점은 '겹침'으로 따로 칠해 환형·선형·몰림 경계가 애매한 곳을 확인할 수 있습니다(다시 판정하지 않음).
+- **설비성 후보(2026-10-12):** 같은 검사 설비(KLARF `InspectionStationID`)에서 step과 무관하게 비슷한 위치·형상이 `min_wafers`(기본 3)장 이상 반복되면 `equip_ring`(환형)·`equip_line`(일자형)·`equip_local`(몰림형)을 `candidate_types` 뒤에 붙입니다. 보고 결함 수가 장비 최대 보고 수(`defect_volume.inspection_defect_limit`)에 도달하면 `inspection_abort_suspect`, 과다 기준만 넘으면 `excess_defect`(중단 미확인)입니다. 허용치·기준은 profile 설정이며(dummy 시험 profile은 설비 반복만 시험값으로 활성), 판정 불가 사유는 `equipment_signature_*`·`defect_volume_*` 열에 남습니다. 후보는 설비 원인 확정이 아닙니다. 정의: [docs/1_domain_definition.md](docs/1_domain_definition.md) 4.1.
 - **다운로드:** 전체 요약 CSV, 유형별 요약 CSV, ZIP(`batch_manifest.json` — 입력 hash·상태·사유·중복·제외 범위·버전, 단위별 `result.json`·CSV·manifest). 필터된 화면 표 CSV는 별도 버튼입니다.
-- SQLite에는 기존 runs/reviews 외에 batch와 구성원 연결 행만 추가합니다(결과·검토 복제 없음). `batch_members.rel_path` 열에는 폴더를 뺀 파일명만 저장하며, 전체 상대 경로는 ZIP의 `batch_manifest.json`에만 있습니다(T-31). 원본 bin 합계와 밀도는 모두 profile 내용(sha256)·adapter가 같은 그룹 안에서만 합칩니다.
+- SQLite에는 기존 runs/reviews 외에 batch와 구성원 연결 행만 추가합니다(결과·검토 복제 없음). `batch_members.rel_path` 열에는 폴더를 뺀 파일명만 저장하며, 전체 상대 경로는 ZIP의 `batch_manifest.json`에만 있습니다(T-27). 원본 bin 합계와 밀도는 모두 profile 내용(sha256)·adapter가 같은 그룹 안에서만 합칩니다.
 - 다운로드 파일은 화면을 다시 그릴 때마다 새로 만들어 검토 열을 최신으로 유지합니다. 파일 수가 많으면 화면 반응이 느릴 수 있습니다(개선은 실제 규모 확인 후).
 
 ## 입력 지원 범위
@@ -203,7 +211,7 @@ UI에서도 위 KLARF와 YAML을 입력하고 **coverage sidecar 경로**에 `kl
 
 두 번째 합성 규약으로 KLARF 1.8 Record/Field/List 문법(단일 wafer)과 `synthetic-die-local-v1` adapter도 지원합니다. 이 adapter는 `raw=(die index×pitch+XREL/YREL−SampleCenterLocation)/1000`을 쓰고 notch를 한 번 회전하며, profile에서 `coordinates.adapter_id`로 명시해야 쓰입니다. `adapter_id`는 모든 profile에서 필수이며, 비어 있으면 `CONFIG_INVALID`입니다. 예제는 `klarf_dummy_data/`와 `tests/profiles/dummy_die_local_test_profile.yaml`이며, coverage는 `--coverage` sidecar로 명시적으로 넘깁니다.
 
-파일명은 파싱하지 않으며 lot/wafer/job/시간 메타데이터도 추출하지 않습니다. **위 내용은 합성 입력에서 검증된 범위이며 사내 입력 지원 완료가 아닙니다.** 실제 사내 데이터 도입 시의 입력 계약 재검증은 [실행계획 5.3](wafer_inspection_execution_plan.md)과 [TBD.md T-29](TBD.md)에 정리되어 있습니다.
+파일명은 파싱하지 않습니다. 단일 분석 결과에는 lot/wafer/job/시간 메타데이터를 넣지 않으며, 일괄 분석 화면·요약 CSV·batch manifest에만 KLARF 헤더의 lot/wafer를 **미검증 표시값**으로 보여 줍니다(분석 키·중복 판정·집계에는 쓰지 않음). **위 내용은 합성 입력에서 검증된 범위이며 사내 입력 지원 완료가 아닙니다.** 실제 사내 데이터 도입 시의 입력 계약 재검증은 [실행계획 5.3](docs/6_execution_plan.md)과 [TBD T-26](docs/9_TBD.md)에 정리되어 있습니다.
 
 입력 예제의 상세 규약은 [합성 KLARF 설명](tests/fixtures/klarf/README.md)을 참고하세요.
 
@@ -245,7 +253,7 @@ UI에서도 위 KLARF와 YAML을 입력하고 **coverage sidecar 경로**에 `kl
 | `bin_sector.csv` | bin × 12 sector·중심 교차표, 합계 및 상태 |
 | `manifest.json` | CSV 목록, null 표기 규약, 입력/profile hash와 버전 정보 |
 
-JSON은 최상위 `job_status`, 성공 시 `data_quality_status`와 `result`를 제공합니다. 결함별 행은 CSV에 있으며 JSON에는 포함하지 않습니다. `provenance`에는 입력·profile SHA-256, profile ID, 코드·규칙·파서·adapter·결과 스키마 버전, coverage, seed가 기록됩니다. 현재 결과 스키마는 `result-0.1`, 코드 버전은 `0.1.0-dev+<모듈 내용 해시>`(자동 산출), 파서는 `wafer.ingest-strict-2`입니다. 결과의 `orientation_status`(`notch_registered`/`unknown`)와 `clock_status`로 시계방향 집계가 계산됐는지 확인합니다.
+JSON은 최상위 `job_status`, 성공 시 `data_quality_status`와 `result`를 제공합니다. 결함별 행은 CSV에 있으며 JSON에는 포함하지 않습니다. `provenance`에는 입력·profile SHA-256, profile ID, 코드·규칙·파서·adapter·결과 스키마 버전, coverage, seed가 기록됩니다. 현재 결과 스키마는 `result-0.2`(2026-10-11: 최상위 null 필드마다 사유를 담는 `null_reasons` 추가), 코드 버전은 `0.1.0-dev+<모듈 내용 해시>`(자동 산출), 파서는 `wafer.ingest-strict-2`입니다. 결과의 `orientation_status`(`notch_registered`/`unknown`)와 `clock_status`로 시계방향 집계가 계산됐는지 확인합니다.
 
 `job_status: succeeded`와 `data_quality_status: valid`여도 모든 기능이 계산된 것은 아닙니다. 각 기능의 `feature_status` 또는 `calc_status`, `reason`을 함께 확인해야 합니다.
 
@@ -294,17 +302,20 @@ inspection_classification/
 │   ├── report.py       # 결과 불변식 검사, CSV export
 │   ├── store.py        # SQLite 분석·실행 시도·검토 revision
 │   ├── version.py      # 코드·규칙 버전(모듈 내용 해시)
-│   └── app.py          # Streamlit 검토 화면(개발용)
+│   ├── batch.py        # 일괄 분석: 입력 목록·입력 고정·순차 실행·요약·export
+│   ├── batch_ui.py     # 통합 파일 분석 화면(입력·목록·결과)
+│   ├── ui_inputs.py    # 화면 기본 profile 경로·입력 도움말
+│   └── app.py          # Streamlit 진입점·상세/검토 화면(개발용)
 ├── tests/
-│   ├── fixtures/      # 합성 KLARF·형상 데이터·독립 정답
+│   ├── fixtures/      # 합성 KLARF·형상 데이터·coverage sidecar·독립 정답
 │   ├── profiles/      # 시험 전용 YAML
 │   └── test_*.py      # 단위·회귀·CLI·UI·브라우저 E2E 테스트
 ├── klarf_dummy_data/  # 합성 KLARF 1.8 묶음과 독립 정답
+├── klarf_dummy_data_mixed/  # 잡음 많은 MixedWM38 스타일 38종 합성 KLARF·생성기·독립 정답
+├── docs/              # 설계 문서 1~9(도메인·PRD·시나리오·아키텍처·ERD·실행계획·와이어프레임·스타일·TBD), 사용 안내 HTML
 ├── .claude/           # 서브에이전트 3개, 프로젝트 스킬 2개
 ├── .mcp.json          # 프로젝트 Playwright MCP(Edge, isolated)
 ├── requirements.txt
-├── TBD.md
-├── wafer_inspection_execution_plan.md
 └── wafer_inspection_map_knowledge.md
 ```
 
@@ -347,9 +358,22 @@ DB 경로가 비어 있으면 화면 분석과 다운로드는 가능하지만 D
 
 ## 관련 문서
 
-- [실행계획](wafer_inspection_execution_plan.md): 단계별 요구사항, 분석 계약, E01~E24 검증 시나리오
+설계 문서(`docs/`):
+
+| 문서 | 내용 |
+|---|---|
+| [1 도메인 정의서](docs/1_domain_definition.md) | 용어, 좌표계, 상태 어휘, 개수·null 규칙, profile 스키마, 오류 코드 |
+| [2 PRD](docs/2_PRD.md) | 사용자, 목표·비목표, 기능 요구사항별 구현 상태 |
+| [3 사용자 시나리오·시험 추적표](docs/3_user_scenarios.md) | 사용 흐름, E01~E24·하위 case ↔ 테스트 함수 ↔ 상태, 유지 규칙 |
+| [4 아키텍처](docs/4_architecture_diagram.md) | 구성·모듈 의존·분석 흐름·일괄 시퀀스·화면 상태 |
+| [5 ERD](docs/5_ERD.md) | SQLite 테이블, 결과 JSON·다운로드 데이터 모델 |
+| [6 실행계획](docs/6_execution_plan.md) | 단계별 요구사항, 분석 계약, C01~C20, E01~E24 시나리오 명세, 실행 기록 |
+| [7 와이어프레임](docs/7_wireframe.md) | 현재 화면 배치·라벨·위젯 key |
+| [8 스타일 가이드](docs/8_style_guide.md) | 값 표시·용어·지도·내보내기·문서 작성 규약 |
+| [9 TBD](docs/9_TBD.md) | 실제 데이터·운영 정의가 필요한 보류 항목과 결정 기록 |
+
+- [사용 및 사내 데이터 적용 안내(HTML)](docs/wafer_usage_and_internal_data_guide.html): 화면 사용 순서, 사내 데이터 적용 시 필요한 자료
 - [분석 배경과 참고 문헌](wafer_inspection_map_knowledge.md): 인라인 inspection map 분석 개념과 연구 자료
-- [보류 항목 및 결정 기록](TBD.md): 실제 데이터·운영 정의가 필요한 항목
 - [개발 작업 지침](CLAUDE.md): 구현·검증·데이터 취급 원칙
 - [Claude Code 도구 가이드](CLAUDE_CODE_TOOLING_GUIDE.md), [서브에이전트 안내](README-wafer-agents.md): 에이전트·스킬·MCP 구성과 사용법
 

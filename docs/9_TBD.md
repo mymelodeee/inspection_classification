@@ -1,0 +1,101 @@
+# 추가 확인 필요 사항 (TBD)
+
+실제 장비 KLARF export, 사내 정의, 계획서 모호 지점 중 **사용자 확인 전까지 구현하지 않고 보류**한 항목이다.
+해결되면 상태를 갱신하고 관련 E/C 시나리오를 재검토한다. 이 파일은 계획서([6_execution_plan.md](6_execution_plan.md))를 수정하지 않는 별도 기록이다.
+최종 갱신: 2026-10-12 (2026-10-12 해결 항목 삭제·번호 재부여 — 끝의 변경표 참조. 2026-10-11 저장소 루트 `TBD.md`에서 `docs/9_TBD.md`로 이동. 코드 주석의 "TBD.md T-xx"는 이 파일을 가리킨다 — 주석을 고치면 `code_version`이 바뀌므로 경로를 갱신하지 않았다, T-28)
+
+| ID | 상태 | 항목 | 현재 처리 | 필요한 자료/결정 | 연계 |
+|---|---|---|---|---|---|
+| T-01 | 일부 해결 | 좌표 변환 공식: die origin(index×pitch)+XREL/YREL, SampleCenterLocation, 단위(µm/mm) | 합성 adapter만 구현(단일 die, 원점=wafer 중심, µm→mm). 0이 아닌 SampleCenterLocation/DieOrigin은 `AdapterUnsupported` 두 번째 합성 adapter `synthetic-die-local-v1` 추가(raw_mm=(index×pitch+rel−center)/1000, XREL/YREL∈[0,pitch) 검사, profile `adapter_id`로 명시 선택). 실제 장비 공식 아님. **결정 필요:** adapter_id=null일 때 기존 adapter를 암묵 선택(현재) vs CONFIG_INVALID(16.1), f01 시험 profile의 `source_units: mm` 표기 모순. **결정(2026-10-09): adapter_id는 명시 필수, 누락은 CONFIG_INVALID(`coordinates.adapter_id`) — 구현됨.** f01 시험 profile에 adapter_id·source_units: um 명시. 실제 장비 좌표 공식은 여전히 열림. | 실제 export의 필드 의미, 화면과 대조할 기준점 몇 개 | P0-02, P1-02, E02 |
+| T-02 | 열림 | 방향·side: 노치 위치, front/back, mirror, 이미 정규화된 export 여부 | notch=DOWN, CoordinatesMirrored=NO만 허용. 그 외는 추정하지 않고 `UNSUPPORTED_ADAPTER` die-local adapter는 side를 profile `side_convention: front` 선언으로만 받음(추정 없음), 노치 회전 1회. die-local adapter는 `SampleOrientationMarkType`이 NOTCH가 아니면 거부(FLAT 추정 안 함). **결정 필요:** 1.8 헤더에 side/mirror 필드가 있을 때 거부할지, 노치 위치 누락 시 원본 집계만 반환할지(16.1, T-11). **결정(2026-10-09): 노치 위치(OrientationMarkLocation)가 없으면 전체 실패 대신 부분 결과** — 원본 개수·bin 집계 반환, 단위·중심이 검증된 adapter에서 반경·edge 거리(zone·radial·center) 반환, 물리 12시/3시 방향과 설비 기준 위상(삼발이)은 보류(`clock_status=insufficient_data/orientation_unknown`, `orientation_status=unknown`, detect `frame=unregistered`). 노치 값이 있으나 지원 밖이면 계속 UNSUPPORTED_ADAPTER. | 장비별 축 방향·side 표기 규칙, 노치 변환 검증 샘플 | P0-02, E02, E10, C03/C04 |
+| T-03 | 일부 해결 | Bin 매핑: CLASSNUMBER의 사내 의미(ADC/review class 등), 0의 의미 | 합성: 1/2/3→B1/B2/B3, 0→unknown (사내 매핑 아님) die-local adapter는 CLASSNUMBER를 "1","2","3" 그대로, 기존 adapter는 "B1".. — 표기 통일 여부 결정 필요. **결정(2026-10-09): bin 표기 통일 — 모든 adapter가 CLASSNUMBER 값을 그대로 문자열("1","2",...)로, 0은 unknown — 구현됨.** F01 oracle의 "Bn"은 CLASSNUMBER n과 같은 뜻으로 테스트에서 명시 매핑. 사내 bin 의미(ROUGH/FINE 포함)는 여전히 열림. | 실제 CLASSNUMBER 정의와 bin 매핑 버전 | P0-02, E09 |
+| T-04 | 열림(방침 결정) | 검사 coverage / 검사 die 목록 / sampling. **방침(2026-10-09): coverage 미상이면 밀도·의존 검정은 null+사유(안 a). profile 선언(안 b)은 채택 안 함** | density·affected die 비율은 null. 실제 coverage 정보는 입력 자료 확인 필요 **2026-10-09:** coverage를 명시적 입력 sidecar로 받는 경로 추가(CLI `--coverage`, UI 입력; `{"coverage":{"shape":"full_disk","radius_mm":R}}`만 지원, 출처·sha256을 provenance와 분석 키에 기록). 결함 분포·파일 크기로 추정하지 않음(안 a 유지 — profile 선언 안 b와 다름). radius<R이면 (rc,R]을 미검사로 lift_pin에 전달. **결정(2026-10-09): sidecar 오류는 CONFIG_INVALID(종료코드 2)를 유지하되 `reason`으로 구분 — coverage_syntax_error / coverage_unsupported_shape / coverage_invalid_value.** | scan ROI(edge exclusion 폭 포함), 제외 영역, 검사 die 목록 위치(KLARF SampleTestPlan 여부) | P0-03, E11, C06 |
+| T-05 | 재정의됨(2026-10-09) | **band 폭**: 사용자 정의 = 환형(ring) 결함이 관찰될 때 그 환형의 두께(폭)이며 100mm와 무관한 **측정량**. band 모양 원이 나오면 중심으로부터 반지름(또는 직경)을 구할 수 있어야 함 | Phase 2 ring 검출기의 출력으로 구현(중심반경·내/외경·폭·직경). 100mm 경계 태그(`zone_8inch_boundary.band_width_mm`)는 별도 설정으로 유지, 기본 비활성, 시험값만 존재 | 사용 결정됨(2026-10-09: 계속 사용). 폭 값과 목적만 TBD | P0-05, E05, E06, E08 |
+| T-06 | 일부 해결 | E1/E2 **metric = edge 거리(distance_from_edge_mm)** 확정(중심 반경 아님). **실제 구간 값·경계 포함 규칙은 사내 규정 확인 후 갱신 예정** | profile에서 E1/E2 metric은 edge 거리로 고정(다르면 CONFIG_INVALID). 기본 비활성, 시험 profile 값은 시험 전용 | 사내 규정 값 | P0-05, E08, C12 |
+| T-07 | 열림 | 삼발이 template: 반경, 위상, 허용오차, 좌표 기준 | 합성 시험 template로 구현(`wafer/lift_pin.py`, T-22). 사내 template 없음 → 기본 비활성 | 설비 template, 적용 공정/설비 | P0-05, E07 |
+| T-08 | 열림 | 중심 제외 반경(center exclusion), 경계 tolerance·snap 정책 | 시험 profile 1mm만 사용. null이면 clock 결과는 null | 운영 값과 근거, 좌표 분해능 | P0-02, E08 |
+| T-09 | 열림 | 다중 wafer/lot KLARF, 복수 inspection 묶음(실제 입력 계약은 T-29에서 함께 확인) | 첫 구현은 단일 wafer만 | 실제 파일 구성 | E09 |
+| T-10 | 열림 | 성능 목표, blind set, 정상 참고군, 유형 지표(P0-06) | 없음. E20/E21은 BLOCKED | Phase 0 합의 | P0-06, E20, E21 |
+| T-11 | 열림 | CLI 오류 코드·종료코드 체계: 0 성공 / 2 CONFIG_INVALID / 3 INVALID_INPUT·UNSUPPORTED_ADAPTER / 4 INPUT_NOT_FOUND. UNSUPPORTED_ADAPTER는 입력 불량이 아니므로 data_quality_status를 생략. 계획서 16.1은 방향·단위 미상 시 가능한 원본 집계를 요구 — 노치 위치 미상은 부분 결과로 구현됨(T-02 결정); 그 외 지원 밖 adapter 값(노치 값이 지원 밖, mirror 등)은 여전히 job 전체를 실패시킴 | 임시 체계(계획서 미정의) 노치 미상은 이제 job 실패가 아니라 부분 결과(T-02 결정). | 코드 체계 승인, 미지원 adapter 시 부분 결과(원본 집계) 반환 여부 | C05, C15, E10, E13 |
+| T-12 | 일부 해결 | zone metric 기본값은 E1/E2=edge 거리로 확정(T-06). 지원 FileVersion `1 2`는 근거 없이 코드에 있음. SampleSize(헤더)와 wafer_radius_mm 일치 검사 없음 | 합성 한정 tests/fixtures/klarf의 "1.8"은 평면 문법+`FileVersion 1 8` 토큰이며 진짜 1.8 Record 문법과 다름(README 정정 완료 2026-10-09). | 지원 버전 범위(P0-01), 크기 불일치 처리 | C12, E12 |
+| T-13 | 열림 | affected_die_count: 합성 adapter는 단일 pseudo-die라 의미 없음 | null로 출력 | die 좌표 규칙(T-01)과 검사 die 목록(T-04) | C02, C06 |
+| T-14 | 열림 | **두께 = P95−P5, 사용자 결정 2026-10-09**(이상점에 강건; 극단값 r_max−r_min은 `radial_extent_mm`로 별도 유지). 측정 키는 `ring_thickness_mm`로 정함(승인 대기). **원 fit 한계**: Kasa 대수 fit은 짧은 호/두꺼운 band에서 편향(RB-ARC 90° 호 자유 fit: 중심 약 (1.96,1.62), 반지름 약 77.8 vs 정답 (0,0), 80) → 부분 호 fit은 **NOT_RUN/미검증**, 중심을 알 때만 호 측정. ring/arc/blob **분류 threshold**(최대 각도 공백, 최소 span, 폭 대비 반지름, 원 fit 허용오차)와 ring 폭 측정 키 이름(profile의 `band_width_mm`와 혼동 방지를 위해 `ring_thickness_mm` 등 별도 이름 권장) | `wafer/ring.py`는 측정만 수행(반지름·내외경·두께·직경·각도 점유). 분류는 미구현 **현행(2026-10-11):** 이후 `ring.classify_ring`으로 ring/arc 후보 분류가 구현됐다(`shapes.ring` 임계값, `calibrated: false`면 `candidate`까지만). 열린 것은 임계값 보정이다. **관찰 기록(2026-10-09):** 순수 ring/edge_ring 합성 파일에서 line 후보가 함께 나오는 것과 uniform_random에서 DBSCAN 군집 19개가 local로 요약되는 것은 확정 오경보가 아니라 **“추가 해석이 필요한 중복·국부 후보”**로 기록한다. ring/line/random의 신뢰할 수 있는 확률(점수 보정)을 얻으려면 정답 라벨 데이터와 확률 보정(calibration)이 추가로 필요하다. | threshold 값과 근거(calibration 자료), 키 이름 승인 **관찰(2026-10-12, `klarf_dummy_data_mixed` 38종, 잡음 많은 합성):** 개수·bin·sector는 38/38 일치. 시험 임계값에서 ring 후보 38/38(Normal·Random 포함), line 후보는 Scratch 포함 18개 중 8개·미포함 20개 중 7개, local_cluster 38/38 — 잡음 많은 자료에서 오경보·미탐이 크다. 임계값은 이 자료에 맞추지 않음. 보정에는 라벨 자료 필요 | E05, E06, P2-04 |
+| T-15 | 해결(구현) · 해석 확인 대기 | 15°/345°(및 모든 sector 경계) **허용오차 ±5°, 변경 가능**(`clock.boundary_tolerance_deg`, 기본 5.0, 0 ≤ 값 < 15). **계산에 반영(2026-10-09 사용자 지시)**: ① `sectors_clock` = 엄격 분할(합 + center = N_included 유지), ② `sectors_clock_tolerant` = 경계 ±tol 이내 점을 자기 sector와 **인접 sector 양쪽**에 집계(합은 N을 초과 가능, `n_multi_sector`로 차이 표시, 고유 점 수는 N), ③ `boundary_ambiguous`(ID·개수 표시), ④ `ring.angular_coverage`의 `occupied_hours_tolerant`(**`max_gap_deg`/`span_deg`와 `classify_ring` 라벨은 strict** — 허용오차를 판정에도 쓸지 결정 필요). `sum(tolerant) = N_included − center + n_multi_sector`(분할 아님). 함수: `geometry.neighbor_hour/near_sector_boundary`. **사용자 결정(2026-10-09): 허용오차는 판정(라벨·각도 span)에 반영하지 않음 — 이 항목은 추가 확인 필요로 유지.** 확인 필요: "인접 sector 양쪽 집계" 해석이 의도와 같은지(대안: 경계 점 제외, 가중 분배), ring 점유율 bin에도 적용할지 | 해석 승인 새 fixture에서 ±5° 이내 점: ring 84, edge_ring 84, line 47, mixed 143, uniform_random 62 → `sectors_clock_tolerant`는 manifest clock_counts와 다른 것이 정상(비교 대상 아님). 시험 profile에 tolerance 미명시 시 코드 기본값 5 적용 — 명시 여부 결정 필요. | T-08, E08 |
+| T-16 | 열림 | **각도 점유율 bin 크기와 점 간격의 상호작용**(E06 발견): 15° 간격 ring을 10° bin으로 재면 점유율 24/36=0.67(<ring_min 0.8 → arc), 30° bin이면 1.0(ring). bin 크기·ring_min_occupancy는 함께 보정해야 함. bin 경계 위 점은 부동소수 잡음(1e-9°로 반올림)으로 결정론화함 | 보정 자료로 bin 크기·임계값 결정(T-17과 함께) | E06, T-14 |
+| T-17 | 열림 | `shapes.ring.calibrated: true`는 자기선언 불리언 — 보정 근거(자료 ID·날짜·승인자)와 연결되지 않음. 운영 profile에서 true로 바꾸는 절차(보정 보고서 첨부, 승인) 필요. E06은 **부분**: 그룹 산술만 검증, 검출기→support 연결 미구현 **현행(2026-10-11):** 검출기→support 연결은 `detect.shape_supports`로 구현되어 `tests/test_e06_mixed.py::test_detectors_reproduce_the_fixture_supports_and_totals`가 합성 검증한다. 열린 것은 `calibrated` 승인 절차다. | 승인 절차 정의 | E06, T-14 |
+| T-18 | 열림 | line 분류 임계값: `shapes.line.min_points / max_relative_width / max_gap_ratio` (ring과 동일하게 내부 라벨로 보정, 코드 기본값 없음). 두께·폭 정의는 ring과 같이 P95−P5(정규 거리) | 보정 자료 | E05, T-14 |
+| T-19 | 열림 | 검출기 탐색 파라미터: `detect.ring_radial_tol_mm`(ring 지원 반경 허용), `detect.line_inlier_mm`(직선 inlier 거리), `detect.line_ransac_trials`. 현재 ring 검출은 **wafer 중심 기준 반경 밀도 최대 지점 하나**만(중심이 어긋난 ring, 다중 ring은 미구현), line은 최대 inlier 직선 하나만 | 보정 자료, 다중/offset ring 필요 여부 | E05, E06 |
+| T-20 | 열림 | `data_quality_status` 판정 기준(16.2에 없음). 현재 성공 job은 항상 `valid`. 기본안: coverage 미상·지원 범위 밖 정보가 있으면 `degraded` | 사용자 결정 참고(2026-10-09): 노치 위치 미상 부분 결과도 현재 `valid`로 나간다 — `degraded` 여부 결정 대상. | C15, E10, E11 |
+| T-21 | 결정(임시) | 통계 항목 상태 키는 `calc_status`(computed / insufficient_data / disabled)로 판정용 `feature_status`(16.2)와 분리. 결과 요약 라벨 `pattern_summary`는 8.1 어휘(no_detected_defect / no_clear_pattern / 후보 라벨 목록). CLI 종료코드에 5=INTERNAL_ERROR 추가(T-11) | 계획서 16.2 개정 여부 | C15, E03 |
+| T-22 | 열림 | 삼발이(lift pin) 판정 정책(합성 template로 구현, `wafer/lift_pin.py`): ① 세 위치 모두 지지 → `threefold_match`, template `calibrated: true`일 때만 `matched`, 아니면 `candidate`(ring/line과 동일 정책) ② 두 위치 → `candidate`+`partial_match`, 빈 위치는 coverage에 따라 `incomplete_coverage`(미검사)/`coverage_unknown`/`inspected_empty` ③ 1개 이하 → `no_match`(사유: 반경 band 내 점 없음, 위상 불일치, lobe 부족). A3는 특징값으로만 출력. ④ lobe 인정 조건: 창 안 점 수 ≥ min_support_per_lobe **그리고** 나머지 band 대비 밀도비 ≥ `min_lobe_contrast`(신규 키, 균일 ring을 삼발이로 오인 방지) **그리고** lobe 평균 반경이 band 중심 ± radial_tolerance_mm ⑤ 0~1 lobe에서 미관측 위치의 coverage가 미상/미검사면 `insufficient_data`(16.2), coverage가 알려진 경우만 `no_match` ⑥ 반경 band는 기본 규칙 [하한, 상한) ⑦ `calibrated` 자기선언 문제는 T-20과 동일. 결정 필요: 2개 관측+1개 미검사를 `candidate`로 둘지 `insufficient_data`로 둘지(계획서 미정), `min_lobe_contrast` 값, band 경계 규칙 확인, coverage 입력 schema(T-04), 사내 template(T-07) | 사용자 결정 | E07, C09, C19 |
+| T-23 | 결정(임시) | CSV export 규약: null=빈 칸(미계산·해당 없음), 0=실제 0. 미계산 표는 `spatial_counts.csv`에 상태 행(count 빈 칸 + reason)으로 남김. `bin_sector.csv`에 status 열. `--csv-dir`에 provenance `manifest.json`. 결함별 행은 CSV에만(JSON 미포함 — 대용량 고려). 종료코드 추가: 5=RESULT_INVARIANT_VIOLATED/INTERNAL_ERROR, 6=OUTPUT_WRITE_FAILED. E16은 CLI JSON↔CSV 부분 정합만(UI/API 없음, NOT_RUN) **현행(2026-10-11):** 이후 Streamlit 화면과 실제 Edge 다운로드 대조 E2E가 추가됐다(E16 합성 하위 case PASS, API는 미구현 N/A — `docs/3_user_scenarios.md`). | 결함별 행을 JSON에도 넣을지, `also_clock_tolerant` 빈 칸 의미(“해당 없음”) 표기 방식 | E16, P3-03, C15 |
+| T-24 | 결정(임시) | 저장소: 로컬 SQLite(`wafer/store.py`, CLI `--db`). 분석 키 = sha256(입력 해시, profile 해시, schema/code/parser/adapter 버전, seed) → 같은 키 재제출은 **결과가 동일할 때만** 재사용(다르면 `KEY_COLLISION_RESULT_MISMATCH`, 종료코드 7 — `code_version`은 결과에 영향을 주는 모듈 내용 해시로 자동 산출(`wafer/version.py`, app.py 제외, 줄바꿈 정규화), `rule_version`=규칙 모듈 해시 — 키에 포함), 시도(attempt)는 별도 기록, 실패 job은 결과로 저장 안 함. 검토는 append-only revision(confirm / correct_label[target+axis 필수: morphology/zone/signature_match] / merge_clusters[중복 금지] / split_cluster[비지 않은 정확한 분할] / defer), 검증·번호는 한 트랜잭션, 재생 불가 revision은 오류, `review_status`(16.2) 계산, 예측 원본 불변. 원본 경로 대신 파일명만 저장, `*.db`는 git 제외. 한계: 검토자 신원 미인증(문자열), 동시성은 로컬 스레드 4개로만 시험, rollback(E22)·schema migration 없음, rule/model version은 아직 null(code_version으로 대체) **현행(2026-10-11):** `rule_version`은 규칙 모듈 내용 해시로 기록되고 분석 키에 들어간다. `model_version`만 null(ML 없음). `code_version`의 실제 제외 범위는 `app.py` 하나뿐이다(T-28). | 운영 저장소·인증 요구, 보존 기간 분석 키에 `coverage`(provenance) 포함. | E17, E18, E19, C17 |
+| T-25 | 열림 | **현행(2026-10-11):** 2026-10-10부터 단일/일괄 모드 구분 없이 `batch_ui.render`가 공통 입력·목록 화면이고, `app.py`는 일괄 결과에서 고른 단위의 상세·검토 화면이다(`docs/7_wireframe.md`). 아래는 그 이전 기록이다. Streamlit 검토 화면(`wafer/app.py`): 입력(업로드 또는 경로), 상태·개수, wafer map(bin별·signature group 강조, 노치 6시), bin×시계방향 표, 공간 집계, 판정 상태, JSON·CSV(zip) 다운로드, 검토 revision 입력. 검증: Streamlit AppTest(headless) — UI 값=CLI JSON, bin 필터가 개수를 바꾸지 않음, 실패 job 표시, 검토 저장. 브라우저 E2E(`tests/test_e2e_browser.py`, 실제 Streamlit 서버 + 시스템 Edge): F01 값, 업로드 경로, 실패 표시, 화면 검토 저장 확인. **다중 사용자·배포 이미지·API는 미시험**. overlay 좌표는 표준 좌표 그대로(원본 화면 대조 overlay 없음) | 사용자 화면 요구·배포 방식(사내 서버/인증) **2026-10-09 갱신:** 브라우저 E2E는 `tests/test_e2e_browser.py`(Edge, 4건)로 실행 중. 화면 입력에 coverage sidecar 경로 추가, 다운로드(JSON·CSV zip)에 분석 키·검토 상태·최신 revision 포함, 노치 미상 시 노치 미표시. 프로젝트 Playwright MCP(`.mcp.json`, Edge·isolated) 등록·stdio 기동 확인(F01 화면 조작 성공), 대화형 사용은 사용자 승인 필요. **2026-10-10:** 실제 Edge에서 내려받은 JSON·CSV zip을 열어 독립 기대값(계획 19.2 F01, 손계산 면적·밀도, hashlib 재계산 provenance)과 대조하는 E2E 4건 추가 — null/0 구분, review(저장 전·후), coverage 유무 포함. 제품 불일치는 발견되지 않음. | E15, E16, E19, P3-03 |
+| T-26 | BLOCKED | **실제 사내 데이터 입력 계약 재검증**(파일명 규칙·내부 형식·메타데이터 정합성·좌표/bin 의미·영향 기능). 실행계획 5.3, 19.3 | 합성 규약만 검증됨(아래 상세). 사내 입력 지원은 미완료 | 실제 export 샘플(계열별, 원본 파일명 유지)과 장비 명세, 메타데이터 우선순위 결정 | P0-07, P1-07, P0-01, P0-02, P1-01~03, C01~C04, C15, C17, C20, E01-FN·E09-META 등 19.3 |
+| T-27 | 열림(기본안 구현) | **일괄 분석**(`wafer/batch.py`, `wafer/batch_ui.py`). 결정 대기 기본안: ① DB `batch_members`에는 파일명(basename)만 저장, 전체 상대 경로는 메모리·다운로드 manifest에만 ② 업로더는 확장자 필터 없이 받고 서버가 `.klf/.klarf/.txt` 외를 제외(실제 장비 확장자 예: `.001`은 T-29에서 확인) ③ batch 요약은 최초 예측 기준, 검토 상태·revision은 별도 열 ④ 입력 상한 기본값(500개/파일당 50 MB/총 300 MB)은 근거 없는 개발용 값 ⑤ local은 DBSCAN 파생 후보(규칙·보정 없음) ⑥ coverage sidecar는 batch 공통 선언 ⑦ 고유 wafer 수는 KLARF 헤더 값(미검증) 기준 ⑧ 배치 내 중복 행은 요약 CSV에서 원본 행의 값을 반복 표시(합산은 succeeded 행만) ⑨ 다운로드는 화면 재실행마다 다시 생성(검토 열 최신 유지 우선, 대량 파일 성능은 E20에서 확인). 입력 고정: 목록 확인 시 profile·sidecar·파일 sha256 기록, 다르면 실행 거부, 실행은 고정 사본 사용(2026-10-10 검토 반영). **정도 등급(0~100 점수, 정상/위험)은 만들지 않음 — 사내 보정 자료와 합의된 임계값 필요.** 한 파일의 복수 wafer/inspection 분석 단위 분리는 미지원(T-09) | 원시 지표·분모·null 정책 구현 | ①~④ 결정, 운영 상한(E20), 등급 기준 보정 자료 | E01, E03, E06, E09, E10, E11, E13, E16~E19, C02, C11, C15, C17 |
+| T-28 | 열림(2026-10-11 문서 정리 중 발견) | **`code_version` 해시 범위**: `wafer/version.py`는 `app.py`만 제외하고 `wafer/*.py` 전체를 해시한다. 화면 모듈 `batch_ui.py`·`ui_inputs.py`도 포함되어 결과와 무관한 화면 수정·주석 수정이 분석 키를 바꾸고, 같은 DB의 저장 결과를 재사용하지 못한다. T-27의 "UI(app.py)는 결과에 영향 없음, 제외" 의도와 범위가 다르다 | 코드 변경 없음. 문서에 실제 범위를 기록(1_domain_definition 8절, 5_ERD 2.1). 문서 경로 갱신을 위한 주석 수정은 하지 않음 | `EXCLUDED`에 `batch_ui.py`·`ui_inputs.py`를 추가할지 결정(추가 시 해당 모듈이 결과에 영향을 주지 않음을 확인하고 `test_store.py::test_code_fingerprint_*` 갱신). 다음 코드 변경 때 같이 고칠 낡은 주석: `batch_ui.py` 1행 docstring의 `mode "일괄 분석" in wafer/app.py`(모드 선택은 2026-10-10 폐지), `ingest/profile/ring/stats.py`의 "TBD.md" 경로 | E17, C17 |
+| T-29 | 열림(기본안 구현, 2026-10-12) | **설비성 후보**(`equip_ring`·`equip_line`·`equip_local`, `inspection_abort_suspect`, `excess_defect`). 결정: 설비 = 검사 설비 `InspectionStationID`(공정 설비와 혼용 금지), 반복 최소 3장, step은 제외 조건 아님, 중단 근거 = 장비 최대 보고 결함 수 도달(Overflow/Abort), 과다만이면 중단 미확인 | `batch.batch_candidates`, profile `equipment_signature`·`defect_volume`. dummy 시험 profile 허용치(5 mm, 10°, 10 mm, 15 mm, 20점)는 합성 자료의 wafer 간 위치 흩어짐 기준 시험값 | 실제 KLARF의 `InspectionStationID` 형식·일관성(같은 장비가 같은 문자열인지), 장비·레시피별 최대 보고 결함 수와 KLARF에 중단·완료 표기(예: SummaryList·SampleTestPlan 대비 검사 die 수)가 있는지, 운영 허용치·과다 기준, 공정 설비 매핑(MES) 필요 여부, 반복 판정의 오경보율(잡음 많은 자료에서 local 반복 우연 일치) | E06, E13, E16, C09, C10, C19 |
+
+## T-05 정리 (2026-10-09 사용자 답변 반영)
+
+- 이전 해석(100mm 원 둘레의 띠)은 **폐기**한다. band 폭은 100mm 기준선과 무관하다.
+- band 폭 = 환형 defect 패턴의 **두께**(정의: 중심 기준 거리의 P95−P5, 극단값 아님). ring 검출 결과로 다음을 출력해야 한다: 중심(wafer 중심 또는 offset), 중심선 반지름, 내/외 반지름, 폭(두께), 직경, 각도 점유 범위.
+- `zone_8inch_boundary`(100mm 근처 tag)는 별개 기능으로 남기되 값은 TBD이며 기본 비활성이다. 사용 목적이 불필요하면 제거 여부를 알려 달라.
+
+## T-26 상세: 실제 사내 데이터 도입 시 입력 계약 재검증
+
+- **필요한 샘플/명세:** export 계열별 실제 KLARF(원본 파일명 그대로, 정상·빈 결과·손상·작성 중·복수 record·방향 변형 포함), 같은 검사의 화면/집계표, 파일명 규칙 명세(필드 순서·구분자·날짜/시간 형식·timezone·확장자·선택 필드·누락 표기), 내부 field 명세(KLARF 버전, record/list 계층, column 이름·순서·자료형), 좌표·bin 명세와 기준점(단위, die index/pitch, 상대좌표, 중심, 축, notch, side, classification/rough/fine bin 의미), 메타데이터 충돌 시 우선순위 결정.
+- **현재 합성 가정(2026-10-09 코드):**
+  - 파일명: 파싱하지 않음. attempts에 basename만 저장하며, 분석 키는 파일 내용 sha256 기준이라 파일명과 무관.
+  - 내부 형식: 1.2 스타일 평면 문법, KLARF 1.8 Record(단일 FileRecord>LotRecord>WaferRecord, 단일 DefectList), UTF-8. 엄격 검사.
+  - 메타데이터: 단일 분석 결과에는 lot/wafer/job/시간을 출력하지 않음. 일괄 분석은 KLARF 헤더의 lot/wafer(평면: LotID/WaferID, 1.8: LotRecord/WaferRecord 이름)를 "미검증" 출처와 함께 입력 목록·요약 CSV·batch manifest에 표시·내보내며 분석 키·중복 판정·집계에는 쓰지 않음(2026-10-10, T-27). 1.8에서 LotRecord가 두 번 나오면 표시용 이름은 마지막 값으로 덮임(키·개수에는 영향 없음, 실제 파일 구성 확인 시 엄격 처리 여부 결정). job·시간은 미추출.
+  - 좌표: 합성 adapter 2종(`synthetic-um-die00-notch-down`, `synthetic-die-local-v1`). profile `adapter_id`로 명시 선택(필수, 누락은 CONFIG_INVALID — T-01 결정). 노치 필드가 없으면 부분 결과(T-02 결정).
+  - bin: CLASSNUMBER만 사용, ROUGH/FINE 미사용.
+  - 파일명 예시 `date_time_lotid_waferid_jobid`는 사내 확정 규칙이 아님.
+- **미확정 사항:** 파일명 규칙 전부, 메타데이터 우선순위·충돌 정책, 지원 KLARF 버전과 계층, 복수 wafer/inspection 처리(T-09), 작성 중 파일 판정(E13), 좌표 공식(T-01)·방향/side(T-02)·bin 의미(T-03), 오류 코드 체계(T-11).
+- **영향 모듈:** 자동 수집(미구현: 파일 도착·작성 완료 판정), `wafer/ingest.py`(파서·adapter), 파일명 profile(미구현), `wafer/cli.py`(provenance·결과 메타데이터), `wafer/store.py`(분석 키·중복 방지·재조회), `wafer/report.py`(JSON/CSV), `wafer/app.py`(UI 표시), `tests/`(fixture·profile·시나리오).
+- **확인 후 수정할 작업(최소 범위):**
+  1. 계열별 입력 계약서를 작성한다.
+  2. 승인된 규칙에 한해 다음을 추가한다: 명시적 파일명 profile, 필요한 parser 차이, 실제 adapter. 범용 추측 파서나 plugin framework는 만들지 않으며, 같은 형식이면 adapter를 추가하지 않는다.
+  3. 메타데이터(파일명·내부 값과 각 출처)를 보존하는 결과 필드를 추가한다. 분석 키는 내용 해시 기준을 유지한다.
+  4. 19.3 하위 case fixture(검토된 실제 샘플)와 정답 manifest를 만든다.
+  5. 기존 테스트 최신성을 점검하고, 승인된 계약 변경에 해당하는 시나리오만 개정한다.
+- **관련 완료 체크/C/E:** P0-01, P0-02, P0-07, P1-01, P1-02, P1-03, P1-07 / C01, C02, C03, C04, C15, C17, C20 / E01-FN, E01-FN-DELIM, E01-FN-TIME, E09-META, E01-COLORDER, E13-COLX, E09-MULTI, E13-VER, E03-EMPTY-REAL, E13-CORRUPT-REAL, E02-REAL, E09-BIN-REAL.
+- **완료 증빙(모두 필요):**
+  1. 대상 장비/export 계열별 입력 계약 문서.
+  2. 검토된 실제 샘플에서 파일명과 내부 메타데이터를 정확히 추출한 결과(정답 manifest 대조).
+  3. 충돌·누락·미지원 입력을 합의된 상태로 처리한 시험 기록.
+  4. 좌표·bin·개수 보존을 독립 정답(기준점·화면·집계표)과 대조한 결과.
+  5. 영향 회귀와 입력부터 출력(저장·export·UI)까지의 실제 흐름 검증 기록.
+- **상태 규칙:** 실제 샘플·정의가 없으면 BLOCKED/미완료로 유지한다. 합성 fixture 통과(`tests/fixtures/klarf`, `klarf_dummy_data`)로 이 항목을 완료 처리하지 않는다.
+
+## 해결되어 TBD에서 삭제한 항목 (결정 기록, 2026-10-12)
+
+열린 질문이 남지 않은 항목은 표에서 지웠다. 코드·테스트·문서가 이 결정을 계속 참조하므로 한 줄 요약과 반영 위치만 남긴다. 상세 이력은 git 기록(2026-10-12 이전 `TBD.md`/`docs/9_TBD.md`)에 있다.
+
+| ID | 구 ID | 결정 | 반영 위치 |
+|---|---|---|---|
+| R-01 | T-01 | KLARF 파서: klarfrs 0.2.1(조용한 누락·이동)은 쓰지 않고 자체 엄격 파서 사용(선언 개수·열·숫자·종료·중복 Field 검사), KLARF 1.8은 단일 WaferRecord만. 실제 export 문법 확인은 T-26 | `wafer/ingest.py`, README 입력 지원 범위 |
+| R-02 | T-10 | 상태 어휘는 실행계획 16.2 기준, `INVALID_INPUT` = job failed + data_quality invalid, zone 중첩은 같은 계층(E1·E2끼리)만 금지 | docs/1 3.4·6절 |
+| R-03 | T-11 | profile에 `wafer_radius_mm` 키 신설 | docs/1 9절 |
+| R-04 | T-30 | 노치 미상 시 방향·위치 측정 키는 null + `withheld` 사유, 회전 불변 측정은 유지, CSV manifest에 `orientation_status`·`coordinate_frame`, adapter 필수 좌표 키 누락은 CONFIG_INVALID | docs/1 3.2·4절 |
+| R-05 | T-33 | 계산 불가 값은 `None` 그대로 두고 사유를 화면·결과 파일에 표기(result-0.2 `null_reasons`, reason 열, manifest). `bin_sector.csv` status 열은 접두사 없이 `<status>: <reason>` | docs/1 7절, docs/8 1절 |
+
+## 번호 변경표 (2026-10-12)
+
+이 날짜 이전 기록(git 이력, 커밋 메시지, 실행계획 20.2의 당시 행 원문)의 T-번호는 아래처럼 바뀌었다. 저장소 안의 참조는 모두 새 번호로 바꿨다.
+
+| 구 | 신 | 구 | 신 | 구 | 신 |
+|---|---|---|---|---|---|
+| T-01 | R-01(해결) | T-13 | T-10 | T-24 | T-21 |
+| T-02 | T-01 | T-14 | T-11 | T-25 | T-22 |
+| T-03 | T-02 | T-15 | T-12 | T-26 | T-23 |
+| T-04 | T-03 | T-16 | T-13 | T-27 | T-24 |
+| T-05 | T-04 | T-17 | T-14 | T-28 | T-25 |
+| T-06 | T-05 | T-18 | T-15 | T-29 | T-26 |
+| T-07 | T-06 | T-19 | T-16 | T-30 | R-04(해결) |
+| T-08 | T-07 | T-20 | T-17 | T-31 | T-27 |
+| T-09 | T-08 | T-21 | T-18 | T-32 | T-28 |
+| T-10 | R-02(해결) | T-22 | T-19 | T-33 | R-05(해결) |
+| T-11 | R-03(해결) | T-23 | T-20 | T-34 | T-29 |
+| T-12 | T-09 | | | | |

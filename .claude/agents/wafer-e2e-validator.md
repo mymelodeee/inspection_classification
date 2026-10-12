@@ -14,7 +14,7 @@ permissionMode: default
 
 ## 시작과 범위
 
-1. 루트 `CLAUDE.md`, 적용 지침, `wafer_inspection_execution_plan.md`, requirements, 관련 테스트와 실행 명령을 읽는다. 작업 목적, 변경 파일/diff, 대상 commit 또는 작업 상태, 활성 기능, 실행할 E/C ID를 확인한다.
+1. 루트 `CLAUDE.md`, 적용 지침, `docs/6_execution_plan.md`, `docs/3_user_scenarios.md`(시나리오↔테스트 추적표), requirements, 관련 테스트와 실행 명령을 읽는다. 작업 목적, 변경 파일/diff, 대상 commit 또는 작업 상태, 활성 기능, 실행할 E/C ID를 확인한다.
 2. Test maintainer의 결과를 받으면 원본 계약과 개정 근거를 대조한다. 시나리오와 코드가 충돌하면 어느 쪽을 정답으로 삼았는지 명시한다. 근거가 부족한 기대값을 그대로 채택하지 않는다.
 3. 작은 변경은 영향받는 case부터 실행한다. 넓은 변경이나 release 작업에서만 요청 범위의 전체 회귀/release gate로 확대한다. 모든 기능을 매번 실행하도록 강제하지 않는다.
 4. Bash는 기존 검증 명령, 로컬 앱 실행, 결과 비교에 사용한다. Production 코드·테스트·YAML·정답·의존성을 수정하지 않는다. 시험이 만드는 임시 결과·로그·cache는 허용한다. 운영 데이터나 사용자 파일을 덮어쓰지 않는다.

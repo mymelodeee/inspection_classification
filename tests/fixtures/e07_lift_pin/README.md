@@ -13,9 +13,9 @@ E07 삼발이(lift pin) 합성 fixture (synthetic=true, seed=null, oracle `e07-l
 
 점 단위 가중 A3(민감도용): 5점 lobe는 `(3+2cos(3·atan(1.5/r)))/5` → r=60: 0.998875995, r=90: 0.999500197; SINGLE-BLOB 0.994384916.
 
-주의: lobe는 구성으로 정의된 support ID이며 lobe 탐색 알고리즘은 고정하지 않는다. Coverage 표현은 fixture 전용(TBD T-05, 현재 production coverage는 unknown). LP-UNCOVERED의 candidate vs insufficient_data는 계획서가 정하지 않았다(`decision_pending`); 고정 요구는 `must_not`과 `coverage_flag`다. 연계: E07, C09, C19, P2-05, P3-01, 계획 8.2.
+주의: lobe는 구성으로 정의된 support ID이며 lobe 탐색 알고리즘은 고정하지 않는다. Coverage 표현은 fixture 전용(TBD T-04, 현재 production coverage는 unknown). LP-UNCOVERED의 candidate vs insufficient_data는 계획서가 정하지 않았다(`decision_pending`); 고정 요구는 `must_not`과 `coverage_flag`다. 연계: E07, C09, C19, P2-05, P3-01, 계획 8.2.
 
 Note (2026-10-09, main agent): the expected `matched` for LP-IDEAL presumes a calibrated template
-(`signatures.lift_pin.calibrated: true`); uncalibrated templates report `candidate` (TBD T-20/T-25).
+(`signatures.lift_pin.calibrated: true`); uncalibrated templates report `candidate` (TBD T-17/T-22).
 The no_match expectations of SINGLE-BLOB / WRONG-RADIUS / WRONG-PHASE presume FULL coverage (known);
 with coverage unknown the result is `insufficient_data` (plan 16.2). Oracle numbers are unchanged.
