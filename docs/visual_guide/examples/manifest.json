@@ -1,0 +1,47 @@
+{
+  "label": "설명용 합성 데이터",
+  "profile": "unchanged copy of tests/profiles/dummy_die_local_test_profile.yaml",
+  "repeat_examples": "mixed.klarf coordinates copied; only WaferRecord and StepID changed, synthetic InspectionStationID added",
+  "files": [
+    {
+      "name": ".gitattributes",
+      "sha256": "aeee29496e87e840f2f2fc5be7f78d4be0b4a67cd6309911caac9f315c8e70d9"
+    },
+    {
+      "name": "analysis_summary.csv",
+      "sha256": "0c267d4c5421ecfd73e2ca30beb57e7de3842cebf3d61e79b72fdf2a269da15a"
+    },
+    {
+      "name": "DEMO_W01.klarf",
+      "sha256": "2bd436b60a2c08a8003e3c743f7d82c7e35f534ace4b64d3ed5a6cb4e481bbf5"
+    },
+    {
+      "name": "DEMO_W02.klarf",
+      "sha256": "c9f6f02cd251500b034898734716cfe9a891656333b3c16d1429b75b25f0ed14"
+    },
+    {
+      "name": "DEMO_W03.klarf",
+      "sha256": "f03c8a332ca9a5b59218af3c1baebe8083c2daa410f67698ecf049dd3f3b5557"
+    },
+    {
+      "name": "M2_04_C+S.klarf",
+      "sha256": "c14354e8e1dd0ec56d1dc0a6c41818171fe6a0760698793d437b3832616c1a00"
+    },
+    {
+      "name": "profile.yaml",
+      "sha256": "c6dfa962289c732a6949dac5ad0d88ab53163241ad45da14f3a8efc1e1a46c97"
+    },
+    {
+      "name": "results.json",
+      "sha256": "d9bc20dd209eaad086cf14e19eac808f06b12bacbafe0dfc44ea99b951ff35dd"
+    },
+    {
+      "name": "ring.klarf",
+      "sha256": "042fa350fa77edb4ecb6ce27c397434b1e9aceb14480223d1f6c82661a309746"
+    },
+    {
+      "name": "ui_summary.csv",
+      "sha256": "802eb5558cb33519551338029a625ba5b86d6fe8d41fc94420d4ee0887017b78"
+    }
+  ]
+}

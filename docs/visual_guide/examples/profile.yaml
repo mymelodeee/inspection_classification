@@ -1,0 +1,80 @@
+# TEST-ONLY profile for klarf_dummy_data (synthetic KLARF 1.8, adapter synthetic-die-local-v1).
+# Same test-only zone/clock/shape values as f01_test_profile.yaml; only the coordinate adapter differs.
+# Derived from: plan 19.2 F01 values + klarf_dummy_data/synthetic_profile.json. NOT an operating profile: values are
+# aggregation-test fixtures and must never be copied into production profiles.
+schema_version: "1.0"
+profile_id: "dummy_die_local_test_only"
+units: "mm"
+wafer_radius_mm: 150
+coordinates:
+  adapter_id: "synthetic-die-local-v1"
+  source_units: "um"
+  target_notch: "DOWN"
+  target_x: "RIGHT"
+  target_y: "UP"
+  side_convention: "front"
+  missing_orientation: "retain_unknown"
+clock:
+  sector_width_deg: 30
+  sector_centers_start_deg: 0
+  center_exclusion_radius_mm: 1
+zones:
+  E1:
+    enabled: true
+    metric: "distance_from_edge_mm"
+    interval_mm: [0, 2]
+    interval_closed: "left"
+  E2:
+    enabled: true
+    metric: "distance_from_edge_mm"
+    interval_mm: [2, 5]
+    interval_closed: "left"
+  zone_8inch_inside:
+    enabled: true
+    metric: "radius_mm"
+    interval_mm: [0, 100]
+    interval_closed: "left"
+  zone_8inch_boundary:
+    enabled: true
+    center_radius_mm: 100
+    band_width_mm: 2
+signatures:
+  lift_pin:
+    enabled: false
+clustering:
+  eps_mm: 10
+  min_samples: 3
+  retain_noise: true
+shapes:
+  ring:   # TEST-ONLY provisional values (TBD T-14); never copy to an operating profile
+    enabled: true
+    occupancy_bin_deg: 10
+    ring_min_occupancy: 0.8
+    arc_min_occupancy: 0.25
+    max_relative_thickness: 0.25
+    min_points: 20
+    calibrated: false
+  line:   # TEST-ONLY provisional values (TBD T-18)
+    enabled: true
+    min_points: 10
+    max_relative_width: 0.1
+    max_gap_ratio: 0.2
+    calibrated: false
+detect:   # TEST-ONLY provisional search parameters (TBD T-19)
+  enabled: true
+  ring_radial_tol_mm: 1.0
+  line_inlier_mm: 1.0
+  line_ransac_trials: 300
+stats:    # TEST-ONLY
+  radial_bin_mm: 50
+equipment_signature:   # TEST-ONLY tolerances (2026-10-12): wafer-to-wafer position spread of the synthetic sets;
+  enabled: true        # never copy to an operating profile. Grouping = InspectionStationID (inspection tool).
+  min_wafers: 3        # user decision 2026-10-12
+  ring_radius_tol_mm: 5
+  line_angle_tol_deg: 10
+  line_offset_tol_mm: 10
+  local_distance_tol_mm: 15
+  local_min_points: 20
+defect_volume:         # tool/recipe values unknown -> not evaluated (reason shown); set both from the tool recipe
+  excess_defect_count: null
+  inspection_defect_limit: null

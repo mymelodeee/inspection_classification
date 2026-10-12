@@ -1,0 +1,36 @@
+[
+  {
+    "file": "flow-batch.gif",
+    "frames": 3,
+    "duration_ms": 9000,
+    "size_bytes": 325493,
+    "source_frames": [
+      "02-files.png",
+      "03-preflight.png",
+      "04-overview.png"
+    ]
+  },
+  {
+    "file": "flow-legend.gif",
+    "frames": 3,
+    "duration_ms": 9000,
+    "size_bytes": 111475,
+    "source_frames": [
+      "08-map-candidates.png",
+      "09-legend-line.png",
+      "10-legend-restored.png"
+    ]
+  },
+  {
+    "file": "flow-repeat.gif",
+    "frames": 4,
+    "duration_ms": 9000,
+    "size_bytes": 214263,
+    "source_frames": [
+      "05-summary.png",
+      "06-gallery.png",
+      "08-map-candidates.png",
+      "11-repeat-wafer2.png"
+    ]
+  }
+]
